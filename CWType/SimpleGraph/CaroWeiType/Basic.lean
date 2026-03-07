@@ -1,5 +1,6 @@
 -- import Mathlib
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
+import Mathlib.Combinatorics.SimpleGraph.Clique
 import Mathlib.Combinatorics.SimpleGraph.Finite
 import Mathlib.Data.Real.Basic
 
@@ -8,21 +9,38 @@ namespace CaroWeiType
 
 open Finset
 
-def IsCaroWeiTypeLowerBound (f : ℕ → ℝ)
-  (π : {n : ℕ} → SimpleGraph (Fin n) → Finset (Fin n) → Prop) :=
-  ∀ {n : ℕ},
-    ∀ G : SimpleGraph (Fin n),
-      let _ := Classical.decRel G.Adj
-      ∃ s : Finset (Fin n), π G s ∧ ∑ v, f (@SimpleGraph.degree _ G v (G.neighborSetFintype v)) ≤ #s
+@[simp]
+lemma p_and_p_implies {p q : Prop} : (p → (p ∧ q)) ↔ (p → q) :=
+  ⟨fun h hp ↦ h hp |>.2, fun hpq hp ↦ ⟨hp, hpq hp⟩⟩
 
-theorem CaroWeiTypeLowerBound_mono {π : {n : ℕ} → SimpleGraph (Fin n) → Finset (Fin n) → Prop}
+structure FiniteSimpleGraph (n : ℕ) where
+  graph : SimpleGraph (Fin n)
+  decAdj : DecidableRel graph.Adj := by aesop_graph
+
+instance {n : ℕ} {G : FiniteSimpleGraph n} : DecidableRel G.graph.Adj := G.decAdj
+
+@[simp]
+abbrev FiniteCompleteGraph (n : ℕ) : FiniteSimpleGraph n where
+  graph := completeGraph (Fin n)
+  decAdj u w := by
+    simp only [completeGraph_eq_top, top_adj, ne_eq]
+    if h : u = w then exact .isFalse (by simp [h])
+    else exact .isTrue h
+
+def IsCaroWeiTypeLowerBound (f : ℕ → ℝ)
+  (π : {n : ℕ} → FiniteSimpleGraph n → Finset (Fin n) → Prop) :=
+  ∀ {n : ℕ},
+    ∀ G : FiniteSimpleGraph n,
+      ∃ s : Finset (Fin n), π G s
+        ∧ ∑ v, f (G.graph.degree v) ≤ #s
+
+theorem CaroWeiTypeLowerBound_mono {π : {n : ℕ} → FiniteSimpleGraph n → Finset (Fin n) → Prop}
     {f₁ f₂ : ℕ → ℝ} (hle : f₁ ≤ f₂) :
     IsCaroWeiTypeLowerBound f₂ π → IsCaroWeiTypeLowerBound f₁ π := by
   intro hf₂ n G
   obtain ⟨s, hs⟩ := hf₂ G
   refine ⟨s, ⟨hs.1, ?_⟩⟩
-  let _ := Classical.decRel G.Adj
-  refine le_trans (sum_le_sum fun v _ ↦ hle (G.degree v)) hs.2
+  refine le_trans (sum_le_sum fun v _ ↦ hle (G.graph.degree v)) hs.2
 
 end CaroWeiType
 end SimpleGraph

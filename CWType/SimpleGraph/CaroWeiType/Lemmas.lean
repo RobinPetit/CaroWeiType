@@ -1,9 +1,13 @@
 -- import Mathlib
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
+
 import Mathlib.Combinatorics.SimpleGraph.DeleteEdges
+import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Real.Basic
 
 import CWType.SimpleGraph.CaroWeiType.Basic
+
+open SimpleGraph
+open CaroWeiType
 
 lemma Nonempty_if_card_pos {α : Type*} {s : Finset α} (h : 0 < s.card) :
     Nonempty s := by
@@ -75,20 +79,20 @@ theorem deleteIncidenceSet_degree {n : ℕ} (G : SimpleGraph (Fin n)) [Decidable
       _ = (G.neighborFinset w \ {v}).card := by rw [this]
       _ = (G.neighborFinset w).card - ({v} : Finset _).card := by
         refine Finset.card_sdiff_of_subset ?_
-        simp only [Finset.singleton_subset_iff, SimpleGraph.mem_neighborFinset]
+        simp only [Finset.singleton_subset_iff, mem_neighborFinset]
         exact (G.mem_neighborFinset v w).mp hw |>.symm
   ext x
   constructor
   · intro hx
-    simp_all only [SimpleGraph.mem_neighborFinset, SimpleGraph.deleteIncidenceSet,
-      SimpleGraph.incidenceSet, SimpleGraph.deleteEdges_adj, Set.mem_setOf_eq,
-      SimpleGraph.mem_edgeSet, Sym2.mem_iff, not_and, not_or, Finset.mem_sdiff,
+    simp_all only [mem_neighborFinset, deleteIncidenceSet,
+      incidenceSet, deleteEdges_adj, Set.mem_setOf_eq,
+      mem_edgeSet, Sym2.mem_iff, not_and, not_or, Finset.mem_sdiff,
       Finset.mem_singleton, true_and]
     exact ne_symm <| hx.2 hx.1 |>.2
   · intro hx
-    simp_all only [SimpleGraph.mem_neighborFinset, Finset.mem_sdiff, Finset.mem_singleton,
-      SimpleGraph.deleteIncidenceSet, SimpleGraph.incidenceSet, SimpleGraph.deleteEdges_adj,
-      Set.mem_setOf_eq, SimpleGraph.mem_edgeSet, Sym2.mem_iff, true_and, not_or]
+    simp_all only [mem_neighborFinset, Finset.mem_sdiff, Finset.mem_singleton,
+      deleteIncidenceSet, incidenceSet, deleteEdges_adj,
+      Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, true_and, not_or]
     exact ⟨hw.ne, ne_symm hx.2⟩
 
 theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
@@ -104,9 +108,9 @@ theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
   have Nv_subs_X : G.neighborFinset v ⊆ X := by
     intro x hx
     refine hX ?_
-    simp only [SimpleGraph.support, SetRel.mem_dom, Set.mem_setOf_eq]
+    simp only [support, SetRel.mem_dom, Set.mem_setOf_eq]
     refine ⟨v, ?_⟩
-    simp_all [SimpleGraph.Adj.symm]
+    simp_all [Adj.symm]
   suffices f (G.degree v)
       ≤ ∑ x ∈ G.neighborFinset v, (f ((G.deleteIncidenceSet v).degree x) - f (G.degree x)) by
     calc ∑ x ∈ X, f (G.degree x)
@@ -117,7 +121,7 @@ theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
           simp only [add_left_inj]
           rw [← Finset.sum_singleton (fun x ↦ f (G.degree x)) v]
           refine Eq.symm <| Finset.sum_sdiff ?_
-          simp only [Finset.singleton_subset_iff, Finset.mem_sdiff, SimpleGraph.mem_neighborFinset,
+          simp only [Finset.singleton_subset_iff, Finset.mem_sdiff, mem_neighborFinset,
             SimpleGraph.irrefl, not_false_eq_true, and_true]
           refine hX <| G.degree_pos_iff_mem_support v |>.mp (hv ▸ hΔ)
       _ = ∑ x ∈ ((X \ G.neighborFinset v) \ {v}), f ((G.deleteIncidenceSet v).degree x)
@@ -130,14 +134,14 @@ theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
           ext w
           constructor
           · intro hw
-            simp_all only [gt_iff_lt, ge_iff_le, tsub_le_iff_right, SimpleGraph.deleteIncidenceSet,
-              SimpleGraph.incidenceSet, Finset.mem_sdiff, SimpleGraph.mem_neighborFinset,
-              Finset.mem_singleton, SimpleGraph.deleteEdges_adj, Set.mem_setOf_eq,
-              SimpleGraph.mem_edgeSet, Sym2.mem_iff, ne_eq, not_false_eq_true, Ne.symm, false_or,
+            simp_all only [gt_iff_lt, ge_iff_le, tsub_le_iff_right, deleteIncidenceSet,
+              incidenceSet, Finset.mem_sdiff, mem_neighborFinset,
+              Finset.mem_singleton, deleteEdges_adj, Set.mem_setOf_eq,
+              mem_edgeSet, Sym2.mem_iff, ne_eq, not_false_eq_true, Ne.symm, false_or,
               true_and]
             exact fun heq ↦ hx.1.2 (heq ▸ hw.symm)
           · intro hw
-            simp_all [SimpleGraph.deleteIncidenceSet, Finset.mem_sdiff]
+            simp_all [deleteIncidenceSet, Finset.mem_sdiff]
       _ = ∑ x ∈ ((X \ G.neighborFinset v) \ {v}), f ((G.deleteIncidenceSet v).degree x)
         + f (G.degree v)
         + ∑ x ∈ G.neighborFinset v, f ((G.deleteIncidenceSet v).degree x)
@@ -160,7 +164,7 @@ theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
           apply Eq.symm
           have cup : ((X \ G.neighborFinset v) \ {v}) ∪ G.neighborFinset v = X \ {v} := by
             ext x
-            simp only [Finset.mem_union, Finset.mem_sdiff, SimpleGraph.mem_neighborFinset,
+            simp only [Finset.mem_union, Finset.mem_sdiff, mem_neighborFinset,
               Finset.mem_singleton]
             refine ⟨?_, by grind⟩
             intro h
@@ -193,7 +197,41 @@ theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
       exact ((G.mem_neighborFinset v x).mp hx |>.degree_pos_right)
     _ ≥ f (G.degree v) := by
       simp only [Finset.sum_const,
-        SimpleGraph.card_neighborFinset_eq_degree, nsmul_eq_mul, ge_iff_le]
+        card_neighborFinset_eq_degree, nsmul_eq_mul, ge_iff_le]
       exact hv ▸ hγ'
+
+theorem bound_of_completeGraph (f : ℕ → ℝ) {n : ℕ}
+    [DecidableRel (completeGraph (Fin (n + 1))).Adj] :
+    ∑ v, f ((completeGraph (Fin (n + 1))).degree v) = (n + 1) * f n := by
+  calc ∑ v, f ((completeGraph (Fin (n + 1))).degree v)
+    _ = ∑ _ : Fin (n + 1), f n := by
+        refine Finset.sum_congr rfl (fun x _ ↦ congrArg _ ?_)
+        simp only [completeGraph_eq_top, degree, neighborFinset, neighborSet, top_adj]
+        suffices {w | x ≠ w} = Set.univ \ {x} by simp [this, Finset.card_sdiff]
+        ext w
+        constructor <;> exact fun hw ↦ by grind
+    _ = (n + 1) * f n := by simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fin,
+      nsmul_eq_mul, Nat.cast_add, Nat.cast_one]
+
+theorem CaroWeiTypeLB_le_1 (f : ℕ → ℝ)
+    {π : {n : ℕ} → FiniteSimpleGraph n → Finset (Fin n) → Prop} :
+    IsCaroWeiTypeLowerBound f π → f ≤ 1 := by
+  intro hf d
+  simp only [Pi.one_apply]
+  obtain ⟨s, ⟨_, hcard⟩⟩:= hf (FiniteCompleteGraph (d + 1))
+  let _ := (FiniteCompleteGraph (d + 1)).decAdj
+  simp only [FiniteCompleteGraph] at hcard
+  suffices (d + 1) * f d ≤ (d + 1 : ℝ) * 1 by
+    exact mul_le_mul_iff_of_pos_left (Nat.cast_add_one_pos d) |>.mp this
+  simp only [mul_one]
+  calc (d + 1) * f d
+    _ ≤ s.card := by
+      exact (@bound_of_completeGraph f d).symm ▸ hcard
+    _ ≤ (d + 1 : ℝ) := by
+      suffices s.card ≤ d + 1 by
+        rw [← Nat.cast_add_one d]
+        exact Nat.cast_le.mpr this
+      refine le_trans (Finset.card_le_card <| Finset.subset_univ s) ?_
+      simp only [Finset.card_univ, Fintype.card_fin, le_refl]
 
 #min_imports

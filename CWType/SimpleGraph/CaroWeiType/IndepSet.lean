@@ -3,11 +3,13 @@ import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Combinatorics.SimpleGraph.Clique
 import Mathlib.Data.Nat.Cast.Order.Field
 
+import CWType.SimpleGraph.CaroWeiType.Basic
 import CWType.SimpleGraph.CaroWeiType.Lemmas
 
 namespace SimpleGraph
 namespace CaroWeiType
 
+open FiniteSimpleGraph
 open Finset
 
 theorem IndepNumberClique_eq_one {V : Type*} (s : Finset V) :
@@ -145,21 +147,21 @@ theorem CaroWeiIndepSet {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         rfl
 
 theorem IndepSet_LowerBound :
-    IsCaroWeiTypeLowerBound (fun d ↦ (d + 1 : ℝ)⁻¹) (fun G s ↦ G.IsIndepSet s) := by
+    IsCaroWeiTypeLowerBound (fun d ↦ (d + 1 : ℝ)⁻¹) (fun G s ↦ G.graph.IsIndepSet s) := by
   intro n G
-  let _ : DecidableRel G.Adj := Classical.decRel G.Adj
-  obtain ⟨s, ⟨_, ⟨hind, hcard⟩⟩⟩ := CaroWeiIndepSet G (Finset.univ) (by simp)
+  obtain ⟨s, ⟨_, ⟨hind, hcard⟩⟩⟩ := CaroWeiIndepSet G.graph (Finset.univ) (by simp)
   exact ⟨s, hind, hcard⟩
 
 theorem IndepSet_LowerBound_iff (f : ℕ → ℝ) :
-    IsCaroWeiTypeLowerBound f (fun {n : ℕ} (G : SimpleGraph (Fin n)) s ↦ G.IsIndepSet s)
+    IsCaroWeiTypeLowerBound f (fun {n : ℕ} (G : FiniteSimpleGraph n) s ↦ G.graph.IsIndepSet s)
       ↔ f ≤ cw_bound := by
   refine ⟨?_, fun hle ↦ CaroWeiTypeLowerBound_mono hle IndepSet_LowerBound⟩
   intro hf d
   unfold IsCaroWeiTypeLowerBound at hf
-  let K := completeGraph (Fin (d + 1))
-  let _ := Classical.decRel K.Adj
-  obtain ⟨s, hind, hcard⟩ := hf <| K
+  let K' := FiniteCompleteGraph (d + 1)
+  let _ := K'.decAdj
+  obtain ⟨s, hind, hcard⟩ := hf <| K'
+  simp only [K'] at hcard
   have hpos' : (d + 1 : ℝ)⁻¹ > 0 := Nat.inv_pos_of_nat
   suffices f d * (d + 1 : ℝ) ≤ 1 by
     calc f d
@@ -168,11 +170,12 @@ theorem IndepSet_LowerBound_iff (f : ℕ → ℝ) :
       _ = (d + 1 : ℝ)⁻¹ := by simp
   calc f d * (d + 1)
     _ = ∑ v : Fin (d + 1), f d := by simp [CommMonoid.mul_comm]
-    _ = ∑ v : Fin (d + 1), f (K.degree v) := by
+    _ = ∑ v : Fin (d + 1), f (K'.graph.degree v) := by
         apply Eq.symm
         refine Fintype.sum_congr _ _ (fun v ↦ congrArg f ?_)
-        simp only [degree, neighborFinset, completeGraph_eq_top, Set.toFinset_card,
-          Fintype.card_ofFinset, mem_neighborSet, top_adj, ne_eq, K]
+        simp only [degree, neighborFinset, completeGraph_eq_top, FiniteCompleteGraph,
+          eq_mpr_eq_cast, cast_eq, Set.toFinset_card, Fintype.card_ofFinset, mem_neighborSet,
+          top_adj, ne_eq, K']
         have h : ({x | ¬v = x} : Finset (Fin (d + 1))) = univ \ ({v} : Finset (Fin (d + 1))) := by
           ext x
           simp only [mem_filter, mem_univ, true_and, mem_sdiff, mem_singleton, ne_comm, ne_eq]
