@@ -20,6 +20,10 @@ lemma Nonempty_if_card_pos' {α : Type*} {s : Finset α} (h : 0 < s.card) :
 lemma card_setminus_singleton {α : Type*} [DecidableEq α] {s : Finset α} {x : α}
     (h : x ∈ s) : (s \ {x}).card = s.card - 1 := by grind
 
+lemma card_setminus_singleton' {n : ℕ} {α : Type*} [DecidableEq α] {s : Finset α} {x : α}
+    (hx : x ∈ s) (hcard : s.card = n + 1) : (s \ {x}).card = n := by
+  grind
+
 theorem Finset_unique_elems {α : Type*} [inst : Nonempty α] (s : Finset α) :
     ∃ f : ℕ → α,
       (∀ (k : ℕ), k < s.card → f k ∈ s)
@@ -63,6 +67,40 @@ theorem Finset_get_two {α : Type*} (s : Finset α) (h : 2 ≤ s.card) :
   · exact hf₁ _ (Nat.lt_of_succ_le h)
   · refine hf₂ 0 1 (Nat.zero_lt_of_lt h) (Nat.lt_of_succ_le h) (by simp)
 
+lemma discrete_derivative_inv_eq (d : ℕ) (hd_pos : 0 < d) :
+    ((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹ = ((d * (d + 1)) : ℝ)⁻¹ := by
+  refine eq_inv_of_mul_eq_one_left ?_
+  rw [Nat.cast_pred hd_pos]
+  simp only [sub_add_cancel]
+  have hdR_pos : (d : ℝ) ≠ 0 := by exact Nat.cast_ne_zero.mpr <| Nat.ne_zero_of_lt hd_pos
+  calc ((d : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹) * ((d : ℝ) * (d + 1 : ℝ))
+    _ = (d : ℝ)⁻¹ * ((d : ℝ) * (d + 1 : ℝ)) - (d + 1 : ℝ)⁻¹ * ((d : ℝ) * (d + 1 : ℝ)) := by
+      exact sub_mul ..
+    _ = ((d : ℝ)⁻¹ * (d : ℝ)) * (d + 1 : ℝ) - (d + 1 : ℝ)⁻¹ * ((d : ℝ) * (d + 1 : ℝ)) := by
+      simp only [sub_left_inj]
+      exact Eq.symm <| mul_assoc ..
+    _ = (d + 1 : ℝ) - (d + 1 : ℝ)⁻¹ * ((d : ℝ) * (d + 1 : ℝ)) := by
+      have h' : (d : ℝ)⁻¹ * (d : ℝ) = 1 := by grind
+      simp only [h', one_mul]
+    _ = 1 := by grind
+
+lemma avg_gain (d : ℕ) (hd_pos : 0 < d) :
+    d * (((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹) = (d + 1 : ℝ)⁻¹ := by
+  rw [discrete_derivative_inv_eq d hd_pos]
+  simp only [mul_inv_rev]
+  calc (d : ℝ) * ((d + 1 : ℝ)⁻¹ * (d : ℝ)⁻¹)
+    _ = (d : ℝ) * ((d : ℝ)⁻¹ * (d + 1 : ℝ)⁻¹) := by
+      simp only [mul_eq_mul_left_iff, Nat.cast_eq_zero]
+      refine Or.inl ?_
+      exact mul_comm ..
+    _ = ((d : ℝ) * (d : ℝ)⁻¹) * (d + 1 : ℝ)⁻¹ := Eq.symm <| mul_assoc ..
+    _ = 1 * (d + 1 : ℝ)⁻¹ := by
+      simp only [mul_eq_mul_right_iff]
+      refine Or.inl ?_
+      refine mul_inv_cancel₀ ?_
+      exact Ne.symm <| ne_of_lt <| Nat.cast_pos'.mpr hd_pos
+    _ = (d + 1 : ℝ)⁻¹ := by simp only [one_mul]
+
 lemma sum_const' {ι : Type*} {f : ι → ℝ} {c : ℝ} (X : Finset ι) (h : ∀ x ∈ X, f x = c) :
     ∑ x ∈ X, f x = X.card * c := by
   simp_all only [Finset.sum_const, nsmul_eq_mul]
@@ -95,15 +133,36 @@ theorem deleteIncidenceSet_degree {n : ℕ} (G : SimpleGraph (Fin n)) [Decidable
       Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, true_and, not_or]
     exact ⟨hw.ne, ne_symm hx.2⟩
 
+lemma subset_eq_inter {α : Type*} [DecidableEq α] {s₁ s₂ t : Finset α} (h : t ⊆ (s₁ \ s₂)) :
+    t ⊆ s₁ :=
+  fun _ hx ↦ Finset.mem_sdiff.mp (h hx) |>.1
+
+theorem deleteIncidenceSet_support {V : Type*} [DecidableEq V] (G : SimpleGraph V)
+    (X : Finset V) (hX : G.support ⊆ X) {v : V} :
+    (G.deleteIncidenceSet v).support ⊆ ((X \ {v}) : Finset V) := by
+  intro w
+  simp only [support, deleteIncidenceSet, incidenceSet, deleteEdges_adj, Prod.mk.eta,
+    Set.mem_setOf_eq, not_and, SetRel.mem_dom, mem_edgeSet, Sym2.mem_iff, not_or, Finset.coe_sdiff,
+    Finset.coe_singleton, Set.mem_diff, SetLike.mem_coe, Set.mem_singleton_iff, forall_exists_index,
+    and_imp]
+  intro x hwx h
+  constructor
+  · refine hX ?_
+    simp only [support, SetRel.mem_dom, Set.mem_setOf_eq]
+    exact ⟨x, hwx⟩
+  · exact Ne.symm <| h hwx |>.1
+
 theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
     (G : SimpleGraph (Fin n))
     [DecidableRel G.Adj]
     (hv : G.degree v = G.maxDegree)
-    (hΔ : G.maxDegree > 0)
+    {δ : ℕ}
+    (hΔ : G.maxDegree > δ)
     (X : Finset (Fin n))
     (hX : G.support ⊆ X)
-    (hγ : ∀ d, d > 0 → d ≤ G.maxDegree → (f (d - 1) - f d) ≥ (f (G.maxDegree - 1) - f G.maxDegree))
-    (hγ' : G.maxDegree * (f (G.maxDegree - 1) - f G.maxDegree) ≥ f G.maxDegree) :
+    (hγ : ∀ d₁ d₂, δ < d₁ → d₁ ≤ d₂ → f (d₂ - 1) - f d₂ ≤ f (d₁ - 1) - f d₁)
+    (hNv : ∀ x ∈ G.neighborFinset v, G.degree x > δ)
+    (hγ' : ∀ d, δ < d → d * (f (d - 1) - f d) ≥ f d) :
     ∑ x ∈ X, f (G.degree x) ≤ ∑ x ∈ (X \ {v}), f ((G.deleteIncidenceSet v).degree x) := by
   have Nv_subs_X : G.neighborFinset v ⊆ X := by
     intro x hx
@@ -123,7 +182,7 @@ theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
           refine Eq.symm <| Finset.sum_sdiff ?_
           simp only [Finset.singleton_subset_iff, Finset.mem_sdiff, mem_neighborFinset,
             SimpleGraph.irrefl, not_false_eq_true, and_true]
-          refine hX <| G.degree_pos_iff_mem_support v |>.mp (hv ▸ hΔ)
+          refine hX <| G.degree_pos_iff_mem_support v |>.mp (hv ▸ Nat.zero_lt_of_lt hΔ)
       _ = ∑ x ∈ ((X \ G.neighborFinset v) \ {v}), f ((G.deleteIncidenceSet v).degree x)
         + f (G.degree v)
         + ∑ x ∈ G.neighborFinset v, f (G.degree x) := by
@@ -193,12 +252,30 @@ theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
       simp only [sub_left_inj]
       exact congrArg _ <| deleteIncidenceSet_degree G v x hx
     _ ≥ ∑ x ∈ G.neighborFinset v, (f (G.maxDegree - 1) - f G.maxDegree) := by
-      refine Finset.sum_le_sum (fun x hx ↦ hγ (G.degree x) ?_ (G.degree_le_maxDegree _))
-      exact ((G.mem_neighborFinset v x).mp hx |>.degree_pos_right)
+      refine Finset.sum_le_sum ?_
+      exact fun x hx ↦ hγ (G.degree x) G.maxDegree (hNv x hx) (G.degree_le_maxDegree _)
     _ ≥ f (G.degree v) := by
       simp only [Finset.sum_const,
         card_neighborFinset_eq_degree, nsmul_eq_mul, ge_iff_le]
-      exact hv ▸ hγ'
+      exact hv ▸ hγ' G.maxDegree hΔ
+
+theorem cw_bound_deleteIncidenceSet_le (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
+    (G : SimpleGraph (Fin n))
+    [DecidableRel G.Adj]
+    (X : Finset (Fin n)) (hv : v ∈ X)
+    (hf : ∀ d d', d ≤ d' → f d' ≤ f d) :
+    ∑ x ∈ X, f (G.degree x)
+      ≤ ∑ x ∈ X \ {v}, f ((G.deleteIncidenceSet v).degree x) + f (G.degree v) := by
+  calc ∑ x ∈ X, f (G.degree x)
+    _ = ∑ x ∈ X \ {v}, f (G.degree x) + ∑ x ∈ {v}, f (G.degree x) :=
+      Eq.symm <| Finset.sum_sdiff <| Finset.singleton_subset_iff.mpr hv
+    _ = ∑ x ∈ X \ {v}, f (G.degree x) + f (G.degree v) := by simp only [Finset.sum_singleton]
+    _ ≤ ∑ x ∈ X \ {v}, f ((G.deleteIncidenceSet v).degree x) + f (G.degree v) := by
+      simp only [add_le_add_iff_right]
+      refine Finset.sum_le_sum ?_
+      intro w hw
+      refine hf _ _ ?_
+      exact degree_le_of_le <| G.deleteIncidenceSet_le v
 
 theorem bound_of_completeGraph (f : ℕ → ℝ) {n : ℕ}
     [DecidableRel (completeGraph (Fin (n + 1))).Adj] :
@@ -233,5 +310,125 @@ theorem CaroWeiTypeLB_le_1 (f : ℕ → ℝ)
         exact Nat.cast_le.mpr this
       refine le_trans (Finset.card_le_card <| Finset.subset_univ s) ?_
       simp only [Finset.card_univ, Fintype.card_fin, le_refl]
+
+lemma induced_degree_eq {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj]
+    (s : Finset V) (v : V) (hv : v ∈ s) :
+    (G.induce s).degree ⟨v, hv⟩ = (G.neighborFinset v ∩ s).card := by
+  rw [degree]
+  refine Set.BijOn.finsetCard_eq ?_ ⟨?_, ?_, ?_⟩
+  · exact fun x ↦ x.1
+  · intro x hx
+    simp only [SetLike.coe_sort_coe, coe_neighborFinset, mem_neighborSet, comap_adj,
+      Finset.coe_inter, Set.mem_inter_iff, Subtype.coe_prop, and_true] at hx ⊢
+    exact hx
+  · intro x hx y hy hne
+    simp_all
+  · intro y hy
+    simp only [Finset.coe_inter, coe_neighborFinset, Set.mem_inter_iff, mem_neighborSet,
+      SetLike.mem_coe, SetLike.coe_sort_coe, Set.mem_image, comap_adj, Subtype.exists,
+      exists_and_right, exists_eq_right] at hy ⊢
+    exact ⟨hy.2, hy.1⟩
+
+namespace SimpleGraph
+
+theorem exists_minimal_degree_vertex_in {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] (X : Finset V) [Nonempty X] :
+    ∃ v, v ∈ X ∧ ∀ w ∈ X, (G.neighborFinset v ∩ X).card ≤ (G.neighborFinset w ∩ X).card := by
+  obtain ⟨v, hv⟩ := (G.induce X).exists_minimal_degree_vertex
+  refine ⟨v.1, v.2, ?_⟩
+  intro w hw
+  calc (G.neighborFinset v ∩ X).card
+    _ = (G.induce X).degree v := Eq.symm <| induced_degree_eq G X v.1 v.2
+    _ = (G.induce X).minDegree := Eq.symm <| hv
+    _ ≤ (G.induce X).degree ⟨w, hw⟩ := (G.induce X).minDegree_le_degree _
+    _ = (G.neighborFinset w ∩ X).card := induced_degree_eq G X w hw
+
+theorem exists_maximal_degree_vertex_in {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] (X : Finset V) [Nonempty X] :
+    ∃ v, v ∈ X ∧ ∀ w ∈ X, (G.neighborFinset v ∩ X).card ≥ (G.neighborFinset w ∩ X).card := by
+  obtain ⟨v, hv⟩ := (G.induce X).exists_maximal_degree_vertex
+  refine ⟨v.1, v.2, ?_⟩
+  intro w hw
+  calc (G.neighborFinset v ∩ X).card
+    _ = (G.induce X).degree v := Eq.symm <| induced_degree_eq G X v.1 v.2
+    _ = (G.induce X).maxDegree := Eq.symm <| hv
+    _ ≥ (G.induce X).degree ⟨w, hw⟩ := (G.induce X).degree_le_maxDegree _
+    _ = (G.neighborFinset w ∩ X).card := induced_degree_eq G X w hw
+
+theorem degree_eq {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] (X : Finset V) (hX : G.support ⊆ X) :
+    ∀ x, G.degree x = (G.neighborFinset x ∩ X).card := by
+  intro x
+  rw [degree]
+  refine congrArg _ ?_
+  refine Finset.ext_iff.mpr ?_
+  intro y
+  constructor
+  · intro hy
+    simp_all only [mem_neighborFinset, Finset.mem_inter, true_and]
+    exact hX <| G.mem_support.mpr ⟨_, hy.symm⟩
+  · exact fun hy ↦ Finset.mem_inter.mp hy |>.1
+
+open Finset in
+lemma degree_eq' {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj]
+    (v : V) : G.degree v = (G.neighborFinset v ∩ G.support.toFinset).card := by
+  rw [degree]
+  refine congrArg _ ?_
+  ext w
+  constructor
+  · intro hw
+    have _ : w ∈ G.support := by
+      refine G.degree_pos_iff_mem_support w |>.mp ?_
+      exact Adj.degree_pos_left (G.mem_neighborFinset v w |>.mp hw).symm
+    simp_all only [mem_neighborFinset, mem_inter, Set.mem_toFinset, and_self]
+  · intro hx
+    exact mem_of_mem_filter w hx
+
+
+theorem minDegree_iff {V : Type*} [Fintype V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] {v : V} :
+    G.degree v = G.minDegree ↔ ∀ w, G.degree v ≤ G.degree w := by
+  if h : Nonempty V then
+    constructor
+    · intro hδ w
+      exact hδ ▸ G.minDegree_le_degree _
+    · intro h
+      obtain ⟨w, hw⟩ := G.exists_minimal_degree_vertex
+      exact Nat.le_antisymm (hw ▸ h w) (G.minDegree_le_degree _)
+  else
+    exact h (Nonempty.intro v) |>.elim
+
+theorem maxDegree_iff {V : Type*} [Fintype V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] {v : V} :
+    G.degree v = G.maxDegree ↔ ∀ w, G.degree w ≤ G.degree v := by
+  if h : Nonempty V then
+    constructor
+    · intro hΔ w
+      exact hΔ ▸ G.degree_le_maxDegree _
+    · intro h
+      obtain ⟨w, hw⟩ := G.exists_maximal_degree_vertex
+      exact (Nat.le_antisymm (G.degree_le_maxDegree _) (hw ▸ h w))
+  else
+    exact h (Nonempty.intro v) |>.elim
+
+theorem minDegree_iff' {V : Type*} [Fintype V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] {v : V}
+    (X : Finset V) (hX : X.Nonempty) (hv : v ∈ X) :
+    G.degree v = (X.image fun x ↦ G.degree x).min' (Finset.image_nonempty.mpr hX)
+      ↔ ∀ w ∈ X, G.degree v ≤ G.degree w := by
+  constructor
+  · intro hdegv w hw
+    exact hdegv ▸ Finset.min'_le _ _ (Finset.mem_image.mpr ⟨w, hw, rfl⟩)
+  · intro h
+    refine Nat.le_antisymm ?_ ?_
+    · refine Finset.le_min'_iff _ (Finset.image_nonempty.mpr hX) |>.mpr ?_
+      intro y
+      simp only [Finset.mem_image, forall_exists_index, and_imp]
+      intro z hz hdz
+      exact hdz ▸ h _ hz
+    · exact Finset.min'_le _ _ (Finset.mem_image_of_mem _ hv)
+
+end SimpleGraph
 
 #min_imports

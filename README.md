@@ -1,5 +1,7 @@
 # Caro-Wei type lower bounds in Lean
 
+## Context
+
 Formalisation of Caro-Wei type lower bounds for graph parameters.
 
 The general definition is as follows: a function $f : ℕ → ℝ$ is called a
@@ -34,17 +36,52 @@ SimpleGraph.degree.{u_1} {V : Type u_1} (G : SimpleGraph V) (v : V) [Fintype ↑
 ```
 And `Fintype (G.neighborSet v)` can be automatically deduced by `Fintype V` and `DecidableRel G.Adj`.
 
-Caro-Wei's theorem (1979, 1981) states that $\alpha(G) \ge \sum_{v \in V(G)} \frac {1}{d(v) + 1}$.
-Furthermore this bound is tight (in the sense that any such lower bound must satisfy $f(d) \le \frac {1}{d(v) + 1}$ (as witnessed by the complete graphs $K_n$.
+## Proved characterisations
 
-In Lean, this theorem is formalised by:
+### Caro-Wei's theorem for independent sets
+
+Caro-Wei's theorem (1979, 1981) states that $\alpha(G) \ge \sum_{v \in V(G)} \frac {1}{d(v) + 1}$.
+Furthermore this bound is tight (in the sense that any such lower bound must satisfy $f(d) \le \frac {1}{d(v) + 1}$ (as witnessed by the complete graphs $K_n$).
+
+In Lean, this theorem is formalised by (see `IndepSet.lean`):
 ```lean4
-noncomputable abbrev cw_bound : ℕ → ℝ := fun d ↦ (d + 1 : ℝ)⁻¹
+namespace CaroWeiType
+
+-- Conceptually: noncomputable abbrev cw_bound : ℕ → ℝ := fun d ↦ (d + 1 : ℝ)⁻¹
+-- but cw_bound is actually definde as `aks_bound 0` (see below)
 
 theorem IndepSet_LowerBound_iff (f : ℕ → ℝ) :
     IsCaroWeiTypeLowerBound f (fun {n : ℕ} (G : FiniteSimpleGraph n) s ↦ G.graph.IsIndepSet s)
       ↔ f ≤ cw_bound := by
 ```
+
+The proof in itself just consists in (1) the equivalence of $0$-degenerate sets and independent sets, and (2) Alon-Kahn-Seymour's theorem (see below).
+
+### Alon-Kahn-Seymour's theorem for $k$-degenerate induced subgraphs
+
+Caro-Wei's theorem (1987) states that if $\alpha_k(G)$ denotes the maximal size of an induced $k$-degenerate subgraph,
+then $\alpha_k(G) \ge \sum_{v \in V(G)} \min\{1, \frac {k + 1}{d(v) + 1}\}$,
+and this bound is tight (as witnessed by by the complete graphs).
+
+This is formalised as follows (see `Degenerate.lean`):
+```lean4
+namespace SimpleGraph
+
+abbrev IsDegenerateSet {V : Type*} [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj] (k : ℕ)
+    (s : Finset V) :=
+  ∀ t ⊆ s, t ≠ ∅ → ∃ x ∈ t, {y ∈ t | G.Adj x y}.card ≤ k
+
+namespace CaroWeiType
+
+noncomputable def aks_bound (k : ℕ) (d : ℕ) : ℝ :=
+  min 1 ((k + 1) * (d + 1 : ℝ)⁻¹)
+
+theorem kDegenerateSet_LowerBound_iff (f : ℕ → ℝ) :
+    ∀ k : ℕ,
+      IsCaroWeiTypeLowerBound f (fun G s ↦ G.graph.IsDegenerateSet k s)
+        ↔ f ≤ aks_bound k := by
+```
+
 
 # License
 
@@ -55,10 +92,12 @@ See the [LICENSE](https://github.com/RobinPetit/graphs-in-lean/blob/main/LICENSE
 # Done
 
 - [x] Generic definition
-- [x] proof of Caro-Wei's theorem (independent sets)
 - [x] get rid of `Classical.propDecidable` (by defining `FiniteSimpleGraph`)
+- [x] proof for independent sets (Caro-Wei)
+- [x] proof for $k$-degenerate induced subgraphs (Alon-Khhan-Seymour)
 
 # TODO
 
-- [ ] bound for $k$-degenerate induced subgraphs
+- [ ] bound for induced caterpillars (5/6 on leaves)
 - [ ] bound for degree-bounded induced caterpillars
+- [ ] bound for degree-bounded induced forests of stars
