@@ -1,4 +1,9 @@
 .lake/
-.github/
 
-*.json
+blueprint/lean_decls
+blueprint/print/
+blueprint/web/
+blueprint/src/web.paux
+
+docbuild/
+

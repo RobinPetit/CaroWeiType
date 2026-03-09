@@ -1,0 +1,26 @@
+% In this file you should put the actual content of the blueprint.
+% It will be used both by the web and the print version.
+% It should *not* include the \begin{document}
+%
+% If you want to split the blueprint content into several files then
+% the current file can be a simple sequence of \input. Otherwise It
+% can start with a \section or \chapter for instance.
+
+\chapter{Caro-Wei type lower bounds}
+
+\section{Definitions}
+
+Given a graph property $\pi : \mathcal G \to \{\bot, \top\}$, let $\alpha_\pi : \mathcal G \to \N$ be:
+\[\alpha_\pi(G) := \max\ \{\#s \st s \subseteq V(G) \text{ and } \pi(G[s])\},\]
+i.e. the maximal size of a vertex subset such that the graph induced by $W$ satisfies the property $\pi$.
+
+Therefore we have $\alpha_\pi(G) \ge k \iff \exists s \subseteq V(G) \st \pi(G[s]) \text{ and } \#s \ge k$.
+
+\begin{definition}[Caro-Wei type lower bound]\label{def:cwtype-lb}
+\lean{SimpleGraph.CaroWeiType.IsCaroWeiTypeLowerBound}
+\leanok
+A function $f : \N \to \R$ is called a \emph{Caro-Wei type lower bound} of the graph parameter $\pi : \mathcal G \to \{\bot, \top\}$ whenever the following inequality holds for every graph $G$:
+\[\alpha_\pi(G) \ge \sum_{v \in V(G)} f(d_G(v)).\]
+
+Intuitively, such a lower bound is one that only depends on the degree distribution of $G$.
+\end{definition}
