@@ -6,6 +6,15 @@ import Mathlib.Data.Real.Basic
 
 import CWType.SimpleGraph.CaroWeiType.Basic
 
+@[simp]
+lemma ne_of_mem_finset_empty_inter {α : Type*} [DecidableEq α]
+    {x y : α} (s t : Finset α)
+    (h : s ∩ t = ∅) (hx : x ∈ s) (hy : y ∈ t) :
+    x ≠ y := by
+  intro this
+  haveI := Finset.mem_inter.mpr ⟨hx, this ▸ hy⟩
+  grind
+
 open SimpleGraph
 open CaroWeiType
 
@@ -311,9 +320,9 @@ theorem CaroWeiTypeLB_le_1 (f : ℕ → ℝ)
       refine le_trans (Finset.card_le_card <| Finset.subset_univ s) ?_
       simp only [Finset.card_univ, Fintype.card_fin, le_refl]
 
-lemma induced_degree_eq {V : Type*} [Fintype V] [DecidableEq V]
+lemma induced_degree_eq {V : Type*} [DecidableEq V]
     (G : SimpleGraph V) [DecidableRel G.Adj]
-    (s : Finset V) (v : V) (hv : v ∈ s) :
+    (s : Finset V) (v : V) (hv : v ∈ s) [Fintype (G.neighborSet v)] :
     (G.induce s).degree ⟨v, hv⟩ = (G.neighborFinset v ∩ s).card := by
   rw [degree]
   refine Set.BijOn.finsetCard_eq ?_ ⟨?_, ?_, ?_⟩
@@ -329,6 +338,16 @@ lemma induced_degree_eq {V : Type*} [Fintype V] [DecidableEq V]
       SetLike.mem_coe, SetLike.coe_sort_coe, Set.mem_image, comap_adj, Subtype.exists,
       exists_and_right, exists_eq_right] at hy ⊢
     exact ⟨hy.2, hy.1⟩
+
+lemma induced_degree_eq' {n : ℕ}
+    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (s : Finset (Fin n)) (v : Fin n) (hv : v ∈ s) :
+    (G.induce s).degree ⟨v, hv⟩ = ({w ∈ s | G.Adj v w}).card := by
+  classical
+  rw [induced_degree_eq]
+  refine congrArg _ ?_
+  ext w
+  simp only [Finset.mem_inter, mem_neighborFinset, Finset.mem_filter, And.comm]
 
 namespace SimpleGraph
 

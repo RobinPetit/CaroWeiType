@@ -116,44 +116,137 @@ open Finset
 
 namespace SimpleGraph
 
-abbrev IsDegenerateSet {V : Type*} [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj] (k : ℕ)
-    (s : Finset V) :=
+abbrev IsDegenerateSet {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (k : ℕ)
+    (s : Finset (Fin n)) :=
   ∀ t ⊆ s, t ≠ ∅ → ∃ x ∈ t, {y ∈ t | G.Adj x y}.card ≤ k
 
-lemma isDegenerate_mono {V : Type*} [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj] (k : ℕ)
-    (s : Finset V) : G.IsDegenerateSet k s → ∀ s' ⊆ s, G.IsDegenerateSet k s' := by
+lemma IsDegenerateSet_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
+    [DecidableRel G₁.Adj] [DecidableRel G₂.Adj] (hle : G₁ ≤ G₂) (k : ℕ)
+    (s : Finset (Fin n)) (h : G₂.IsDegenerateSet k s) : G₁.IsDegenerateSet k s := by
+  intro t ht htne
+  obtain ⟨x, hx, hxdeg⟩ := h t ht htne
+  refine ⟨x, hx, le_trans ?_ hxdeg⟩
+  refine Finset.card_le_card ?_
+  intro y hy
+  simp only [mem_filter] at hy ⊢
+  exact ⟨hy.1, hle hy.2⟩
+
+lemma IsDegenerateSet_mono' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (k : ℕ)
+    (s₁ s₂ : Finset (Fin n)) (hs : s₁ ∩ s₂ = ∅)
+    (h : (G.deleteIncidencesOf s₂).IsDegenerateSet k s₁) :
+    G.IsDegenerateSet k s₁ := by
+  intro t ht htne
+  obtain ⟨x, hx, hxdeg⟩ := h t ht htne
+  refine ⟨x, hx, ?_⟩
+  suffices #({y ∈ t | (G.deleteIncidencesOf s₂).Adj x y}) = #({y ∈ t | G.Adj x y}) by
+    exact this ▸ hxdeg
+  refine congrArg _ ?_
+  ext y
+  simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, inf_adj, iInf_adj,
+    deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq,
+    mem_filter, and_congr_right_iff, and_iff_left_iff_imp]
+  intro hy hxy
+  refine ⟨fun w ↦ ⟨fun hw ↦ ⟨hxy, ?_⟩, hxy.ne⟩, hxy.ne⟩
+  intro _
+  constructor <;> {
+    intro this; suffices w ∈ s₁ ∩ s₂ by simp_all;
+    grind; }
+
+lemma IsDegenerate_iff_induce {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (k : ℕ) (s : Finset (Fin n)) :
+    G.IsDegenerateSet k s ↔
+      ∀ t ⊆ s, t ≠ ∅ → (G.induce t).minDegree ≤ k := by
+  constructor
+  · intro h t ht htne
+    obtain ⟨x, hx, hxdeg⟩ := h t ht htne
+    refine le_trans ((G.induce t).minDegree_le_degree ⟨x, hx⟩) ?_
+    rw [induced_degree_eq']
+    exact hxdeg
+  · intro h t ht htne
+    have _ : Nonempty t := Nonempty.to_subtype <| nonempty_iff_ne_empty.mpr htne
+    obtain ⟨⟨x, hx⟩, hxdeg⟩ := (G.induce t).exists_minimal_degree_vertex
+    refine ⟨x, hx, ?_⟩
+    rw [← induced_degree_eq' G t x hx]
+    refine le_trans (le_of_eq ?_) (h t ht htne)
+    exact hxdeg.symm
+
+theorem minDegree_le_degeracy {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (k : ℕ) (s : Finset (Fin n)) (hs : G.IsDegenerateSet k s) :
+    (G.induce s).minDegree ≤ k := by
+  if hsempty : s = ∅ then
+    suffices (G.induce s).minDegree = 0 by simp [this]
+    suffices G.induce s = ⊥ by simp [this]
+    refine edgeFinset_eq_empty.mp ?_
+    rw [hsempty]
+    ext _
+    simp
+  else
+    exact IsDegenerate_iff_induce G k s |>.mp hs s (subset_refl _) hsempty
+
+lemma isDegenerate_mono {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (k : ℕ)
+    (s : Finset (Fin n)) : G.IsDegenerateSet k s → ∀ s' ⊆ s, G.IsDegenerateSet k s' := by
   intro h s' hs' t ht htnonempty
   exact h t (subset_trans ht hs') htnonempty
 
 @[simp]
-lemma emptyset_IsDegenerate {V : Type*} [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj] :
+lemma emptyset_IsDegenerate {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] :
     ∀ k : ℕ, G.IsDegenerateSet k ∅ := by
   intro k
   simp [IsDegenerateSet]
 
-theorem Is1DegenerateSet_iff_IsIndepSet {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (s : Finset (Fin n)) :
-    G.IsDegenerateSet 0 s ↔ G.IsIndepSet s := by
-  constructor
-  · intro h x hx y hy hne hxy
-    obtain ⟨z, ⟨hz, h⟩⟩ := h {x, y} (by grind) (by simp)
-    simp only [mem_insert, mem_singleton] at hz
-    simp only [nonpos_iff_eq_zero, card_eq_zero, filter_eq_empty_iff, mem_insert, mem_singleton,
-      forall_eq_or_imp, forall_eq] at h
-    cases hz with
-    | inl hz => exact h.2 (hz ▸ hxy)
-    | inr hz => exact h.1 <| (hz ▸ hxy.symm)
-  · intro h s' hs' hs'ne
-    obtain x := @Classical.choice s' <| Nonempty.to_subtype (by grind)
-    refine ⟨x.1, x.2, ?_⟩
-    simp only [nonpos_iff_eq_zero, card_eq_zero, filter_eq_empty_iff]
-    intro y hy
-    if hxy : x = y then
-      exact hxy.symm ▸ G.irrefl
-    else
-      exact h (hs' x.2) (hs' hy) hxy
-
 namespace CaroWeiType
+
+lemma neighbourFinset_cap_eq {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (s : Finset (Fin n)) (v : (Fin n)) :
+    {x ∈ s | G.Adj v x} = G.neighborFinset v ∩ s := by
+  ext x
+  constructor <;>
+    { simp only [mem_filter, mem_inter, mem_neighborFinset, and_imp, p_and_p_implies];
+      exact fun a _ ↦ a }
+
+theorem DegenerateSet_mono_bounded_degree_not_in {n : ℕ} (G : SimpleGraph (Fin n))
+    [DecidableRel G.Adj] (k : ℕ) (s : Finset (Fin n)) {v : Fin n}
+    (hs : (G.deleteIncidenceSet v).IsDegenerateSet k s)
+    (hvs : v ∉ s) :
+    G.IsDegenerateSet k s := by
+  intro t ht htne
+  have hvt : v ∉ t := fun this ↦ hvs <| ht this
+  obtain ⟨x, ⟨hxt, hcard⟩⟩ := hs t ht htne
+  refine ⟨x, hxt, ?_⟩
+  refine le_trans ?_ hcard
+  refine Finset.card_le_card ?_
+  intro y hy
+  simp_all only [deleteIncidenceSet, incidenceSet, ne_eq, deleteEdges_adj, Set.mem_setOf_eq,
+    mem_edgeSet, Sym2.mem_iff, not_and, not_or, mem_filter, forall_const, true_and]
+  constructor
+  · exact fun hveqx ↦ hvt (hveqx ▸ hxt)
+  · exact fun hveqx ↦ hvt (hveqx ▸ hy.1)
+
+theorem DegenerateSet_mono_bounded_degree_in {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (k : ℕ) (s : Finset (Fin n)) {v : Fin n}
+    (hs : (G.deleteIncidenceSet v).IsDegenerateSet k s)
+    (hv : (G.neighborFinset v ∩ s).card ≤ k) :
+    G.IsDegenerateSet k s := by
+  intro t ht htne
+  if hvt : v ∈ t then
+    refine ⟨v, hvt, ?_⟩
+    let bla := hs t ht htne
+    calc #({y ∈ t | G.Adj v y})
+      _ = (G.neighborFinset v ∩ t).card := congrArg _ <| neighbourFinset_cap_eq G t v
+      _ ≤ (G.neighborFinset v ∩ s).card :=
+        Finset.card_le_card <| Finset.inter_subset_inter (subset_refl _) ht
+      _ ≤ k := hv
+  else
+    obtain ⟨x, ⟨hxt, hcard⟩⟩ := hs t ht htne
+    refine ⟨x, hxt, ?_⟩
+    refine le_trans ?_ hcard
+    refine Finset.card_le_card ?_
+    intro y hy
+    simp_all only [deleteIncidenceSet, incidenceSet, ne_eq, deleteEdges_adj, Set.mem_setOf_eq,
+      mem_edgeSet, Sym2.mem_iff, not_and, not_or, mem_filter, forall_const, true_and]
+    constructor
+    · exact fun hveqx ↦ hvt (hveqx ▸ hxt)
+    · exact fun hveqx ↦ hvt (hveqx ▸ hy.1)
 
 theorem kDegenerateSetClique_iff_le_k_plus_one (k : ℕ) {n : ℕ} (s : Finset (Fin n))
     [DecidableRel (completeGraph (Fin n)).Adj] :
@@ -183,62 +276,9 @@ theorem kDegenerateSetClique_iff_le_k_plus_one (k : ℕ) {n : ℕ} (s : Finset (
         exact Nat.sub_le_sub_right (card_le_card hs') _
       _ ≤ k := by grind
 
-lemma neighbourFinset_cap_eq {V : Type*} [Fintype V] [DecidableEq V]
-    (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) (v : V) :
-    {x ∈ s | G.Adj v x} = G.neighborFinset v ∩ s := by
-  ext x
-  constructor <;>
-    { simp only [mem_filter, mem_inter, mem_neighborFinset, and_imp, p_and_p_implies];
-      exact fun a _ ↦ a }
-
-theorem DegenerateSet_mono_bounded_degree_not_in {V : Type*} [Fintype V] [DecidableEq V]
-    (G : SimpleGraph V) [DecidableRel G.Adj] (k : ℕ) (s : Finset V) {v : V}
-    (hs : (G.deleteIncidenceSet v).IsDegenerateSet k s)
-    (hvs : v ∉ s) :
-    G.IsDegenerateSet k s := by
-  intro t ht htne
-  have hvt : v ∉ t := fun this ↦ hvs <| ht this
-  obtain ⟨x, ⟨hxt, hcard⟩⟩ := hs t ht htne
-  refine ⟨x, hxt, ?_⟩
-  refine le_trans ?_ hcard
-  refine Finset.card_le_card ?_
-  intro y hy
-  simp_all only [deleteIncidenceSet, incidenceSet, ne_eq, deleteEdges_adj, Set.mem_setOf_eq,
-    mem_edgeSet, Sym2.mem_iff, not_and, not_or, mem_filter, forall_const, true_and]
-  constructor
-  · exact fun hveqx ↦ hvt (hveqx ▸ hxt)
-  · exact fun hveqx ↦ hvt (hveqx ▸ hy.1)
-
-theorem DegenerateSet_mono_bounded_degree_in {V : Type*} [Fintype V] [DecidableEq V]
-    (G : SimpleGraph V) [DecidableRel G.Adj] (k : ℕ) (s : Finset V) {v : V}
-    (hs : (G.deleteIncidenceSet v).IsDegenerateSet k s)
+theorem DegenerateSet_union_singleton {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (k : ℕ) (s : Finset (Fin n)) (hs : G.IsDegenerateSet k s) {v : Fin n}
     (hv : (G.neighborFinset v ∩ s).card ≤ k) :
-    G.IsDegenerateSet k s := by
-  intro t ht htne
-  if hvt : v ∈ t then
-    refine ⟨v, hvt, ?_⟩
-    let bla := hs t ht htne
-    calc #({y ∈ t | G.Adj v y})
-      _ = (G.neighborFinset v ∩ t).card := congrArg _ <| neighbourFinset_cap_eq G t v
-      _ ≤ (G.neighborFinset v ∩ s).card :=
-        Finset.card_le_card <| Finset.inter_subset_inter (subset_refl _) ht
-      _ ≤ k := hv
-  else
-    obtain ⟨x, ⟨hxt, hcard⟩⟩ := hs t ht htne
-    refine ⟨x, hxt, ?_⟩
-    refine le_trans ?_ hcard
-    refine Finset.card_le_card ?_
-    intro y hy
-    simp_all only [deleteIncidenceSet, incidenceSet, ne_eq, deleteEdges_adj, Set.mem_setOf_eq,
-      mem_edgeSet, Sym2.mem_iff, not_and, not_or, mem_filter, forall_const, true_and]
-    constructor
-    · exact fun hveqx ↦ hvt (hveqx ▸ hxt)
-    · exact fun hveqx ↦ hvt (hveqx ▸ hy.1)
-
-
-theorem DegenerateSet_union_singleton {V : Type*} [Fintype V] [DecidableEq V]
-    (G : SimpleGraph V) [DecidableRel G.Adj] (k : ℕ) (s : Finset V)
-    (hs : G.IsDegenerateSet k s) {v : V} (hv : (G.neighborFinset v ∩ s).card ≤ k) :
     G.IsDegenerateSet k (s ∪ {v}) := by
   intro t ht htne
   if hvt : v ∈ t then
@@ -383,17 +423,6 @@ theorem AlonKahnSeymour {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
             grind
       refine le_of_eq ?_
       exact Eq.symm <| avg_gain d (by exact Nat.zero_lt_of_lt hd)
-
-theorem IndepSet_LowerBound_iff_1DegenerateSet_LowerBound (f : ℕ → ℝ) :
-    IsCaroWeiTypeLowerBound f (fun G s ↦ G.graph.IsIndepSet s)
-      ↔ IsCaroWeiTypeLowerBound f (fun G s ↦ G.graph.IsDegenerateSet 0 s) := by
-  constructor <;> refine fun h n G ↦ ⟨h G |>.choose, ?_⟩
-  · obtain ⟨hsprop, hscard⟩ := h G |>.choose_spec
-    refine ⟨?_, hscard⟩
-    exact Is1DegenerateSet_iff_IsIndepSet G.graph _ |>.mpr hsprop
-  · obtain ⟨hsprop, hscard⟩ := h G |>.choose_spec
-    refine ⟨?_, hscard⟩
-    exact Is1DegenerateSet_iff_IsIndepSet G.graph _ |>.mp hsprop
 
 theorem DegenerateSet_LowerBound (k : ℕ) :
     IsCaroWeiTypeLowerBound (aks_bound k) (fun G s ↦ G.graph.IsDegenerateSet k s) := by
