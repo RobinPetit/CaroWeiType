@@ -161,6 +161,11 @@ theorem deleteIncidenceSet_support {V : Type*} [DecidableEq V] (G : SimpleGraph 
     exact ⟨x, hwx⟩
   · exact Ne.symm <| h hwx |>.1
 
+lemma deleteIncidencesOf_singleton_eq_deleteIncidenceSet
+    {n : ℕ} (G : SimpleGraph (Fin n)) (v : Fin n) :
+    G.deleteIncidencesOf {v} = G.deleteIncidenceSet v := by
+  simp [deleteIncidencesOf, deleteIncidenceSet_le]
+
 theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
     (G : SimpleGraph (Fin n))
     [DecidableRel G.Adj]
