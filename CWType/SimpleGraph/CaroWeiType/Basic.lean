@@ -1,10 +1,21 @@
--- import Mathlib
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Combinatorics.SimpleGraph.Clique
 import Mathlib.Combinatorics.SimpleGraph.Finite
 import Mathlib.Data.Real.Basic
 
 namespace SimpleGraph
+
+def closed_neighborFinset_of_Finset {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) : Finset V :=
+  {v : V | v ∈ s ∨ ∃ x ∈ s, G.Adj v x}
+
+def N2 {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] (v : V) : Finset V :=
+  {u : V | u ≠ v ∧ ¬G.Adj u v ∧ ∃ w, G.Adj u w ∧ G.Adj w v}
+
+def N2_of_Finset {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) : Finset V :=
+  {u : V | u ∉ s ∧ (∀ x ∈ s, ¬G.Adj u x) ∧ ∃ x ∈ s, ∃ w ∉ s, G.Adj u w ∧ G.Adj w x}
 
 def deleteIncidencesOf {n : ℕ} (G : SimpleGraph (Fin n)) (s : Finset (Fin n)) :
     SimpleGraph (Fin n) :=
@@ -49,13 +60,6 @@ structure FiniteSimpleGraph (n : ℕ) where
 
 instance {n : ℕ} {G : FiniteSimpleGraph n} : DecidableRel G.graph.Adj := G.decAdj
 
--- instance {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (s : Set (Fin n)) :
---     DecidableRel (G.induce s).Adj := by
---   intro ⟨v, hv⟩ ⟨w, hw⟩
---   simp only [comap_adj, Function.Embedding.subtype_apply]
---   infer_instance
-
-
 @[simp]
 abbrev FiniteCompleteGraph (n : ℕ) : FiniteSimpleGraph n where
   graph := completeGraph (Fin n)
@@ -81,4 +85,3 @@ theorem CaroWeiTypeLowerBound_mono {π : {n : ℕ} → FiniteSimpleGraph n → F
 
 end CaroWeiType
 end SimpleGraph
-#min_imports

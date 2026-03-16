@@ -89,14 +89,43 @@ See the [LICENSE](https://github.com/RobinPetit/graphs-in-lean/blob/main/LICENSE
 
 # Features
 
-# Done
+## WIP
+
+Complete characterization of CW-type lower bounds for induced bounded-degree caterpillars
+
+- [ ] ABC Lemma
+  - [x] Claim 0
+  - [x] Claim 1
+  - [x] Claim 2
+  - [ ] Claim 3
+  - [ ] Claim 4
+  - [ ] Claim 5
+  - [ ] Claim 6
+  - [ ] Claim 7
+  - [ ] Claim 8
+  - [ ] Claim 9
+  - [ ] Claim 10
+  - [ ] Claim 11
+  - [ ] Claim 12
+  - [ ] Claim 13
+  - [ ] define `vstar`
+  - [ ] Claim 14
+  - [ ] Claim 15
+  - [ ] Claim 16
+  - [ ] Claim 17
+  - [ ] Claim 18
+  - [ ] Claim 19
+  - [ ] Claim 20
+  - [ ] Finish
+
+## Done
 
 - [x] Generic definition
 - [x] get rid of `Classical.propDecidable` (by defining `FiniteSimpleGraph`)
 - [x] proof for independent sets (Caro-Wei)
 - [x] proof for $k$-degenerate induced subgraphs (Alon-Khhan-Seymour)
 
-# TODO
+## TODO
 
 - [ ] bound for induced caterpillars (5/6 on leaves)
 - [ ] bound for degree-bounded induced caterpillars

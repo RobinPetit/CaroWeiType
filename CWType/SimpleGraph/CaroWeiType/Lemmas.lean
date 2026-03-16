@@ -1,5 +1,3 @@
--- import Mathlib
-
 import Mathlib.Combinatorics.SimpleGraph.DeleteEdges
 import Mathlib.Algebra.Order.BigOperators.Group.Finset
 import Mathlib.Data.Real.Basic
@@ -161,10 +159,26 @@ theorem deleteIncidenceSet_support {V : Type*} [DecidableEq V] (G : SimpleGraph 
     exact ⟨x, hwx⟩
   · exact Ne.symm <| h hwx |>.1
 
+lemma closed_neighborFinset_contains_Finset {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) :
+    s ⊆ G.closed_neighborFinset_of_Finset s := by
+  intro u hu
+  simp only [closed_neighborFinset_of_Finset, Finset.mem_filter, Finset.mem_univ, true_and]
+  exact Or.symm (Or.inr hu)
+
 lemma deleteIncidencesOf_singleton_eq_deleteIncidenceSet
     {n : ℕ} (G : SimpleGraph (Fin n)) (v : Fin n) :
     G.deleteIncidencesOf {v} = G.deleteIncidenceSet v := by
   simp [deleteIncidencesOf, deleteIncidenceSet_le]
+
+lemma deleteIncidencesOf_notadj {n : ℕ} (G : SimpleGraph (Fin n)) {s : Finset (Fin n)}
+    {x y : Fin n} (hx : x ∈ s) :
+    ¬(G.deleteIncidencesOf s).Adj x y := by
+  simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, inf_adj, iInf_adj,
+    deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq,
+    Decidable.not_not]
+  intro hxy h
+  exact false_of_ne (h x |>.1 hx |>.2 hxy |>.1) |>.elim
 
 theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
     (G : SimpleGraph (Fin n))
@@ -454,5 +468,3 @@ theorem minDegree_iff' {V : Type*} [Fintype V]
     · exact Finset.min'_le _ _ (Finset.mem_image_of_mem _ hv)
 
 end SimpleGraph
-
-#min_imports
