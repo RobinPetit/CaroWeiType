@@ -1,5 +1,3 @@
-import Mathlib
-
 import Mathlib.Combinatorics.SimpleGraph.Acyclic
 
 import CWType.SimpleGraph.CaroWeiType.Lemmas
@@ -63,7 +61,54 @@ structure Tripartition (n : ℕ) where
   sound : ∀ x, ¬(A x ∧ B x) ∧ ¬(A x ∧ C x) ∧ ¬(B x ∧ C x)
   -- cover : ∀ x, (A x ∨ B x ∨ C x)
 
+private def demote_A {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hv : ABC.A v) :
+    Tripartition n where
+  A w := ABC.A w ∧ w ≠ v
+  B w := ABC.B w ∨ w = v
+  C w := ABC.C w
+  sound := fun x ↦ by grind [ABC.sound x]
+
+private def demote_B {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hv : ABC.B v) :
+    Tripartition n where
+  A w := ABC.A w
+  B w := ABC.B w ∧ w ≠ v
+  C w := ABC.C w ∨ w = v
+  sound := fun x ↦ by grind [ABC.sound x]
+
 namespace Tripartition
+
+noncomputable def demote {n : ℕ} (ABC : Tripartition n) (v : Fin n) : Tripartition n := by
+  if hA : ABC.A v then exact demote_A ABC hA
+  else if hB : ABC.B v then exact demote_B ABC hB
+  else exact ABC
+
+@[simp]
+lemma demote_from_A {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.A v) :
+    (ABC.demote v).B v := by
+  simp [demote, demote_A, hv]
+
+@[simp]
+lemma demote_from_A' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.A v) :
+    ¬(ABC.demote v).A v := by
+  exact fun hA ↦ (ABC.demote v).sound v |>.1 ⟨hA, ABC.demote_from_A v hv⟩
+
+@[simp]
+lemma demote_from_B {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
+    (ABC.demote v).C v := by
+  have hA : ¬ABC.A v := fun hA ↦ (ABC.sound v).1 ⟨hA, hv⟩
+  simp [demote, demote_B, hv, hA]
+
+@[simp]
+lemma demote_from_B' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
+    ¬(ABC.demote v).B v := by
+  exact fun hB ↦ (ABC.demote v).sound v |>.2.2 ⟨hB, ABC.demote_from_B v hv⟩
+
+@[simp]
+lemma demote_from_C {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.C v) :
+    (ABC.demote v).C v := by
+  have hA : ¬ABC.A v := fun hA ↦ (ABC.sound v).2.1 ⟨hA, hv⟩
+  have hB : ¬ABC.B v := fun hB ↦ (ABC.sound v).2.2 ⟨hB, hv⟩
+  simp [demote, hA, hB, hv]
 
 instance {n : ℕ} : Membership (Fin n) (Tripartition n) :=
   ⟨fun ABC x ↦ ABC.A x ∨ ABC.B x ∨ ABC.C x⟩
@@ -219,13 +264,13 @@ noncomputable def fB (d : ℕ) : ℝ :=
   if d = 0 then 1
   else if d = 1 then 5 / (6 : ℝ)
   else if d = 2 then 1 / (3 : ℝ)
-  else 4 / (3 * (d + 1 : ℝ))
+  else (4 / 3) / (d + 1 : ℝ)
 
 @[simp]
 noncomputable def fC (d : ℕ) : ℝ :=
   if d = 0 then 1
   else if d = 1 ∨ d = 2 then 1 / (3 : ℝ)
-  else 2 / (3 * (d + 1 : ℝ))
+  else (2 / 3) / (d + 1 : ℝ)
 
 lemma fA_decreasing {d d' : ℕ} (h : d ≤ d') : fA d' ≤ fA d := by
   if heq : d = d' then exact le_of_eq (heq ▸ rfl) else ?_
@@ -258,8 +303,7 @@ lemma fB_decreasing {d d' : ℕ} (h : d ≤ d') : fB d' ≤ fB d := by
     intro hd'
     split_ifs
     any_goals grind
-    calc 4 / (3 * (d' + 1 : ℝ))
-      _ = 4 / (3 : ℝ) / (d' + 1 : ℝ) := by grind
+    calc (4 / 3) / (d' + 1 : ℝ)
       _ ≤ 4 / (3 : ℝ) / (3 + 1 : ℝ) := by
         ring_nf
         have h : (1 + d' : ℝ)⁻¹ * (4 / 3) = (1 + d' : ℝ)⁻¹ * 4 * 3⁻¹ := by grind
@@ -278,7 +322,7 @@ lemma fB_decreasing {d d' : ℕ} (h : d ≤ d') : fB d' ≤ fB d := by
   split_ifs
   any_goals grind
   ring_nf
-  simp only [Nat.ofNat_pos, mul_le_mul_iff_left₀, ge_iff_le]
+  simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀, ge_iff_le]
   refine inv_anti₀ (by grind) (by simp [h])
 
 lemma fC_decreasing {d d' : ℕ} (h : d ≤ d') : fC d' ≤ fC d := by
@@ -287,21 +331,23 @@ lemma fC_decreasing {d d' : ℕ} (h : d ≤ d') : fC d' ≤ fC d := by
   any_goals grind
   · ring_nf
     have h' : 3 ≤ d' := by grind
-    calc (3 + d' * 3 : ℝ)⁻¹ * 2
-      _ ≤ (3 + 3 * 3 : ℝ)⁻¹ * 2 := by
-        simp only [Nat.ofNat_pos, mul_le_mul_iff_left₀]
-        refine inv_anti₀ (by grind) (by simp [h'])
+    calc (1 + d' : ℝ)⁻¹ * (2 / 3)
+      _ ≤ (1 + 1 : ℝ)⁻¹ * (2 / 3) := by
+        simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
+        refine inv_anti₀ (by grind) ?_
+        rw [← Nat.cast_one, ← Nat.cast_add, ← Nat.cast_add]
+        refine Nat.cast_le.mpr (by grind)
       _ ≤ 1 := by grind
   · ring_nf
     simp only [one_div]
     have h' : 3 ≤ d' := by grind
-    calc (3 + d' * 3 : ℝ)⁻¹ * 2
-      _ ≤ (3 + 3 * 3 : ℝ)⁻¹ * 2 := by
-        simp only [Nat.ofNat_pos, mul_le_mul_iff_left₀]
+    calc (1 + d' : ℝ)⁻¹ * (2 / 3)
+      _ ≤ (1 + 3 : ℝ)⁻¹ * (2 / 3) := by
+        simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
         refine inv_anti₀ (by grind) (by simp [h'])
       _ ≤ 3⁻¹ := by grind
   · ring_nf
-    simp only [Nat.ofNat_pos, mul_le_mul_iff_left₀]
+    simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
     refine inv_anti₀ (by grind) (by simp [h])
 
 @[simp]
@@ -345,7 +391,7 @@ lemma f_pos_of_mem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC
     split_ifs
     any_goals grind
     ring_nf
-    simp only [Nat.ofNat_pos, mul_pos_iff_of_pos_right, inv_pos]
+    simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_pos_iff_of_pos_right, inv_pos]
     grind
   · have hA' : ¬ABC.A v := by grind [ABC.sound]
     have hB' : ¬ABC.B v := by grind [ABC.sound]
@@ -353,7 +399,7 @@ lemma f_pos_of_mem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC
     split_ifs
     any_goals grind
     ring_nf
-    simp only [Nat.ofNat_pos, mul_pos_iff_of_pos_right, inv_pos]
+    simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_pos_iff_of_pos_right, inv_pos]
     grind
 
 lemma f_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
@@ -518,7 +564,6 @@ lemma eval_lt {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         grind
       rw [add_comm, inter_comm, h']
       exact Finset.sum_inter_add_sum_diff ..
-
 
 @[simp, reducible]
 private def Objective {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
@@ -918,9 +963,7 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
             exact inv_anti₀ four_pos this
           _ ≤ 1 / (3 : ℝ) := by grind
       exact Nat.cast_le.mpr <| by grind
-    · refine div_le_div_iff_of_pos_left four_pos (by grind) (by grind) |>.mpr ?_
-      simp only [Nat.ofNat_pos, mul_le_mul_iff_right₀]
-      have _ : ((1 : ℕ) : ℝ) = 1 := by exact Nat.cast_one
+    · refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr ?_
       rw [← Nat.cast_one, ← Nat.cast_add _ 1]
       exact Nat.cast_le.mpr hdeg
  else if hC : ABC.C w then
@@ -945,8 +988,7 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           refine inv_anti₀ two_pos ?_
           exact @Nat.cast_two ℝ _ ▸ Nat.cast_le.mpr (by grind)
         _ ≤ (1 / (3 : ℝ)) := by grind
-    · refine div_le_div_iff_of_pos_left two_pos (by grind) (by grind) |>.mpr ?_
-      simp only [Nat.ofNat_pos, mul_le_mul_iff_right₀]
+    · refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr ?_
       rw [← Nat.cast_one, ← Nat.cast_add]
       exact Nat.cast_le.mpr hdeg
   else
@@ -1095,9 +1137,6 @@ private lemma Corollary2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj
   simp only [le_add_iff_nonneg_right]
   refine sum_nonneg <| fun _ _ ↦ γ_nonneg G ABC
 
-private lemma tmp {x y z : ℝ} (h : x ≤ y - z) : x + z ≤ y := by
-  exact le_sub_iff_add_le.mp h
-
 private lemma Claim3 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
@@ -1151,6 +1190,112 @@ private lemma Corollary3 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj
           exact mul_inv_cancel₀ <| Nat.cast_ne_zero.mpr hdegv
         grind
 
+-- set_option maxHeartbeats 215000 in
+private lemma Claim4 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
+    (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n}
+    (h : G.degree v = G'.degree v + 1) : f G ABC v - f G' (ABC.demote v) v ≤ 1 / (6 : ℝ) := by
+  simp only [f, fA, h, Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte, Nat.add_eq_right,
+    Nat.cast_add, Nat.cast_one, fB, Nat.reduceEqDiff, fC, dite_eq_ite, tsub_le_iff_right]
+  have H : 2 / (G'.degree v + 1 + 1 : ℝ) ≤ 1 := by
+    ring_nf
+    calc ((2 : ℝ) + G'.degree v)⁻¹ * 2
+      _ ≤ (2 : ℝ)⁻¹ * 2 := by
+        refine mul_le_mul_iff_of_pos_right two_pos |>.mpr ?_
+        refine inv_anti₀ two_pos (by simp)
+      _ = 1 := by simp
+  have H' : 3 ≤ G'.degree v → (2 / 3) / (G'.degree v + 1 : ℝ) ≤ 1 / 6 := by
+    intro h
+    calc (2 / 3) / (G'.degree v + 1 : ℝ)
+      _ ≤ (2 / 3) / (4 : ℝ) := by
+        refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr ?_
+        rw [← Nat.cast_one, ← Nat.cast_four, ← Nat.cast_add]
+        refine Nat.cast_le.mpr (by grind)
+      _ ≤ 1 / 6 := by grind
+  if hA : ABC.A v then
+    simp only [hA, ↓reduceIte, Tripartition.demote_from_A', Tripartition.demote_from_A, ge_iff_le]
+    split_ifs
+    any_goals grind
+    · calc 2 / ((G'.degree v) + 1 + 1 : ℝ)
+        _ = 2 / (4 : ℝ) := by
+          refine congrArg (fun x ↦ 2 / x) ?_
+          rw [← Nat.cast_one, ← Nat.cast_add, ← Nat.cast_add, ← Nat.cast_four, Nat.cast_inj]
+          grind
+        _ ≤ 1 / 6 + 1 / 3 := by grind
+    · calc 2 / (G'.degree v + 1 + 1 : ℝ)
+        _ = 2 * (G'.degree v + 1 + 1 : ℝ)⁻¹ := by ring_nf
+        _ ≤ 2 * (G'.degree v + 1 : ℝ)⁻¹ := by
+          simp only [Nat.ofNat_pos, mul_le_mul_iff_right₀]
+          refine inv_anti₀ (Nat.cast_add_one_pos _) (by grind)
+        _ = (2 / 3) * (G'.degree v + 1 : ℝ)⁻¹ + (4 / 3) * (G'.degree v + 1 : ℝ)⁻¹ := by
+          grind
+        _ ≤ 1 / 6 + (4 / 3) * (G'.degree v + 1 : ℝ)⁻¹ := by
+          simp only [add_le_add_iff_right]
+          exact H' (by grind)
+  else if hB : ABC.B v then
+    simp only [hA, ↓reduceIte, hB, Tripartition.demote_from_B', Tripartition.demote_from_B,
+      ge_iff_le]
+    split_ifs
+    any_goals grind
+    · calc (4 / 3) / (G'.degree v + 1 + 1 : ℝ)
+        _ ≤ (4 / 3) / (G'.degree v + 1 : ℝ) := by
+          refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr ?_
+          simp only [le_add_iff_nonneg_right, zero_le_one]
+        _ ≤ 2 / (G'.degree v + 1 : ℝ) := by
+          ring_nf
+          refine mul_le_mul_iff_right₀ (inv_pos.mpr (by grind)) |>.mpr (by grind)
+      grind
+    · calc (4 / 3) / (G'.degree v + 1 + 1 : ℝ)
+        _ ≤ (4 / 3) / (1 + 1 + 1) := by
+          refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr ?_
+          simp only [add_le_add_iff_right, Nat.one_le_cast]
+          refine Nat.one_le_iff_ne_zero.mpr (by grind)
+      grind
+    · calc (4 / 3) / (G'.degree v + 1 + 1 : ℝ)
+        _ ≤ (4 / 3) / (G'.degree v + 1 : ℝ) := by
+          refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr (by grind)
+        _ = (2 / 3) / (G'.degree v + 1 : ℝ) + (2 / 3) / (G'.degree v + 1 : ℝ) := by
+          grind
+        _ ≤ 1 / 6 + (2 / 3) / (G'.degree v + 1 : ℝ) := by
+          simp only [add_le_add_iff_right]
+          exact H' (by grind)
+  else if hC : ABC.C v then
+    simp only [hA, ↓reduceIte, hB, hC, one_div, Tripartition.demote_from_C, ge_iff_le]
+    split_ifs
+    any_goals grind
+    · calc (2 / 3) / (G'.degree v + 1 + 1 : ℝ)
+        _ ≤ (2 / 3) / (G'.degree v + 1 : ℝ) := by
+          refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr (by grind)
+        _ ≤ 2 / (G'.degree v + 1 : ℝ) := by
+          ring_nf
+          refine mul_le_mul_iff_right₀ (inv_pos.mpr (by grind)) |>.mpr (by grind)
+      grind
+    · calc (2 / 3) / (G'.degree v + 1 + 1 : ℝ)
+        _ ≤ (2 / 3) / (G'.degree v + 1 : ℝ) := by
+          refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr (by grind)
+        _ ≤ (4 / 3) / (G'.degree v + 1 : ℝ) := by
+          ring_nf
+          refine mul_le_mul_iff_right₀ (inv_pos.mpr (by grind)) |>.mpr (by grind)
+      grind
+    · calc (2 / 3) / (G'.degree v + 1 + 1 : ℝ)
+        _ ≤ (2 / 3) / (G'.degree v + 1 : ℝ) := by
+          refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr (by grind)
+      grind
+  else
+    have this {c : ℝ} (hc : 0 ≤ c) : 0 ≤ c / (G'.degree v + 1 : ℝ) := by
+      ring_nf
+      exact Left.mul_nonneg hc <| inv_nonneg_of_nonneg (by grind)
+    simp only [hA, ↓reduceIte, hB, hC, ge_iff_le]
+    have H16 : 0 ≤ (6 : ℝ)⁻¹ := by grind
+    have H56 : 0 ≤ 5 / (6 : ℝ) := by grind
+    split_ifs
+    all_goals simp only [H56, Left.add_nonneg H16, Nat.ofNat_nonneg, add_zero, ge_iff_le,
+      inv_nonneg, one_div, this, zero_le_one]
+    · refine Left.add_nonneg H16 <| this <| div_nonneg zero_le_four zero_le_three
+    · refine Left.add_nonneg H16 <| this <| div_nonneg zero_le_two zero_le_three
+
+private lemma tmplemma {x y : ℝ} {hx : 0 ≤ x} {hy : 0 ≤ y} : 0 ≤ x / y := by
+  exact div_nonneg hx hy
+
 theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n) :
     Objective G ABC := by
   induction hcard : ABC.card using Nat.strong_induction_on generalizing G ABC with | h k ih
@@ -1168,3 +1313,4 @@ end ABC
 
 end CaroWeiType
 end SimpleGraph
+#min_imports

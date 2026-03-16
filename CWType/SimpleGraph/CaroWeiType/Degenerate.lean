@@ -1,5 +1,3 @@
--- import Mathlib
-
 import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Data.Nat.Cast.Order.Field
 
