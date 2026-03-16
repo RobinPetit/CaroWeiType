@@ -25,6 +25,20 @@ def degree_in {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (s : Finset (Fin n)) (x : Fin n) : ℕ :=
   (G.neighborFinset x ∩ s).card
 
+lemma InducesForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n} :
+    G.InducesForest {v} := by
+  simp only [InducesForest, IsDegenerateSet, subset_singleton_iff, ne_eq, forall_eq_or_imp,
+    not_true_eq_false, notMem_empty, filter_empty, card_empty, zero_le, and_true, exists_false,
+    imp_self, forall_eq, singleton_ne_empty, not_false_eq_true, mem_singleton, exists_eq_left,
+    forall_const, true_and]
+  refine le_trans ?_ <| le_of_eq <| card_singleton v
+  refine Finset.card_le_card (by simp)
+
+lemma InducesLinearForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {v : Fin n} : G.InducesLinearForest {v} := by
+  simp [InducesLinearForest, InducesForest_singleton]
+
+
 lemma InducesForest_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
     [DecidableRel G₁.Adj] [DecidableRel G₂.Adj]
     (s : Finset (Fin n)) (hle : G₁ ≤ G₂) (h : G₂.InducesForest s) : G₁.InducesForest s := by
@@ -133,6 +147,10 @@ def respects {n : ℕ} (s : Finset (Fin n)) (G : SimpleGraph (Fin n)) [Decidable
     (ABC.A w → G.degree_in s w ≤ 2)
     ∧ (ABC.B w → G.degree_in s w ≤ 1)
     ∧ (ABC.C w → G.degree_in s w = 0)
+
+lemma respects_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} : respects {v} G ABC := by
+  simp [respects, degree_in]
 
 lemma respects_union {n : ℕ} {s t : Finset (Fin n)} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) (hs : respects s G ABC) (ht : respects t G ABC)
@@ -937,7 +955,8 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
 private lemma Claim2' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) (F : Finset (Fin n)) (hFne : F.Nonempty)
     (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (hF : G.closed_neighborFinset_of_Finset F ⊆ ABC.toFinset) (hF' : respects F G ABC)
+    (hF : F ⊆ ABC.toFinset)
+    (hF' : respects F G ABC)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
@@ -945,8 +964,7 @@ private lemma Claim2' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         - ∑ w ∈ G.N2_of_Finset F, γ G ABC w →
         Objective G ABC := by
   intro h h'
-  refine Claim2 G ABC F hFne
-    (subset_trans (closed_neighborFinset_contains_Finset G F) hF) hF' ih h ?_
+  refine Claim2 G ABC F hFne hF hF' ih h ?_
   simp_all only [ge_iff_le]
   simp only [eval]
   calc ∑ v ∈ ABC.toFinset, f G ABC v
@@ -959,7 +977,15 @@ private lemma Claim2' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
             f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
               (ABC \ G.closed_neighborFinset_of_Finset F) v := by
       simp only [sub_left_inj]
-      refine Eq.symm <| sum_sdiff hF
+      refine Eq.symm <| sum_sdiff ?_
+      intro w
+      simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
+      intro hw
+      rcases hw with hw | hw
+      · exact hF hw
+      · refine hG <| Set.mem_toFinset.mpr <| G.degree_pos_iff_mem_support w |>.mp ?_
+        obtain ⟨x, _, hx⟩ := hw
+        exact (degree_pos_iff_exists_adj G w).mpr ⟨x, hx⟩
     _ = (∑ v ∈ ABC.toFinset \ (G.closed_neighborFinset_of_Finset F), f G ABC v
         - ∑ v ∈ (ABC \ G.closed_neighborFinset_of_Finset F).toFinset,
           f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -1055,7 +1081,8 @@ private lemma Claim2' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
 private lemma Corollary2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) (F : Finset (Fin n)) (hFne : F.Nonempty)
     (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (hF : G.closed_neighborFinset_of_Finset F ⊆ ABC.toFinset) (hF' : respects F G ABC)
+    (hF : F ⊆ ABC.toFinset)
+    (hF' : respects F G ABC)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
@@ -1067,6 +1094,62 @@ private lemma Corollary2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj
   refine le_trans h' ?_
   simp only [le_add_iff_nonneg_right]
   refine sum_nonneg <| fun _ _ ↦ γ_nonneg G ABC
+
+private lemma tmp {x y z : ℝ} (h : x ≤ y - z) : x + z ≤ y := by
+  exact le_sub_iff_add_le.mp h
+
+private lemma Claim3 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (ABC : Tripartition n) {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
+      ABC'.card < ABC.card → Objective G' ABC') :
+    ∑ w ∈ G.neighborFinset v, f G ABC w ≤ 1 - f G ABC v → Objective G ABC := by
+  intro h
+  refine Corollary2 G ABC {v} (singleton_nonempty v) hG (by simp [(ABC.coe_mem_toFinset _).mp hv])
+    respects_singleton ih InducesLinearForest_singleton ?_
+  calc ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f G ABC w
+    _ = ∑ w ∈ G.neighborFinset v ∪ {v}, f G ABC w := by
+      rw [closed_neighborFinset_of_singleton_eq]
+    _ = ∑ w ∈ G.neighborFinset v, f G ABC w + f G ABC v := by
+      have _ : f G ABC v = ∑ w ∈ {v}, f G ABC w := by exact Eq.symm (sum_singleton (f G ABC) v)
+      rw [← sum_singleton (f G ABC ·) v]
+      rw [← sum_union_inter]
+      suffices G.neighborFinset v ∩ {v} = ∅ by grind
+      ext; simp
+    _ ≤ 1 := by grind
+    _ = (#{v} : ℝ) := by
+      rw [← Nat.cast_one]
+      refine Eq.symm <| Nat.cast_inj.mpr <| card_singleton _
+
+private lemma Corollary3 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (ABC : Tripartition n) {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
+      ABC'.card < ABC.card → Objective G' ABC') :
+    (∀ w ∈ G.neighborFinset v, f G ABC w ≤ (1 - f G ABC v) / (G.degree v : ℝ))
+      → Objective G ABC := by
+  intro h
+  refine Claim3 G ABC hv hG ih ?_
+  calc ∑ w ∈ G.neighborFinset v, f G ABC w
+    _ ≤ ∑ w ∈ G.neighborFinset v, (1 - f G ABC v) / (G.degree v : ℝ) := by
+      exact sum_le_sum h
+    _ = (G.degree v) * (1 - f G ABC v) / (G.degree v : ℝ) := by
+      simp only [sum_const, card_neighborFinset_eq_degree, nsmul_eq_mul]
+      grind
+    _ = (G.degree v) * (1 - f G ABC v) * (G.degree v : ℝ)⁻¹ := by
+      grind
+    _ = ((G.degree v) * (G.degree v : ℝ)⁻¹) * (1 - f G ABC v) := by
+      grind
+    _ = 1 - f G ABC v := by
+      if hdegv : G.degree v = 0 then
+        have _ : 1 - f G ABC v = 0 := by
+          simp [Tripartition.mem_iff] at hv
+          simp only [f, fA, hdegv, ↓reduceIte, fB, fC, dite_eq_ite]
+          split_ifs
+          any_goals grind
+        grind
+      else
+        have : (G.degree v) * (G.degree v : ℝ)⁻¹ = 1 := by
+          exact mul_inv_cancel₀ <| Nat.cast_ne_zero.mpr hdegv
+        grind
 
 theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n) :
     Objective G ABC := by

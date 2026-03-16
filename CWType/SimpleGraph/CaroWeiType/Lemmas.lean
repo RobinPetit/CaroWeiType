@@ -159,6 +159,19 @@ theorem deleteIncidenceSet_support {V : Type*} [DecidableEq V] (G : SimpleGraph 
     exact ⟨x, hwx⟩
   · exact Ne.symm <| h hwx |>.1
 
+lemma closed_neighborFinset_of_singleton_eq {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] (v : V) :
+    G.closed_neighborFinset_of_Finset {v} = G.neighborFinset v ∪ {v} := by
+  ext w
+  simp only [closed_neighborFinset_of_Finset, Finset.mem_singleton, exists_eq_left,
+    Finset.mem_filter, Finset.mem_univ, true_and, Finset.union_singleton, Finset.mem_insert,
+    mem_neighborFinset]
+  if h : w = v then
+    simp only [h, SimpleGraph.irrefl, or_false]
+  else
+    simp only [h, false_or]
+    exact ⟨fun h ↦ h.symm, fun h ↦ h.symm⟩
+
 lemma closed_neighborFinset_contains_Finset {V : Type*} [Fintype V] [DecidableEq V]
     (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) :
     s ⊆ G.closed_neighborFinset_of_Finset s := by
