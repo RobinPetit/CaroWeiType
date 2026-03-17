@@ -118,6 +118,26 @@ abbrev IsDegenerateSet {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] 
     (s : Finset (Fin n)) :=
   ∀ t ⊆ s, t ≠ ∅ → ∃ x ∈ t, {y ∈ t | G.Adj x y}.card ≤ k
 
+lemma IsDegenerateSet_union {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {k : ℕ}
+    (s₁ s₂ : Finset (Fin n)) (hs₁ : G.IsDegenerateSet k s₁) (hs₂ : ∀ x ∈ s₂, G.degree x ≤ k) :
+    G.IsDegenerateSet k (s₁ ∪ s₂) := by
+  intro t ht htne
+  if hcap : t ∩ s₂ ≠ ∅ then
+    obtain ⟨x, hx⟩ := nonempty_iff_ne_empty.mpr hcap
+    refine ⟨x, mem_inter.mp hx |>.1, ?_⟩
+    refine le_trans ?_ <| hs₂ x <| mem_inter.mp hx |>.2
+    exact card_le_card <| fun _ ↦ by simp
+  else
+    have ht' : t ⊆ s₁ := by
+      intro y hy
+      rcases mem_union.mp <| ht hy with hy' | hy'
+      · exact hy'
+      · suffices y ∈ (∅ : Finset _) by exact notMem_empty y this |>.elim
+        simp only [ne_eq, Decidable.not_not] at hcap
+        rw [← hcap]
+        refine mem_inter.mpr ⟨hy, hy'⟩
+    exact hs₁ t ht' htne
+
 lemma IsDegenerateSet_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
     [DecidableRel G₁.Adj] [DecidableRel G₂.Adj] (hle : G₁ ≤ G₂) (k : ℕ)
     (s : Finset (Fin n)) (h : G₂.IsDegenerateSet k s) : G₁.IsDegenerateSet k s := by
@@ -471,5 +491,3 @@ theorem kDegenerateSet_LowerBound_iff (f : ℕ → ℝ) :
 
 end CaroWeiType
 end SimpleGraph
-
-#min_imports

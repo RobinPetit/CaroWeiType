@@ -1,4 +1,4 @@
 import CWType.SimpleGraph.CaroWeiType.Basic
 import CWType.SimpleGraph.CaroWeiType.Degenerate
 import CWType.SimpleGraph.CaroWeiType.IndepSet
-import CWType.SimpleGraph.CaroWeiType.Forest
+import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.ABCLemma

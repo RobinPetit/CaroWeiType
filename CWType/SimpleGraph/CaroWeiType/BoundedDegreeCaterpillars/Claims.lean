@@ -1,0 +1,6 @@
+
+import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim0
+import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim1
+import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim2
+import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim3
+import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim4

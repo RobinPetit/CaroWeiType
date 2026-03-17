@@ -5,6 +5,10 @@ import Mathlib.Data.Real.Basic
 
 namespace SimpleGraph
 
+def degree_in {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (s : Finset (Fin n)) (x : Fin n) : ℕ :=
+  (G.neighborFinset x ∩ s).card
+
 def closed_neighborFinset_of_Finset {V : Type*} [Fintype V] [DecidableEq V]
     (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) : Finset V :=
   {v : V | v ∈ s ∨ ∃ x ∈ s, G.Adj v x}
@@ -21,8 +25,8 @@ def deleteIncidencesOf {n : ℕ} (G : SimpleGraph (Fin n)) (s : Finset (Fin n)) 
     SimpleGraph (Fin n) :=
   G ⊓ ⨅ x ∈ s, G.deleteIncidenceSet x
 
-instance {n : ℕ} {W : Finset (Fin n)} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] :
-    DecidableRel (G.deleteIncidencesOf W).Adj := by
+instance instDecidableRel_deleteIncidencesOf {n : ℕ} {W : Finset (Fin n)}
+    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] : DecidableRel (G.deleteIncidencesOf W).Adj := by
   intro u v
   simp only [deleteIncidencesOf, inf_adj, iInf_adj, ne_eq]
   if huv : G.Adj u v then
@@ -49,10 +53,6 @@ instance {n : ℕ} {W : Finset (Fin n)} {G : SimpleGraph (Fin n)} [DecidableRel 
 namespace CaroWeiType
 
 open Finset
-
-@[simp]
-lemma p_and_p_implies {p q : Prop} : (p → (p ∧ q)) ↔ (p → q) :=
-  ⟨fun h hp ↦ h hp |>.2, fun hpq hp ↦ ⟨hp, hpq hp⟩⟩
 
 structure FiniteSimpleGraph (n : ℕ) where
   graph : SimpleGraph (Fin n)
@@ -84,4 +84,5 @@ theorem CaroWeiTypeLowerBound_mono {π : {n : ℕ} → FiniteSimpleGraph n → F
   refine le_trans (sum_le_sum fun v _ ↦ hle (G.graph.degree v)) hs.2
 
 end CaroWeiType
+
 end SimpleGraph
