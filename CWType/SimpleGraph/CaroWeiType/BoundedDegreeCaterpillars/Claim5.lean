@@ -234,29 +234,24 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
           · exact fun hC ↦ h₃ <| C_of_demote_ne _ heq ⟨hC, hznotinx⟩
     refine ⟨s ∪ {x}, hs'ABC, ?_, hs'resp, ?_⟩
     · refine linear_forest_of_forest_respects _ _ ABC hs'ABC ?_ hs'resp
-      · intro t ht htne
-        if hxt :x ∈ t then
-          refine ⟨x, hxt, ?_⟩
-          refine le_trans ?_ (le_of_eq hdegx)
-          refine card_le_card (fun y ↦ by simp)
-        else
-          have ht' : t ⊆ s := by grind
-          obtain ⟨z, hzt, hzdeg⟩ := hslf.1 t ht' htne
-          refine ⟨z, hzt, ?_⟩
-          refine le_trans ?_ hzdeg
-          refine card_le_card ?_
-          intro y
-          simp only [mem_filter, deleteIncidenceSet, incidenceSet, deleteEdges_adj,
-            Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, and_imp]
-          refine fun hy hzy ↦ ⟨hy, hzy, fun _ ↦ ⟨?_, ?_⟩⟩
-          · intro heq; subst heq
-            exact hxt hzt
-          · intro heq; subst heq
-            exact hxt hy
+      intro t ht htne
+      if hxt :x ∈ t then
+        refine ⟨x, hxt, ?_⟩
+        refine le_trans ?_ (le_of_eq hdegx)
+        refine card_le_card (fun y ↦ by simp)
+      else
+        obtain ⟨z, hzt, hzdeg⟩ := hslf.1 t (by grind) htne
+        refine ⟨z, hzt, ?_⟩
+        refine le_trans ?_ hzdeg
+        refine card_le_card ?_
+        intro y
+        simp only [mem_filter, deleteIncidenceSet, incidenceSet, deleteEdges_adj,
+          Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, and_imp]
+        refine fun hy hzy ↦ ⟨hy, hzy, fun _ ↦ ⟨?_, ?_⟩⟩
+        <;> { intro heq; subst heq; contradiction }
     · have : ((ABC \ {x}).demote u).toFinset = ABC.toFinset \ {x} := by
         rw [← demote_toFinset_eq]
         exact ABC.sdiff_toFinset
-      unfold eval
       calc ∑ v ∈ ABC.toFinset, f G ABC v
         _ = ∑ v ∈ ABC.toFinset \ {x}, f G ABC v + f G ABC x := by
           rw [← sum_singleton (f G ABC ·) x]
@@ -273,10 +268,9 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
         _ = ∑ v ∈ (ABC.toFinset \ {x}) \ {u}, f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) v
             + f G ABC u + 5 / 6 := by
           simp only [add_left_inj]
-          refine sum_equiv { toFun := (·), invFun := (·) } (by grind) ?_
+          refine sum_congr rfl ?_
           intro v hv
           simp only [mem_sdiff, mem_singleton] at hv
-          simp only [Equiv.coe_fn_mk]
           have hdegeq : G.degree v = (G.deleteIncidenceSet x).degree v := by
             refine congrArg Finset.card ?_
             ext w
@@ -382,7 +376,7 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
                 deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or,
                 and_congr_right_iff]
               grind
-        _ = 0 := by exact sub_self _
+        _ = 0 := sub_self _
 
 lemma Claim5 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (hG : G.support ⊆ ABC.toFinset)
