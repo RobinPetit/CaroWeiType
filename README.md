@@ -100,7 +100,7 @@ Complete characterization of CW-type lower bounds for induced bounded-degree cat
   - [x] Claim 3
   - [x] Claim 4
   - [x] Claim 5
-  - [ ] Claim 6
+  - [x] Claim 6
   - [ ] Claim 7
   - [ ] Claim 8
   - [ ] Claim 9

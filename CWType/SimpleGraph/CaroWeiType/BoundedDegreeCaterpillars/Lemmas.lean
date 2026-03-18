@@ -10,6 +10,9 @@ open SimpleGraph
 
 -- sound
 
+private lemma five_pos : (0 : ℝ) < 5 := by
+  exact Nat.ofNat_pos'
+
 @[simp]
 lemma not_A_of_B {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hB : ABC.B v) : ¬ABC.A v :=
   fun hA ↦ ABC.sound v |>.1 ⟨hA, hB⟩
@@ -38,57 +41,218 @@ lemma not_C_of_B {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hB : ABC.B v) : �
 
 @[simp]
 lemma fA0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree = 0) : f G ABC v = 1 := by
-  simp only [f, hA, ↓reduceDIte, fA, hv, Pi.zero_apply, ↓reduceIte]
+    (hA : ABC.A v) (hv : G.degree v = 0) : f G ABC v = 1 := by
+  simp only [f, hA, ↓reduceDIte, fA, hv, ↓reduceIte]
 
 @[simp]
 lemma fB0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree = 0) : f G ABC v = 1 := by
-  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, Pi.zero_apply, ↓reduceIte]
+    (hB : ABC.B v) (hv : G.degree v = 0) : f G ABC v = 1 := by
+  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, ↓reduceIte]
 
 @[simp]
 lemma fC0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree = 0) : f G ABC v = 1 := by
-  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, Pi.ofNat_apply, ↓reduceIte]
+    (hC : ABC.C v) (hv : G.degree v = 0) : f G ABC v = 1 := by
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, ↓reduceIte]
 
 -- f(1)
 
 @[simp]
 lemma fA1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree = 1) : f G ABC v = 5 / 6 := by
-  simp only [f, hA, ↓reduceDIte, fA, hv, Pi.one_apply, one_ne_zero, ↓reduceIte]
+    (hA : ABC.A v) (hv : G.degree v = 1) : f G ABC v = 5 / 6 := by
+  simp only [f, hA, ↓reduceDIte, fA, hv, one_ne_zero, ↓reduceIte]
 
 @[simp]
 lemma fB1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree = 1) : f G ABC v = 5 / 6 := by
-  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, Pi.ofNat_apply, one_ne_zero, ↓reduceIte]
+    (hB : ABC.B v) (hv : G.degree v = 1) : f G ABC v = 5 / 6 := by
+  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, one_ne_zero, ↓reduceIte]
 
 @[simp]
 lemma fC1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree = 1) : f G ABC v = 1 / 6 := by
-  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, Pi.one_apply, one_ne_zero,
-    ↓reduceIte, OfNat.one_ne_ofNat, or_false, one_div]
+    (hC : ABC.C v) (hv : G.degree v = 1) : f G ABC v = 1 / 6 := by
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, one_ne_zero, ↓reduceIte,
+    OfNat.one_ne_ofNat, or_false, one_div]
 
 -- f(2)
 
 @[simp]
 lemma fA2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree = 2) : f G ABC v = 2 / 3 := by
-  simp only [f, hA, ↓reduceDIte, fA, hv, Pi.ofNat_apply, OfNat.ofNat_ne_zero, ↓reduceIte,
-    OfNat.ofNat_ne_one, Nat.cast_ofNat]
+    (hA : ABC.A v) (hv : G.degree v = 2) : f G ABC v = 2 / 3 := by
+  simp only [f, hA, ↓reduceDIte, fA, hv, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one,
+    Nat.cast_ofNat]
   grind only
 
 @[simp]
 lemma fB2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree = 2) : f G ABC v = 1 / 3 := by
-  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, Pi.ofNat_apply, OfNat.ofNat_ne_zero,
-    ↓reduceIte, OfNat.ofNat_ne_one, one_div]
+    (hB : ABC.B v) (hv : G.degree v = 2) : f G ABC v = 1 / 3 := by
+  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
+    OfNat.ofNat_ne_one, one_div]
 
 @[simp]
 lemma fC2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree = 2) : f G ABC v = 1 / 6 := by
-  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, Pi.ofNat_apply,
-    OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, or_true, one_div]
+    (hC : ABC.C v) (hv : G.degree v = 2) : f G ABC v = 1 / 6 := by
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
+    OfNat.ofNat_ne_one, or_true, one_div]
+
+@[simp]
+lemma fA_le_25_of_4_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) (hv : 4 ≤ G.degree v) :
+    f G ABC v ≤ 2 / 5 := by
+  simp only [f, hA, ↓reduceDIte, fA]
+  split_ifs
+  any_goals grind
+  refine (div_le_div_iff_of_pos_left two_pos add_one_pos five_pos).mpr ?_
+  rw [← Nat.cast_one, ← Nat.cast_add]
+  refine Nat.cast_le.mpr ?_
+  simp only [Nat.reduceLeDiff, hv]
+
+@[simp]
+lemma fA_le_12_of_3_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) (hv : 3 ≤ G.degree v) :
+    f G ABC v ≤ 1 / 2 := by
+  simp only [f, hA, ↓reduceDIte, fA]
+  split_ifs
+  any_goals grind
+  calc 2 / (G.degree v + 1 : ℝ)
+    _ ≤ 2 / (4 : ℝ) := by
+      refine (div_le_div_iff_of_pos_left two_pos add_one_pos four_pos).mpr ?_
+      rw [← Nat.cast_four, ← Nat.cast_one, ← Nat.cast_add]
+      exact Nat.cast_le.mpr <| Nat.le_add_of_sub_le hv
+    _ ≤ 1 / 2 := by grind
+
+@[simp]
+lemma fA_le_23_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) (hv : 2 ≤ G.degree v) :
+    f G ABC v ≤ 2 / 3 := by
+  if h2 : G.degree v = 2 then
+    rw [fA2 hA h2]
+  else
+    exact le_trans (fA_le_12_of_3_le_deg hA (by grind)) (by grind)
+
+@[simp]
+lemma fA_le_56_of_1_ledeg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) (hv : 1 ≤ G.degree v) :
+    f G ABC v ≤ 5 / 6 := by
+  if h1 : G.degree v = 1 then
+    rw [fA1 hA h1]
+  else
+    exact le_trans (fA_le_23_of_2_le_deg hA (by grind)) (by grind)
+
+@[simp]
+lemma fB_le_13_if_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hB : ABC.B v) (hv : 2 ≤ G.degree v) :
+    f G ABC v ≤ 1 / 3 := by
+  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB]
+  split_ifs
+  any_goals grind
+  calc (4 / 3) / (G.degree v + 1 : ℝ)
+    _ ≤ (4 / 3) / (4 : ℝ) := by
+      refine (div_le_div_iff_of_pos_left (by grind) add_one_pos four_pos).mpr ?_
+      rw [← Nat.cast_four, ← Nat.cast_one, ← Nat.cast_add]
+      exact Nat.cast_le.mpr (by grind)
+    _ ≤ 1 / 3 := by grind
+
+@[simp]
+lemma fB_le_56_if_1_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hB : ABC.B v) (hv : 1 ≤ G.degree v) :
+    f G ABC v ≤ 5 / 6 := by
+  if h1 : G.degree v = 1 then
+    rw [fB1 hB h1]
+  else
+    exact le_trans (fB_le_13_if_2_le_deg hB (by grind)) (by grind)
+
+@[simp]
+lemma fC_le_16_if_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hC : ABC.C v) (hv : 2 ≤ G.degree v) :
+    f G ABC v ≤ 1 / 6 := by
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC]
+  split_ifs
+  any_goals grind
+  calc (2 / 3) / (G.degree v + 1 : ℝ)
+    _ ≤ (2 / 3) / (4 : ℝ) := by
+      refine (div_le_div_iff_of_pos_left (by grind) add_one_pos four_pos).mpr ?_
+      rw [← Nat.cast_four, ← Nat.cast_one, ← Nat.cast_add]
+      exact Nat.cast_le.mpr (by grind)
+    _ ≤ 1 / 6 := by grind
+
+@[simp]
+lemma fC_le_16_if_1_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hC : ABC.C v) (hv : 1 ≤ G.degree v) :
+    f G ABC v ≤ 1 / 6 := by
+  if h1 : G.degree v = 1 then
+    rw [fC1 hC h1]
+  else
+    exact fC_le_16_if_2_le_deg hC (by grind)
+
+@[simp]
+lemma A2_of_f_lt_12_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hv : 2 ≤ G.degree v) (h : v ∈ ABC)
+    (hf : 1 / 2 < f G ABC v) : ABC.A v ∧ G.degree v = 2 := by
+  rcases h with hA | hB | hC
+  · refine ⟨hA, ?_⟩
+    refine le_antisymm ?_ hv
+    refine Nat.le_of_not_lt ?_
+    refine Function.mt (fA_le_12_of_3_le_deg hA) <| not_le.mpr hf
+  · grind [fB_le_13_if_2_le_deg hB hv]
+  · grind [fC_le_16_if_2_le_deg hC hv]
+
+@[simp]
+lemma A2_or_A3_of_f_lt_25_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hv : 2 ≤ G.degree v) (h : v ∈ ABC)
+    (hf : 2 / 5 < f G ABC v) : ABC.A v ∧ (G.degree v = 2 ∨ G.degree v = 3) := by
+  rcases h with hA | hB | hC
+  · refine ⟨hA, ?_⟩
+    have hobj := Function.mt (fA_le_25_of_4_le_deg hA) <| not_le.mpr hf
+    grind
+  · grind [fB_le_13_if_2_le_deg hB hv]
+  · grind [fC_le_16_if_2_le_deg hC hv]
+
+@[simp]
+lemma γA1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree v = 1) : γ G ABC v = 1 / 6 := by
+  simp only [γ, hA, ↓reduceDIte, fA, hv, tsub_self, ↓reduceIte, one_ne_zero, one_div]
+  grind
+
+@[simp]
+lemma γA2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree v = 2) : γ G ABC v = 1 / 6 := by
+  simp only [γ, hA, ↓reduceDIte, fA, hv, Nat.add_one_sub_one, one_ne_zero, ↓reduceIte,
+    OfNat.ofNat_ne_zero, OfNat.ofNat_ne_one, Nat.cast_ofNat, one_div]
+  grind
+
+@[simp]
+lemma γA3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree v = 3) : γ G ABC v = 1 / 6 := by
+  simp only [γ, hA, ↓reduceDIte, fA, hv, Nat.add_one_sub_one, OfNat.ofNat_ne_zero, ↓reduceIte,
+    OfNat.ofNat_ne_one, Nat.cast_ofNat, one_div]
+  grind
+
+@[simp]
+lemma γB1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hB : ABC.B v) (hv : G.degree v = 1) : γ G ABC v = 1 / 6 := by
+  simp only [γ, hB, not_A_of_B, ↓reduceDIte, fB, hv, tsub_self, ↓reduceIte, one_ne_zero, one_div]
+  grind
+
+@[simp]
+lemma γB2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hB : ABC.B v) (hv : G.degree v = 2) : γ G ABC v = 1 / 2 := by
+  simp only [γ, hB, not_A_of_B, ↓reduceDIte, fB, hv, Nat.add_one_sub_one, one_ne_zero, ↓reduceIte,
+    OfNat.ofNat_ne_zero, OfNat.ofNat_ne_one, one_div]
+  grind
+
+
+@[simp]
+lemma γC1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hC : ABC.C v) (hv : G.degree v = 1) : γ G ABC v = 5 / 6 := by
+  simp only [γ, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, tsub_self, ↓reduceIte, one_ne_zero,
+    OfNat.one_ne_ofNat, or_false, one_div]
+  grind
+
+@[simp]
+lemma γC2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hC : ABC.C v) (hv : G.degree v = 2) : γ G ABC v = 0 := by
+  simp only [γ, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, Nat.add_one_sub_one, one_ne_zero,
+    ↓reduceIte, OfNat.one_ne_ofNat, or_false, one_div, OfNat.ofNat_ne_zero, OfNat.ofNat_ne_one,
+    or_true, sub_self]
 
 namespace Tripartition
 
