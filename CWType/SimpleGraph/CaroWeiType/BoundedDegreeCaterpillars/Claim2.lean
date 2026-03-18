@@ -39,12 +39,10 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
   refine ⟨s' ∪ F, fun _ _ ↦ by grind [Tripartition.toFinset_mono], ?_, hresp, ?_⟩
   · refine ⟨?_, ?_⟩
     · intro t ht htne
-      have H : s' ⊆ s' ∪ F := by exact subset_union_left
-      have _ : (t ∩ s') ⊆ s' := by exact inter_subset_right
+      have _ : (t ∩ s') ⊆ s' := inter_subset_right
       if hcap : t ∩ s' = ∅ then exact h.1 t (by grind) htne
       else ?_
-      let bla := hlf'.1 (t ∩ s') (inter_subset_right) hcap
-      obtain ⟨x, hx, hx'⟩ := bla
+      obtain ⟨x, hx, hx'⟩ := hlf'.1 (t ∩ s') (inter_subset_right) hcap
       refine ⟨x, mem_of_mem_filter x hx, ?_⟩
       refine le_trans ?_ hx'
       refine Finset.card_le_card ?_
@@ -79,12 +77,11 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
             exact Or.inr ⟨y, hy, hxy⟩
     · intro x hx
       simp only [respects, degree_in] at hresp
-      let bla := hresp x hx
       have hxABC : x ∈ ABC := by
         rcases mem_union.mp hx with hx | hx
-        · let bla := hs' hx
+        · let hobj := hs' hx
           simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
-            mem_filter, mem_univ, true_and] at bla
+            mem_filter, mem_univ, true_and] at hobj
           grind [Tripartition.mem_iff]
         · exact ABC.coe_mem_toFinset.mpr <| hF hx
       simp only [Tripartition.mem_iff] at hxABC
@@ -146,7 +143,7 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         exact Or.inr ⟨x, hx, hyx⟩
       simp only [mem_neighborFinset]
       exact Adj.symm.mt <| deleteIncidencesOf_notadj G hy'
-  have hdegw : 1 ≤ G.degree w := by exact Nat.one_le_of_lt hdeg
+  have hdegw : 1 ≤ G.degree w := Nat.one_le_of_lt hdeg
   have h1 : ((((G.degree w- 1) : ℕ) : ℝ) + 1) = (G.degree w : ℝ) := by
     simp only [Nat.cast_one, sub_add_cancel, Nat.cast_sub hdegw]
   rw [γ, f]
@@ -160,7 +157,7 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     simp only [hA, ↓reduceDIte, f, tsub_le_iff_right, sub_add_cancel,
       ge_iff_le, hAiff.mp hA, fA, Nat.pred_eq_succ_iff, zero_add]
     split_ifs
-    any_goals grind
+    any_goals grind [f_le_56]
     · rw [h1]
       exact mul_le_one (Nat.cast_pos'.mpr hdegw) (Nat.ofNat_le_cast.mpr (by grind))
     · rw [h1]

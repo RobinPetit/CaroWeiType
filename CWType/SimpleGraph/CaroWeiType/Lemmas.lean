@@ -7,8 +7,52 @@ import CWType.SimpleGraph.CaroWeiType.Basic
 open Finset
 
 @[simp]
+lemma le_add_one {x : ℝ} : x ≤ x + 1 :=
+  le_of_lt <| lt_add_one x
+
+@[simp]
+lemma add_one_pos {n : ℕ} : 0 < n + (1 : ℝ) := by
+  rw [← Nat.cast_one, ← Nat.cast_add, Nat.cast_pos]
+  exact Nat.zero_lt_succ n
+
+@[simp]
+lemma add_one_add_one_pos {n : ℕ} : 0 < n + (1 : ℝ) + 1 := by
+  rw [← Nat.cast_add_one n]
+  exact add_one_pos
+
+@[simp]
+lemma one_add_pos {n : ℕ} : 0 < (1 : ℝ) + n := by
+  rw [← Nat.cast_one, ← Nat.cast_add, Nat.cast_pos]
+  exact Nat.pos_of_neZero (1 + n)
+
+@[simp]
 lemma p_and_p_implies {p q : Prop} : (p → (p ∧ q)) ↔ (p → q) :=
   ⟨fun h hp ↦ h hp |>.2, fun hpq hp ↦ ⟨hp, hpq hp⟩⟩
+
+@[simp]
+private lemma eq_of_subset_and_eq_card {α : Type*} {A B : Finset α} (h : A ⊆ B) (h' : #A = #B) :
+    A = B := by
+  classical
+  induction hA : #A generalizing A B with
+  | zero =>
+      have : A = ∅ := card_eq_zero.mp hA
+      have : B = ∅ := card_eq_zero.mp (h'.symm.trans hA)
+      simp_all
+  | succ n ih => ?_
+  obtain ⟨a, ha⟩ := nonempty_def.mp <| card_pos.mp <| Nat.lt_of_sub_eq_succ hA
+  let A' := A \ {a}
+  let B' := B \ {a}
+  have hsubset : A' ⊆ B' := by grind
+  have hA : A = A' ∪ {a} := by ext _; simp [A', ha]
+  have hB : B = B' ∪ {a} := by ext _; simp [B', h ha]
+  grind
+
+private lemma sorted_pair {α : Type*} [DecidableEq α] (f : α → ℝ) (x y : α) :
+    ∃ a b, ({a, b} : Finset _) = {x, y} ∧ f a ≤ f b :=
+  if h : f x ≤ f y then
+    ⟨x, y, rfl, h⟩
+  else
+    ⟨y, x, pair_comm .., le_of_not_ge h⟩
 
 @[simp]
 lemma ne_of_mem_finset_empty_inter {α : Type*} [DecidableEq α]
@@ -454,7 +498,6 @@ theorem degree_eq {V : Type*} [Fintype V] [DecidableEq V]
     exact hX <| G.mem_support.mpr ⟨_, hy.symm⟩
   · exact fun hy ↦ mem_inter.mp hy |>.1
 
-open Finset in
 lemma degree_eq' {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj]
     (v : V) : G.degree v = (G.neighborFinset v ∩ G.support.toFinset).card := by
   rw [degree]
@@ -512,6 +555,49 @@ theorem minDegree_iff' {V : Type*} [Fintype V]
       intro z hz hdz
       exact hdz ▸ h _ hz
     · exact min'_le _ _ (mem_image_of_mem _ hv)
+
+lemma neighborFinset_eq_deg2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n} :
+    G.degree v = 2 → ∃ u w, G.neighborFinset v = {u, w} := by
+  intro hdeg
+  obtain ⟨u, hu⟩ := by
+    refine Finset_get_one (G.neighborFinset v) ?_
+    rw [degree] at hdeg
+    rw [hdeg]
+    exact NeZero.one_le
+  obtain ⟨w, hw⟩ := by
+    refine Finset_get_one ((G.deleteIncidenceSet u).neighborFinset v) ?_
+    refine le_of_eq ?_
+    rw [← degree]
+    have hv : v ∈ G.neighborFinset u := by simp_all [Adj.symm]
+    rw [deleteIncidenceSet_degree G u v hv]
+    grind
+  refine ⟨u, w, ?_⟩
+  simp only [deleteIncidenceSet, incidenceSet, mem_neighborFinset, deleteEdges_adj,
+    Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or] at hw hu
+  refine Eq.symm <| eq_of_subset_and_eq_card ?_ ?_
+  · intro z
+    simp only [mem_insert, mem_singleton, mem_neighborFinset]
+    intro hz
+    rcases hz with hz | hz <;> { subst hz; simp only [hu, hw.1] }
+  · simp only [card_neighborFinset_eq_degree, hdeg]
+    refine card_insert_of_notMem (by simp [hw])
+
+lemma neighborFinset_subset_support {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    {v : Fin n} : G.neighborFinset v ⊆ G.support.toFinset := by
+  intro w hw
+  refine Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, Adj.symm ?_⟩
+  exact G.mem_neighborFinset .. |>.mp hw
+
+
+lemma neighborFinset_eq_deg2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n}
+    (f : Fin n → ℝ) :
+    G.degree v = 2 → ∃ u w, G.neighborFinset v = {u, w} ∧ f w ≤ f u := by
+  intro h
+  obtain ⟨u, w, huw⟩ := neighborFinset_eq_deg2 h
+  obtain ⟨u', w', heq, hle⟩ := sorted_pair f u w
+  refine ⟨w', u', ?_, hle⟩
+  rw [huw, ← heq]
+  exact pair_comm ..
 
 lemma degree_in_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {u : Fin n} {s : Finset (Fin n)} :

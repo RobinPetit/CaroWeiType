@@ -14,31 +14,12 @@ lemma Claim0 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
-  have h' : (ABC \ W).card < ABC.card := by
-    simp only [Tripartition.card, Tripartition.toFinset, Tripartition.mem_iff]
-    refine Finset.card_lt_card ⟨?_, ?_⟩
-    · intro x
-      simp only [Tripartition.sdiff, Tripartition.mem_iff, mem_filter,
-        mem_univ, true_and]
-      grind
-    · intro h
-      obtain ⟨w, hw⟩ := @Classical.choice ↑(W ∩ ABC.toFinset) (Nonempty.to_subtype (by grind))
-      simp only [mem_inter] at hw
-      let hobj := h hw.2
-      simp [Tripartition.sdiff] at hobj
-      grind
+  have h' : (ABC \ W).card < ABC.card := sdiff_card ABC hWABC'
   obtain ⟨s, ⟨hs1, hs2, hs3, hs4⟩⟩ := ih (G.deleteIncidencesOf W) (ABC \ W) h'
-  have hsW : s ∩ W = ∅ := by
-    simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff] at hs1
-    ext x
-    simp only [mem_inter, notMem_empty, iff_false, not_and]
-    intro hx
-    let hobj := hs1 hx
-    simp only [Tripartition.mem_iff, mem_filter, mem_univ, true_and] at hobj
-    grind
+  have hsW : s ∩ W = ∅ := by grind [sdiff_toFinset]
   refine ⟨s, ?_, ⟨?_, ?_⟩, ?_, ?_⟩
   · simp only [Tripartition.toFinset, Tripartition.mem_iff] at hs1 ⊢
-    exact subset_trans hs1 Tripartition.toFinset_mono
+    exact subset_trans hs1 toFinset_mono
   · exact InducesForest_mono' _ _ _ hsW hs2.1
   · intro x hx
     suffices #((G.deleteIncidencesOf W).neighborFinset x ∩ s) = #(G.neighborFinset x ∩ s) by
@@ -51,8 +32,7 @@ lemma Claim0 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     intro hy hxy
     refine ⟨fun z ↦ ⟨fun hz ↦ ⟨hxy, fun _ ↦ ?_⟩, hxy.ne⟩, hxy.ne⟩
     constructor <;> exact ne_of_mem_finset_empty_inter _ _ hsW (by simp [hx, hy]) hz |>.symm
-  · simp only [respects] at hs3 ⊢
-    intro w hw
+  · intro w hw
     have heq : #((G.deleteIncidencesOf W).neighborFinset w ∩ s) = #(G.neighborFinset w ∩ s) := by
       refine congrArg _ ?_
       ext u
