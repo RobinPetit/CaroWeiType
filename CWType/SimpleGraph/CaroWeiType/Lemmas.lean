@@ -530,6 +530,33 @@ lemma degree_in_deleteIncidenceSet {n : ℕ} (G : SimpleGraph (Fin n)) [Decidabl
   intro hw hvw
   exact fun heq ↦ hu (heq ▸ hw)
 
+lemma degree_in_deleteIncidenceSet' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    {u v : Fin n} (s : Finset (Fin n)) (hu : u ∉ s) (huv : G.Adj u v) :
+    G.degree_in (s ∪ {u}) v ≤ (G.deleteIncidenceSet u).degree_in s v + 1 := by
+  unfold degree_in
+  calc #(G.neighborFinset v ∩ (s ∪ {u}))
+    _ ≤ #(((G.deleteIncidenceSet u).neighborFinset v ∩ (s ∪ {u})) ∪ {u}) := by
+      refine card_le_card ?_
+      intro w
+      simp only [union_singleton, mem_inter, mem_neighborFinset, mem_insert, deleteIncidenceSet,
+        incidenceSet, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, or_true,
+        and_true, and_not_self, not_false_eq_true, inter_insert_of_notMem, not_and, not_or, and_imp]
+      intro hvw hw
+      rcases hw with hw | hw
+      · simp only [hw, not_true_eq_false, and_false, imp_false, and_not_self, false_and, or_false]
+      · refine Or.inr ⟨⟨hvw, ?_⟩, hw⟩
+        simp only [hvw, huv.ne, not_false_eq_true, true_and, forall_const]
+        exact fun heq ↦ hu (heq ▸ hw)
+    _ ≤ #((G.deleteIncidenceSet u).neighborFinset v ∩ (s ∪ {u})) + #({u} : Finset _) := by
+      exact card_union_le ..
+    _ = #((G.deleteIncidenceSet u).neighborFinset v ∩ s) + #({u} : Finset _) := by
+      simp only [union_singleton, card_singleton, Nat.add_right_cancel_iff]
+      refine congrArg card ?_
+      ext w
+      simp [deleteIncidenceSet, incidenceSet]
+    _ = #((G.deleteIncidenceSet u).neighborFinset v ∩ s) + 1 := by
+      simp
+
 lemma degree_in_neighbor {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {u v : Fin n}
     (s : Finset (Fin n)) (huv : G.Adj u v) (hv : v ∉ s) :
     G.degree_in (s ∪ {v}) u = G.degree_in s u + 1 := by

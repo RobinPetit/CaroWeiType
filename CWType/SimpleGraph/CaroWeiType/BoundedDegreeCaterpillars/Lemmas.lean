@@ -38,6 +38,27 @@ lemma demote_from_C {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.C v) 
   have hB : ¬ABC.B v := fun hB ↦ (ABC.sound v).2.2 ⟨hB, hv⟩
   simp [demote, hA, hB, hv]
 
+@[simp]
+lemma A_of_demote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
+    ABC.A v → (ABC.demote w).A v := by
+  intro hA
+  simp only [demote, demote_A, demote_B]
+  split_ifs <;> simp [h, hA]
+
+@[simp]
+lemma B_of_demote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
+    ABC.B v → (ABC.demote w).B v := by
+  intro hB
+  simp only [demote, demote_A, demote_B]
+  split_ifs <;> simp [h, hB]
+
+@[simp]
+lemma C_of_demote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
+    ABC.C v → (ABC.demote w).C v := by
+  intro hC
+  simp only [demote, demote_A, demote_B]
+  split_ifs <;> simp [h, hC]
+
 @[simp 10]
 lemma coe_mem_toFinset {n : ℕ} (ABC : Tripartition n) {x : Fin n} :
     x ∈ ABC ↔ x ∈ ABC.toFinset := by
