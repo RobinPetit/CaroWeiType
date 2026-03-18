@@ -8,6 +8,88 @@ open Finset
 
 open SimpleGraph
 
+-- sound
+
+@[simp]
+lemma not_A_of_B {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hB : ABC.B v) : ¬ABC.A v :=
+  fun hA ↦ ABC.sound v |>.1 ⟨hA, hB⟩
+
+@[simp]
+lemma not_A_of_C {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hC : ABC.C v) : ¬ABC.A v :=
+  fun hA ↦ ABC.sound v |>.2.1 ⟨hA, hC⟩
+
+@[simp]
+lemma not_B_of_A {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) : ¬ABC.B v :=
+  fun hB ↦ ABC.sound v |>.1 ⟨hA, hB⟩
+
+@[simp]
+lemma not_B_of_C {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hC : ABC.C v) : ¬ABC.B v :=
+  fun hB ↦ ABC.sound v |>.2.2 ⟨hB, hC⟩
+
+@[simp]
+lemma not_C_of_A {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) : ¬ABC.C v :=
+  fun hC ↦ ABC.sound v |>.2.1 ⟨hA, hC⟩
+
+@[simp]
+lemma not_C_of_B {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hB : ABC.B v) : ¬ABC.C v :=
+  fun hC ↦ ABC.sound v |>.2.2 ⟨hB, hC⟩
+
+-- f(0)
+
+@[simp]
+lemma fA0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree = 0) : f G ABC v = 1 := by
+  simp only [f, hA, ↓reduceDIte, fA, hv, Pi.zero_apply, ↓reduceIte]
+
+@[simp]
+lemma fB0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hB : ABC.B v) (hv : G.degree = 0) : f G ABC v = 1 := by
+  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, Pi.zero_apply, ↓reduceIte]
+
+@[simp]
+lemma fC0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hC : ABC.C v) (hv : G.degree = 0) : f G ABC v = 1 := by
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, Pi.ofNat_apply, ↓reduceIte]
+
+-- f(1)
+
+@[simp]
+lemma fA1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree = 1) : f G ABC v = 5 / 6 := by
+  simp only [f, hA, ↓reduceDIte, fA, hv, Pi.one_apply, one_ne_zero, ↓reduceIte]
+
+@[simp]
+lemma fB1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hB : ABC.B v) (hv : G.degree = 1) : f G ABC v = 5 / 6 := by
+  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, Pi.ofNat_apply, one_ne_zero, ↓reduceIte]
+
+@[simp]
+lemma fC1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hC : ABC.C v) (hv : G.degree = 1) : f G ABC v = 1 / 6 := by
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, Pi.one_apply, one_ne_zero,
+    ↓reduceIte, OfNat.one_ne_ofNat, or_false, one_div]
+
+-- f(2)
+
+@[simp]
+lemma fA2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree = 2) : f G ABC v = 2 / 3 := by
+  simp only [f, hA, ↓reduceDIte, fA, hv, Pi.ofNat_apply, OfNat.ofNat_ne_zero, ↓reduceIte,
+    OfNat.ofNat_ne_one, Nat.cast_ofNat]
+  grind only
+
+@[simp]
+lemma fB2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hB : ABC.B v) (hv : G.degree = 2) : f G ABC v = 1 / 3 := by
+  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, Pi.ofNat_apply, OfNat.ofNat_ne_zero,
+    ↓reduceIte, OfNat.ofNat_ne_one, one_div]
+
+@[simp]
+lemma fC2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hC : ABC.C v) (hv : G.degree = 2) : f G ABC v = 1 / 6 := by
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, Pi.ofNat_apply,
+    OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, or_true, one_div]
+
 namespace Tripartition
 
 @[simp]
@@ -23,8 +105,7 @@ lemma demote_from_A' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.A v)
 @[simp]
 lemma demote_from_B {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
     (ABC.demote v).C v := by
-  have hA : ¬ABC.A v := fun hA ↦ (ABC.sound v).1 ⟨hA, hv⟩
-  simp [demote, demote_B, hv, hA]
+  simp only [demote, hv, not_A_of_B, ↓reduceDIte, demote_B, ne_eq, not_C_of_B, or_true]
 
 @[simp]
 lemma demote_from_B' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
@@ -34,9 +115,7 @@ lemma demote_from_B' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v)
 @[simp]
 lemma demote_from_C {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.C v) :
     (ABC.demote v).C v := by
-  have hA : ¬ABC.A v := fun hA ↦ (ABC.sound v).2.1 ⟨hA, hv⟩
-  have hB : ¬ABC.B v := fun hB ↦ (ABC.sound v).2.2 ⟨hB, hv⟩
-  simp [demote, hA, hB, hv]
+  simp only [demote, hv, not_A_of_C, ↓reduceDIte, not_B_of_C]
 
 @[simp]
 lemma A_of_demote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
@@ -146,7 +225,7 @@ lemma linear_forest_of_forest_respects {n : ℕ} (s : Finset (Fin n)) (G : Simpl
   refine ⟨hf, ?_⟩
   intro x hx
   obtain ⟨h₁, h₂, h₃⟩ := hresp x hx
-  simp_all only [degree_in]
+  rw [degree_in] at h₁ h₂ h₃
   rcases ABC.mem_iff.mp <| ABC.coe_mem_toFinset.mpr (hs hx) with hA | hB | hC <;> grind
 
 lemma respects_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
@@ -340,16 +419,13 @@ lemma f_pos_of_mem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC
     ring_nf
     simp only [Nat.ofNat_pos, mul_pos_iff_of_pos_right, inv_pos]
     grind [Nat.pos_of_neZero]
-  · have hA' : ¬ABC.A v := by grind [ABC.sound]
-    simp only [f, hA', ↓reduceDIte, hB, fB, one_div, gt_iff_lt]
+  · simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, one_div]
     split_ifs
     any_goals grind
     ring_nf
     simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_pos_iff_of_pos_right, inv_pos]
     grind
-  · have hA' : ¬ABC.A v := by grind [ABC.sound]
-    have hB' : ¬ABC.B v := by grind [ABC.sound]
-    simp only [f, hA', ↓reduceDIte, hB', hC, fC, one_div, gt_iff_lt]
+  · simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, one_div]
     split_ifs
     any_goals grind
     ring_nf
@@ -383,18 +459,10 @@ private lemma eval_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
   rcases hw with hA | hB | hC
   · simp only [f, hA, ↓reduceDIte, fA]
     exact fA_decreasing <| degree_le_of_le hle
-  · have hnA : ¬ABC.A w := by grind [ABC.sound]
-    simp only [f, hnA, ↓reduceDIte, hB, fB, one_div, ge_iff_le]
-    let hobj := @fB_decreasing (G₁.degree w) (G₂.degree w) <| degree_le_of_le hle
-    simp only [fB, one_div] at hobj
-    exact hobj
-  · have hnA : ¬ABC.A w := by grind [ABC.sound]
-    have hnB : ¬ABC.B w := by grind [ABC.sound]
-    have hC : ABC.C w := by grind
-    simp only [f, hnA, ↓reduceDIte, hnB, hC, fC, one_div, ge_iff_le]
-    let hobj := @fC_decreasing (G₁.degree w) (G₂.degree w) <| degree_le_of_le hle
-    simp only [fC, one_div] at hobj
-    exact hobj
+  · simp only [f, hB, not_A_of_B, ↓reduceDIte, fB]
+    exact fB_decreasing <| degree_le_of_le hle
+  · simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC]
+    exact fC_decreasing <| degree_le_of_le hle
 
 lemma eval_lt {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) (W : Finset (Fin n)) (hW : W ∩ ABC.toFinset ≠ ∅) :
@@ -406,37 +474,27 @@ lemma eval_lt {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       intro x hx
       simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
         mem_filter, mem_univ, true_and, f, fA, fB, one_div, fC, dite_eq_ite] at hx ⊢
-      if hA : ABC.A x then
-        have hA' : (ABC \ W).A x := by simp [Tripartition.sdiff]; grind
-        simp only [hA, true_and, ite_not, ↓reduceIte, ite_eq_right_iff]
-        grind
-      else if hB : ABC.B x then
-        have hB' : (ABC \ W).B x := by simp [Tripartition.sdiff]; grind
-        simp only [hA, false_and, ↓reduceIte, hB, true_and, ite_not, ite_eq_right_iff]
-        grind
-      else grind
+      grind
     _ < ∑ v ∈ (ABC \ W).toFinset, f G ABC v + ∑ v ∈ (W ∩ ABC.toFinset), f G ABC v := by
       simp only [Tripartition.sdiff_eq, inter_assoc, inter_self, lt_add_iff_pos_right]
-      suffices ∃ w, w ∈ W ∩ ABC.toFinset by
-        obtain ⟨w, hw⟩ := this
-        calc 0
-          _ < f G ABC w :=
-            f_pos_of_mem G ABC w <| ABC.coe_mem_toFinset.mpr (mem_inter.mp hw).2
-          _ = ∑ v ∈ ((W ∩ ABC.toFinset) ∩ {w}), f G ABC v := by
-            have this : ((W ∩ ABC.toFinset) ∩ {w}) = {w} := by grind
-            rw [this]
-            exact Eq.symm <| sum_singleton _ _
-          _ ≤ ∑ v ∈ ((W ∩ ABC.toFinset) ∩ {w}), f G ABC v
-            + ∑ v ∈ (W ∩ ABC.toFinset) \ {w}, f G ABC v := by
-            simp only [inter_assoc, le_add_iff_nonneg_right]
-            refine sum_nonneg' ?_
-            intro v
-            if hv : v ∈ ABC then
-              exact le_of_lt <| f_pos_of_mem G ABC v hv
-            else
-              exact le_of_eq <| f_eq_zero_of_notMem G ABC v hv
-          _ = ∑ v ∈ (W ∩ ABC.toFinset), f G ABC v := sum_inter_add_sum_diff ..
-      grind
+      obtain ⟨w, hw⟩ := nonempty_def.mp <| nonempty_iff_ne_empty.mpr hW
+      calc 0
+        _ < f G ABC w :=
+          f_pos_of_mem G ABC w <| ABC.coe_mem_toFinset.mpr (mem_inter.mp hw).2
+        _ = ∑ v ∈ ((W ∩ ABC.toFinset) ∩ {w}), f G ABC v := by
+          have this : ((W ∩ ABC.toFinset) ∩ {w}) = {w} := by grind
+          rw [this]
+          exact Eq.symm <| sum_singleton _ _
+        _ ≤ ∑ v ∈ ((W ∩ ABC.toFinset) ∩ {w}), f G ABC v
+          + ∑ v ∈ (W ∩ ABC.toFinset) \ {w}, f G ABC v := by
+          simp only [inter_assoc, le_add_iff_nonneg_right]
+          refine sum_nonneg' ?_
+          intro v
+          if hv : v ∈ ABC then
+            exact le_of_lt <| f_pos_of_mem G ABC v hv
+          else
+            exact le_of_eq <| f_eq_zero_of_notMem G ABC v hv
+        _ = ∑ v ∈ (W ∩ ABC.toFinset), f G ABC v := sum_inter_add_sum_diff ..
     _ = ∑ v ∈ ABC.toFinset, f G ABC v := by
       have _ {s t : Finset (Fin n)} : s ∩ t = t ∩ s := by exact inter_comm s t
       have h' : (ABC \ W).toFinset = ABC.toFinset \ W := by
@@ -469,15 +527,12 @@ lemma degree_deleteIncidencesOf_neighbor {n : ℕ}
     Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, and_self_left]
   constructor
   · intro hwx
-    cases Classical.em <| x = v with
-    | inl h => exact Or.inl h
-    | inr h =>
-        refine Or.inr ?_
-        simp only [hwx, hw.ne, not_false_eq_true, Ne.symm h, and_self, imp_self]
+    if heq : x = v then exact Or.inl heq
+    else                exact Or.inr (by simp [hwx, hw.ne, Ne.symm heq])
   · intro h
-    cases h with
-    | inl h => exact h ▸ hw.symm
-    | inr h => exact h.1
+    rcases h with h | h
+    · exact h ▸ hw.symm
+    · exact h.1
 
 lemma f_deleteIncidencesOf_singleton {n : ℕ} (ABC : Tripartition n)
     (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
@@ -486,24 +541,20 @@ lemma f_deleteIncidencesOf_singleton {n : ℕ} (ABC : Tripartition n)
   simp only [f, Tripartition.sdiff_eq, inter_assoc, inter_self, fA, fB, one_div, fC, dite_eq_ite, γ,
     Nat.pred_eq_succ_iff, zero_add, Nat.reduceAdd]
   rw [degree_deleteIncidencesOf_neighbor G hw]
+  simp only [Tripartition.sdiff, mem_singleton, hw.ne', not_false_eq_true, and_true,
+    Tripartition.sdiff.eq_1, Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte,
+    Nat.add_eq_right, Nat.cast_add, Nat.cast_one, Nat.reduceEqDiff, add_tsub_cancel_right]
   if hA : (ABC \ {v}).A w then
-    simp_all only [Tripartition.sdiff_eq, inter_assoc, inter_self, ↓reduceIte, hA.left,
-      Nat.add_eq_zero_iff, one_ne_zero, and_false, Nat.add_eq_right, Nat.cast_add, Nat.cast_one,
-      add_tsub_cancel_right, Nat.reduceEqDiff, add_sub_cancel]
+    simp [hA.left, hw.ne']
   else if hB : (ABC \ {v}).B w then
-    have hB' : ABC.B w := hB.left
-    have hA' : ¬ABC.A w := fun h ↦ ABC.sound w |>.1 ⟨h, hB'⟩
-    simp_all
+    simp [hw.ne', hB.left]
   else if hC : (ABC \ {v}).C w then
-    have hC' : ABC.C w := hC.left
-    have hB' : ¬ABC.B w := fun h ↦ ABC.sound w |>.2.2 ⟨h, hC'⟩
-    have hA' : ¬ABC.A w := fun h ↦ ABC.sound w |>.2.1 ⟨h, hC'⟩
-    simp_all
+    simp [hw.ne', hC.left]
   else
     have hA' : ¬ABC.A w := fun this ↦ hA <| by simp [Tripartition.sdiff, this, hw.ne']
     have hB' : ¬ABC.B w := fun this ↦ hB <| by simp [Tripartition.sdiff, this, hw.ne']
     have hC' : ¬ABC.C w := fun this ↦ hC <| by simp [Tripartition.sdiff, this, hw.ne']
-    simp_all
+    simp [*]
 
 lemma f_deleteIncidencesOf_isolated {n : ℕ} (ABC : Tripartition n)
     (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
@@ -520,18 +571,12 @@ lemma f_deleteIncidencesOf_isolated {n : ℕ} (ABC : Tripartition n)
     · exact ne_of_deg0_of_adj' hv hwx
   let hw' := (not_iff_not.mpr mem_singleton).mpr hwne
   if hA : ABC.A w then
-    have hA' : (ABC \ {v}).A w := ⟨hA, hw'⟩
     simp only [f, Tripartition.sdiff, mem_singleton, hA, hwne, not_false_eq_true, and_self,
       ↓reduceDIte, fA, hdeg]
   else if hB : ABC.B w then
-    have hA' : ¬(ABC \ {v}).A w := fun ⟨h, _⟩ ↦ hA h
-    have hB' : (ABC \ {v}).B w := ⟨hB, hw'⟩
     simp only [f, Tripartition.sdiff, mem_singleton, hA, hwne, not_false_eq_true, and_true,
       ↓reduceDIte, hB, and_self, fB, one_div, hdeg]
   else if hC : ABC.C w then
-    have hA' : ¬(ABC \ {v}).A w := fun ⟨h, _⟩ ↦ hA h
-    have hB' : ¬(ABC \ {v}).B w := fun ⟨h, _⟩ ↦ hB h
-    have hC' : (ABC \ {v}).C w := ⟨hC, hw'⟩
     simp only [f, Tripartition.sdiff, mem_singleton, hA, hwne, not_false_eq_true, and_true,
       ↓reduceDIte, hB, hC, and_self, fC, one_div, hdeg]
   else
