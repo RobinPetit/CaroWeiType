@@ -1,10 +1,15 @@
-import Mathlib.Combinatorics.SimpleGraph.DeleteEdges
-import Mathlib.Algebra.Order.BigOperators.Group.Finset
-import Mathlib.Data.Real.Basic
+import Mathlib.Analysis.RCLike.Basic
+import Mathlib.Data.Finset.Sort
 
 import CWType.SimpleGraph.CaroWeiType.Basic
 
 open Finset
+
+lemma add_congr {a b c d : ℝ} (h₁ : a = c) (h₂ : b = d) :
+    a + b = c + d := by
+  let hobj1 := add_right_inj a |>.mpr h₂
+  let hobj2 := add_left_inj d |>.mpr h₁
+  exact hobj1.trans hobj2
 
 @[simp]
 lemma le_add_one {x : ℝ} : x ≤ x + 1 :=
@@ -54,6 +59,62 @@ private lemma sorted_pair {α : Type*} [DecidableEq α] (f : α → ℝ) (x y : 
   else
     ⟨y, x, pair_comm .., le_of_not_ge h⟩
 
+private lemma sorted_finset {α : Type*} [DecidableEq α] {s : Finset α} (k : ℕ) [NeZero k]
+    (hs : #s = k) (f : α → ℝ) :
+    ∃ σ : Fin k → α,
+      (Finset.image σ univ) = s
+        ∧ (∀ i j : Fin k, i ≤ j → f (σ i) ≤ f (σ j)) := by
+  induction s using Finset.induction_on_max_value f generalizing k with
+  | h0 => exact (ne_of_lt <| Nat.pos_of_neZero k) (card_empty ▸ hs) |>.elim
+  | step x t hx hmax ih => ?_
+  have hcard : #t = k - 1 := by grind
+  if hk : k = 1 then
+    have ht : t = ∅ := card_eq_zero.mp (by simp [hcard, hk])
+    use fun _ ↦ x
+    simp only [le_refl, implies_true, and_true, ht]
+    ext y
+    simp only [mem_image, mem_univ, true_and, exists_const, eq_comm, insert_empty_eq, mem_singleton]
+  else
+    have _ : NeZero (k - 1) := { out := by grind }
+    obtain ⟨σ, hσ, hinc⟩ := ih _ hcard
+    let σ' : Fin k → α := by
+      refine fun i ↦ if hi : i < k - 1 then σ ⟨i, hi⟩ else x
+    refine ⟨σ', ?_, ?_⟩
+    · ext z
+      constructor
+      · simp only [mem_image, mem_univ, true_and, mem_insert, forall_exists_index]
+        intro i hiz
+        if hi : i < k - 1 then
+          simp only [σ', hi, ↓reduceDIte] at hiz
+          rw [← hiz, ← hσ]
+          exact Or.inr <| mem_image_of_mem σ <| mem_univ _
+        else
+          simp only [σ', hi, ↓reduceDIte] at hiz
+          exact Or.inl hiz.symm
+      · simp only [mem_insert, mem_image, mem_univ, true_and, σ']
+        intro h
+        rcases h with h | h
+        · exact ⟨⟨k-1, by simp [Nat.pos_of_neZero k]⟩, by simp [h]⟩
+        · simp only [← hσ, mem_image, mem_univ,
+          true_and] at h
+          obtain ⟨i, hi⟩ := h
+          refine ⟨⟨i, lt_of_lt_of_le i.isLt <| Nat.sub_le k 1⟩, by simp [hi]⟩
+    · intro i j hij
+      if heq : i = j then
+        simp only [heq, le_refl]
+      else
+        have hiltj : i < j := lt_of_le_of_ne hij heq
+        if hj : j < k - 1 then
+          have hi : i < k - 1 := lt_trans hiltj hj
+          simp only [hi, ↓reduceDIte, hj, ge_iff_le, σ']
+          refine hinc _ _ hij
+        else
+          have hi : i < k - 1 := lt_of_lt_of_le hiltj (by grind)
+          simp only [hi, ↓reduceDIte, hj, ge_iff_le, σ']
+          refine hmax _ ?_
+          rw [← hσ]
+          refine mem_image_of_mem σ <| mem_univ _
+
 @[simp]
 lemma ne_of_mem_finset_empty_inter {α : Type*} [DecidableEq α]
     {x y : α} (s t : Finset α)
@@ -65,6 +126,12 @@ lemma ne_of_mem_finset_empty_inter {α : Type*} [DecidableEq α]
 
 open SimpleGraph
 open CaroWeiType
+
+lemma mem_neighborFinset_symm {V : Type*} [Fintype V] {G : SimpleGraph V} [DecidableRel G.Adj]
+    {u v : V} : u ∈ G.neighborFinset v → v ∈ G.neighborFinset u := by
+  intro hu
+  simp only [mem_neighborFinset] at hu ⊢
+  exact hu.symm
 
 lemma Nonempty_if_card_pos {α : Type*} {s : Finset α} (h : 0 < s.card) :
     Nonempty s := by
@@ -512,7 +579,6 @@ lemma degree_eq' {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [De
   · intro hx
     exact mem_of_mem_filter w hx
 
-
 theorem minDegree_iff {V : Type*} [Fintype V]
     (G : SimpleGraph V) [DecidableRel G.Adj] {v : V} :
     G.degree v = G.minDegree ↔ ∀ w, G.degree v ≤ G.degree w := by
@@ -556,48 +622,36 @@ theorem minDegree_iff' {V : Type*} [Fintype V]
       exact hdz ▸ h _ hz
     · exact min'_le _ _ (mem_image_of_mem _ hv)
 
-lemma neighborFinset_eq_deg2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n} :
-    G.degree v = 2 → ∃ u w, G.neighborFinset v = {u, w} := by
-  intro hdeg
-  obtain ⟨u, hu⟩ := by
-    refine Finset_get_one (G.neighborFinset v) ?_
-    rw [degree] at hdeg
-    rw [hdeg]
-    exact NeZero.one_le
-  obtain ⟨w, hw⟩ := by
-    refine Finset_get_one ((G.deleteIncidenceSet u).neighborFinset v) ?_
-    refine le_of_eq ?_
-    rw [← degree]
-    have hv : v ∈ G.neighborFinset u := by simp_all [Adj.symm]
-    rw [deleteIncidenceSet_degree G u v hv]
-    grind
-  refine ⟨u, w, ?_⟩
-  simp only [deleteIncidenceSet, incidenceSet, mem_neighborFinset, deleteEdges_adj,
-    Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or] at hw hu
-  refine Eq.symm <| eq_of_subset_and_eq_card ?_ ?_
-  · intro z
-    simp only [mem_insert, mem_singleton, mem_neighborFinset]
-    intro hz
-    rcases hz with hz | hz <;> { subst hz; simp only [hu, hw.1] }
-  · simp only [card_neighborFinset_eq_degree, hdeg]
-    refine card_insert_of_notMem (by simp [hw])
-
 lemma neighborFinset_subset_support {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     {v : Fin n} : G.neighborFinset v ⊆ G.support.toFinset := by
   intro w hw
   refine Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, Adj.symm ?_⟩
   exact G.mem_neighborFinset .. |>.mp hw
 
-
 lemma neighborFinset_eq_deg2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n}
     (f : Fin n → ℝ) :
     G.degree v = 2 → ∃ u w, G.neighborFinset v = {u, w} ∧ f w ≤ f u := by
   intro h
-  obtain ⟨u, w, huw⟩ := neighborFinset_eq_deg2 h
+  obtain ⟨u, w, _, huw⟩ := card_eq_two.mp h
   obtain ⟨u', w', heq, hle⟩ := sorted_pair f u w
   refine ⟨w', u', ?_, hle⟩
   rw [huw, ← heq]
   exact pair_comm ..
+
+lemma neighborFinset_eq_deg3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n}
+    (f : Fin n → ℝ) :
+    G.degree v = 3 → ∃ x y z, G.neighborFinset v = {x, y, z} ∧ f z ≤ f y ∧ f y ≤ f x := by
+  intro h
+  obtain ⟨σ, hσ, hinc⟩ := sorted_finset 3 h f
+  have : Finset.image σ univ = {σ 2, σ 1, σ 0} := by
+    ext x
+    simp only [mem_image, mem_univ, true_and, Fin.isValue, mem_insert, mem_singleton]
+    constructor
+    · intro ⟨i, hi⟩
+      suffices i = 0 ∨ i = 1 ∨ i = 2 by grind
+      grind
+    · grind
+  refine ⟨σ 2, σ 1, σ 0, hσ.symm.trans this, by grind⟩
 
 lemma degree_in_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {u : Fin n} {s : Finset (Fin n)} :

@@ -34,6 +34,7 @@ lemma Claim5_0 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
       exact (not_iff_not.mpr mem_singleton).mp
         <| mem_sdiff.mp (ABC.sdiff_toFinset ▸ (hs'1 hy)) |>.2
     · intro w hw
+      rw [degree_in]
       rcases mem_union.mp hw with hw | hw
       · refine le_trans (le_of_eq ?_) (hs'2.2 w hw)
         refine congrArg _ ?_

@@ -16,7 +16,6 @@ lemma InducesLinearForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [Decidab
     {v : Fin n} : G.InducesLinearForest {v} := by
   simp [InducesLinearForest, InducesForest_singleton]
 
-
 lemma InducesForest_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
     [DecidableRel G₁.Adj] [DecidableRel G₂.Adj]
     (s : Finset (Fin n)) (hle : G₁ ≤ G₂) (h : G₂.InducesForest s) : G₁.InducesForest s := by

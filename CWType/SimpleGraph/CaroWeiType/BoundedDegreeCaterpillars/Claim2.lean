@@ -76,7 +76,7 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
             simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
             exact Or.inr ⟨y, hy, hxy⟩
     · intro x hx
-      simp only [respects, degree_in] at hresp
+      simp only [respects, degree_in] at hresp ⊢
       have hxABC : x ∈ ABC := by
         rcases mem_union.mp hx with hx | hx
         · let hobj := hs' hx

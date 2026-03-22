@@ -12,7 +12,7 @@ def InducesForest {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
 
 def InducesLinearForest {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (s : Finset (Fin n)) : Prop :=
-  G.InducesForest s ∧ ∀ x ∈ s, (G.neighborFinset x ∩ s).card ≤ 2
+  G.InducesForest s ∧ ∀ x ∈ s, G.degree_in s x ≤ 2
 
 def InducesCaterpillar {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (s : Finset (Fin n)) : Prop :=

@@ -8,8 +8,6 @@ open Finset
 
 open SimpleGraph
 
--- sound
-
 private lemma five_pos : (0 : ℝ) < 5 := by
   exact Nat.ofNat_pos'
 
@@ -92,6 +90,29 @@ lemma fC2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripar
     (hC : ABC.C v) (hv : G.degree v = 2) : f G ABC v = 1 / 6 := by
   simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, or_true, one_div]
+
+-- f(3)
+
+@[simp]
+lemma fA3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree v = 3) : f G ABC v = 1 / 2 := by
+  simp only [f, hA, ↓reduceDIte, fA, hv, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one,
+    Nat.cast_ofNat]
+  grind only
+
+@[simp]
+lemma fB3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hB : ABC.B v) (hv : G.degree v = 3) : f G ABC v = 1 / 3 := by
+  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
+    OfNat.ofNat_ne_one, Nat.succ_ne_self, Nat.cast_ofNat, one_div]
+  grind only
+
+@[simp]
+lemma fC3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hC : ABC.C v) (hv : G.degree v = 3) : f G ABC v = 1 / 6 := by
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
+    OfNat.ofNat_ne_one, Nat.succ_ne_self, or_self, Nat.cast_ofNat, one_div]
+  grind only
 
 @[simp]
 lemma fA_le_25_of_4_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
@@ -389,7 +410,7 @@ lemma linear_forest_of_forest_respects {n : ℕ} (s : Finset (Fin n)) (G : Simpl
   refine ⟨hf, ?_⟩
   intro x hx
   obtain ⟨h₁, h₂, h₃⟩ := hresp x hx
-  rw [degree_in] at h₁ h₂ h₃
+  rw [degree_in] at h₁ h₂ h₃ ⊢
   rcases ABC.mem_iff.mp <| ABC.coe_mem_toFinset.mpr (hs hx) with hA | hB | hC <;> grind
 
 lemma respects_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
@@ -604,6 +625,7 @@ lemma f_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Ad
   obtain ⟨hvA, hvB, hvC⟩ := hv
   simp [f, hvA, hvB, hvC]
 
+@[simp, grind! .]
 lemma γ_nonneg {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     {v : Fin n} : 0 ≤ γ G ABC v := by
   have h : G.degree v - 1 ≤ G.degree v := Nat.sub_le ..
@@ -745,6 +767,18 @@ lemma f_deleteIncidencesOf_isolated {n : ℕ} (ABC : Tripartition n)
       ↓reduceDIte, hB, hC, and_self, fC, one_div, hdeg]
   else
     simp only [f, Tripartition.sdiff, mem_singleton, hA, false_and, ↓reduceDIte, hB, hC]
+
+lemma deleteIncidencesOf_le {n : ℕ} {G : SimpleGraph (Fin n)} {s : Finset (Fin n)} :
+    (G.deleteIncidencesOf s) ≤ G := by
+  intro v w
+  simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, inf_adj, iInf_adj,
+    deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq, and_imp]
+  intro hvw
+  simp [hvw, hvw.ne]
+
+lemma deleteIncidencesOf_degree_le {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {s : Finset (Fin n)} {v : Fin n} : (G.deleteIncidencesOf s).degree v ≤ G.degree v := by
+  exact degree_le_of_le deleteIncidencesOf_le
 
 end ABC
 end CaroWeiType

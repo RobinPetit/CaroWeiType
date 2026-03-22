@@ -5,6 +5,7 @@ import Mathlib.Data.Real.Basic
 
 namespace SimpleGraph
 
+@[simp]
 def degree_in {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (s : Finset (Fin n)) (x : Fin n) : ℕ :=
   (G.neighborFinset x ∩ s).card

@@ -22,6 +22,7 @@ lemma Claim0 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     exact subset_trans hs1 toFinset_mono
   · exact InducesForest_mono' _ _ _ hsW hs2.1
   · intro x hx
+    rw [degree_in]
     suffices #((G.deleteIncidencesOf W).neighborFinset x ∩ s) = #(G.neighborFinset x ∩ s) by
       exact this ▸ (hs2.2 x hx)
     refine congrArg _ ?_
