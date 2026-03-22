@@ -25,42 +25,13 @@ lemma Claim5_0 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
     rcases mem_union.mp hw with hw | hw
     · exact mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs'1 hw) |>.1
     · exact (mem_singleton.mp hw) ▸ ABC.coe_mem_toFinset.mp hx
-  · refine ⟨?_, ?_⟩
-    · refine G.IsDegenerateSet_union s' {x} ?_ (by simp [hdegx0])
-      refine IsDegenerateSet_mono' G _ s' {x} ?_ hs'2.1
-      ext y
-      simp only [mem_inter, mem_singleton, notMem_empty, iff_false, not_and]
-      intro hy
-      exact (not_iff_not.mpr mem_singleton).mp
-        <| mem_sdiff.mp (ABC.sdiff_toFinset ▸ (hs'1 hy)) |>.2
-    · intro w hw
-      rw [degree_in]
-      rcases mem_union.mp hw with hw | hw
-      · refine le_trans (le_of_eq ?_) (hs'2.2 w hw)
-        refine congrArg _ ?_
-        ext u
-        simp only [union_singleton, mem_inter, mem_neighborFinset, mem_insert, deleteIncidencesOf,
-          deleteIncidenceSet, incidenceSet, mem_singleton, iInf_iInf_eq_left, inf_adj,
-          deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or,
-          and_self_left]
-        constructor
-        · intro ⟨hwu, hu⟩
-          rcases hu with hu | hu
-          · subst hu
-            have hobj : G.degree u ≠ 0 := Ne.symm <| ne_of_lt hwu.symm.degree_pos_left
-            exact hobj hdegx0 |>.elim
-          · simp only [hwu, forall_const, true_and, hu, and_true]
-            refine ⟨?_, ?_⟩
-            · exact ne_of_deg0_of_adj hdegx0 hwu
-            · exact ne_of_deg0_of_adj' hdegx0 hwu
-        · intro ⟨⟨hwu, hu'⟩, hu⟩
-          simp only [hwu, hu, or_true, and_self]
-      · simp only [mem_singleton] at hw
-        subst hw
-        refine le_trans (le_of_eq ?_) zero_le_two
-        simp only [card_eq_zero]
-        suffices G.neighborFinset w = ∅ by grind
-        exact card_eq_zero.mp hdegx0
+  · refine G.IsDegenerateSet_union s' {x} ?_ (by simp [hdegx0])
+    refine IsDegenerateSet_mono' G _ s' {x} ?_ hs'2
+    ext y
+    simp only [mem_inter, mem_singleton, notMem_empty, iff_false, not_and]
+    intro hy
+    exact (not_iff_not.mpr mem_singleton).mp
+      <| mem_sdiff.mp (ABC.sdiff_toFinset ▸ (hs'1 hy)) |>.2
   · refine respects_union G ABC (respects_mono G ABC hs'1 hs'3) respects_singleton ?_
     simp only [mem_singleton, forall_eq]
     exact fun _ _ h ↦ (Ne.symm <| ne_of_lt h.symm.degree_pos_left) hdegx0
@@ -146,7 +117,7 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
         _ = 6⁻¹ := by grind
   else
     -- u ∈ A ∪ B as well
-    obtain ⟨s, hs, hslf, hsresp, hscard⟩ := by
+    obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
       refine ih (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) ?_
       rw [← @Tripartition.card_demote_eq_card n _ u]
       refine Tripartition.sdiff_card ABC ?_
@@ -234,14 +205,13 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
           · exact fun hB ↦ h₂ <| B_of_demote_ne _ heq ⟨hB, hznotinx⟩
           · exact fun hC ↦ h₃ <| C_of_demote_ne _ heq ⟨hC, hznotinx⟩
     refine ⟨s ∪ {x}, hs'ABC, ?_, hs'resp, ?_⟩
-    · refine linear_forest_of_forest_respects _ _ ABC hs'ABC ?_ hs'resp
-      intro t ht htne
+    · intro t ht htne
       if hxt :x ∈ t then
         refine ⟨x, hxt, ?_⟩
         refine le_trans ?_ (le_of_eq hdegx)
         refine card_le_card (fun y ↦ by simp)
       else
-        obtain ⟨z, hzt, hzdeg⟩ := hslf.1 t (by grind) htne
+        obtain ⟨z, hzt, hzdeg⟩ := hsf t (by grind) htne
         refine ⟨z, hzt, ?_⟩
         refine le_trans ?_ hzdeg
         refine card_le_card ?_

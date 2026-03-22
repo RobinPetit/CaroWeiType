@@ -17,14 +17,19 @@ lemma Claim0 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
   have h' : (ABC \ W).card < ABC.card := sdiff_card ABC hWABC'
   obtain ⟨s, ⟨hs1, hs2, hs3, hs4⟩⟩ := ih (G.deleteIncidencesOf W) (ABC \ W) h'
   have hsW : s ∩ W = ∅ := by grind [sdiff_toFinset]
-  refine ⟨s, ?_, ⟨?_, ?_⟩, ?_, ?_⟩
+  refine ⟨s, ?_, ?_, ?_, ?_⟩
   · simp only [Tripartition.toFinset, Tripartition.mem_iff] at hs1 ⊢
     exact subset_trans hs1 toFinset_mono
-  · exact InducesForest_mono' _ _ _ hsW hs2.1
+  · exact InducesForest_mono' _ _ _ hsW hs2
   · intro x hx
+    suffices (G.deleteIncidencesOf W).degree_in s x = G.degree_in s x by
+      rw [← this]
+      have hxW : x ∉ W := fun hxW ↦ by grind [hsW ▸ mem_inter.mpr ⟨hx, hxW⟩]
+      refine ⟨?_, ?_, ?_⟩
+      · exact fun h ↦ hs3 x hx |>.1 ⟨h, hxW⟩
+      · exact fun h ↦ hs3 x hx |>.2.1 ⟨h, hxW⟩
+      · exact fun h ↦ hs3 x hx |>.2.2 ⟨h, hxW⟩
     rw [degree_in]
-    suffices #((G.deleteIncidencesOf W).neighborFinset x ∩ s) = #(G.neighborFinset x ∩ s) by
-      exact this ▸ (hs2.2 x hx)
     refine congrArg _ ?_
     ext y
     simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, mem_inter, mem_neighborFinset,
@@ -33,34 +38,6 @@ lemma Claim0 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     intro hy hxy
     refine ⟨fun z ↦ ⟨fun hz ↦ ⟨hxy, fun _ ↦ ?_⟩, hxy.ne⟩, hxy.ne⟩
     constructor <;> exact ne_of_mem_finset_empty_inter _ _ hsW (by simp [hx, hy]) hz |>.symm
-  · intro w hw
-    have heq : #((G.deleteIncidencesOf W).neighborFinset w ∩ s) = #(G.neighborFinset w ∩ s) := by
-      refine congrArg _ ?_
-      ext u
-      constructor
-      · intro hu
-        simp only [deleteIncidencesOf, mem_inter, mem_neighborFinset, inf_adj, iInf_adj,
-          ne_eq] at hu ⊢
-        exact ⟨hu.1.1,  hu.2⟩
-      · intro hu
-        simp only [mem_inter, mem_neighborFinset, deleteIncidencesOf, deleteIncidenceSet,
-          incidenceSet, inf_adj, iInf_adj, deleteEdges_adj, ne_eq] at hu ⊢
-        refine ⟨⟨hu.1, ⟨fun v ↦ ⟨fun hv ↦ ⟨hu.1, ?_⟩, hu.1.ne⟩, hu.1.ne⟩⟩, hu.2⟩
-        intro this
-        simp only [Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff] at this
-        rcases this.2 <;>
-          { rename_i hv';
-            have _ : v ∈ s ∩ W := by { subst hv'; simp [mem_inter, hv, hw, hu.2]; }; grind }
-    have hwW : w ∉ W := by
-      let hobj := hs1 hw
-      simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
-        mem_filter, mem_univ, true_and] at hobj
-      grind
-    simp only [degree_in]
-    refine ⟨?_, ?_, ?_⟩
-    · exact fun hAw ↦ heq.symm ▸ (hs3 w hw).1   ⟨hAw, hwW⟩
-    · exact fun hBw ↦ heq.symm ▸ (hs3 w hw).2.1 ⟨hBw, hwW⟩
-    · exact fun hCw ↦ heq.symm ▸ (hs3 w hw).2.2 ⟨hCw, hwW⟩
   · exact le_trans h hs4
 
 end Tripartition

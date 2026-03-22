@@ -169,7 +169,7 @@ lemma Claim7 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       simp only [mem_insert, mem_singleton] at hw
       rcases hw with hx | hy | hz <;> grind
     subst heq
-    obtain ⟨s, hs, hslf, hsresp, hscard⟩ := by
+    obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
       refine ih (G.deleteIncidencesOf {v, y, z}) (ABC \ {v, y, z}) (ABC.sdiff_card ?_)
       exact nonempty_iff_ne_empty.mp ⟨y, by simp [ABC.coe_mem_toFinset.mp hy]⟩
     have h₁ : s ∪ {v} ⊆ ABC.toFinset := by
@@ -235,7 +235,7 @@ lemma Claim7 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           · exact fun h ↦ h₁ ⟨h, hu'⟩
           · exact fun h ↦ h₂ ⟨h, hu'⟩
           · exact fun h ↦ h₃ ⟨h, hu'⟩
-    refine ⟨s ∪ {v}, h₁, ABC.linear_forest_of_forest_respects (s ∪ {v}) G h₁ ?_ hresp, hresp, ?_⟩
+    refine ⟨s ∪ {v}, h₁, ?_, hresp, ?_⟩
     · intro t ht htne
       if hvt : v ∈ t then
         refine ⟨v, hvt, ?_⟩
@@ -259,7 +259,7 @@ lemma Claim7 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           · exact ha'
           · simp only [mem_singleton] at ha'
             exact hvt (ha' ▸ ha) |>.elim
-        obtain ⟨x', hx't, hx'⟩ := hslf.1 t hts htne
+        obtain ⟨x', hx't, hx'⟩ := hsf t hts htne
         refine ⟨x', hx't, ?_⟩
         refine le_trans ?_ hx'
         refine card_le_card ?_

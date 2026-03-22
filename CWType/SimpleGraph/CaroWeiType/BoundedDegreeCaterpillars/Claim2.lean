@@ -22,7 +22,7 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     refine Nonempty.ne_empty <| nonempty_def.mpr ?_
     obtain ⟨x, hx⟩ := nonempty_def.mp hFne
     refine ⟨x, mem_inter.mpr ⟨closed_neighborFinset_contains_Finset G F <| hx, hF hx⟩⟩
-  obtain ⟨s', hs', hlf', hresp, hcard'⟩ :=
+  obtain ⟨s', hs', hlf, hresp, hcard'⟩ :=
     ih (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F)
       (ABC \ (G.closed_neighborFinset_of_Finset F)) (Tripartition.sdiff_card ABC hcap)
   have hresp : respects (s' ∪ F) G ABC := by
@@ -37,55 +37,43 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     have _ : y ∉ G.closed_neighborFinset_of_Finset F := by grind
     contradiction
   refine ⟨s' ∪ F, fun _ _ ↦ by grind [Tripartition.toFinset_mono], ?_, hresp, ?_⟩
-  · refine ⟨?_, ?_⟩
-    · intro t ht htne
-      have _ : (t ∩ s') ⊆ s' := inter_subset_right
-      if hcap : t ∩ s' = ∅ then exact h.1 t (by grind) htne
-      else ?_
-      obtain ⟨x, hx, hx'⟩ := hlf'.1 (t ∩ s') (inter_subset_right) hcap
-      refine ⟨x, mem_of_mem_filter x hx, ?_⟩
-      refine le_trans ?_ hx'
-      refine Finset.card_le_card ?_
-      intro y
-      simp only [mem_filter, mem_inter, and_imp, deleteIncidencesOf, deleteIncidenceSet]
-      intro hy hxy
-      simp only [hy, true_and, closed_neighborFinset_of_Finset, mem_filter, mem_univ,
-        incidenceSet, inf_adj, hxy, iInf_adj, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet,
-        Sym2.mem_iff, not_or, ne_eq, hxy.ne, not_false_eq_true, and_true]
-      have hnotinF {z} (hz : z ∈ s') : z ∉ G.closed_neighborFinset_of_Finset F := by
-        let hobj := hs' hz
-        simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
-          mem_filter, mem_univ, true_and] at hobj
-        grind
-      refine ⟨?_, ?_⟩
-      · rcases mem_union.mp <| ht hy with hy | hy
-        · exact hy
-        · refine (hnotinF <| (mem_inter.mp hx).2) ?_ |>.elim
+  · intro t ht htne
+    have _ : (t ∩ s') ⊆ s' := inter_subset_right
+    if hcap : t ∩ s' = ∅ then exact h.1 t (by grind) htne
+    else ?_
+    obtain ⟨x, hx, hx'⟩ := hlf (t ∩ s') (inter_subset_right) hcap
+    refine ⟨x, mem_of_mem_filter x hx, ?_⟩
+    refine le_trans ?_ hx'
+    refine Finset.card_le_card ?_
+    intro y
+    simp only [mem_filter, mem_inter, and_imp, deleteIncidencesOf, deleteIncidenceSet]
+    intro hy hxy
+    simp only [hy, true_and, closed_neighborFinset_of_Finset, mem_filter, mem_univ,
+      incidenceSet, inf_adj, hxy, iInf_adj, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet,
+      Sym2.mem_iff, not_or, ne_eq, hxy.ne, not_false_eq_true, and_true]
+    have hnotinF {z} (hz : z ∈ s') : z ∉ G.closed_neighborFinset_of_Finset F := by
+      let hobj := hs' hz
+      simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
+        mem_filter, mem_univ, true_and] at hobj
+      grind
+    refine ⟨?_, ?_⟩
+    · rcases mem_union.mp <| ht hy with hy | hy
+      · exact hy
+      · refine (hnotinF <| (mem_inter.mp hx).2) ?_ |>.elim
+        simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
+        exact Or.inr ⟨y, hy, hxy⟩
+    · intro w h
+      have hw : w ∈ G.closed_neighborFinset_of_Finset F := by
+        simp [h, closed_neighborFinset_of_Finset]
+      constructor
+      · exact fun heq ↦ (hnotinF (mem_inter.mp hx).2) (heq ▸ hw)
+      · suffices y ∉ G.closed_neighborFinset_of_Finset F by
+          exact fun heq ↦ this (heq ▸ hw)
+        rcases mem_union.mp <| ht hy with hy | hy
+        · exact hnotinF hy
+        · refine (hnotinF (mem_inter.mp hx).2) ?_ |>.elim
           simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
           exact Or.inr ⟨y, hy, hxy⟩
-      · intro w h
-        have hw : w ∈ G.closed_neighborFinset_of_Finset F := by
-          simp [h, closed_neighborFinset_of_Finset]
-        constructor
-        · exact fun heq ↦ (hnotinF (mem_inter.mp hx).2) (heq ▸ hw)
-        · suffices y ∉ G.closed_neighborFinset_of_Finset F by
-            exact fun heq ↦ this (heq ▸ hw)
-          rcases mem_union.mp <| ht hy with hy | hy
-          · exact hnotinF hy
-          · refine (hnotinF (mem_inter.mp hx).2) ?_ |>.elim
-            simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
-            exact Or.inr ⟨y, hy, hxy⟩
-    · intro x hx
-      simp only [respects, degree_in] at hresp ⊢
-      have hxABC : x ∈ ABC := by
-        rcases mem_union.mp hx with hx | hx
-        · let hobj := hs' hx
-          simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
-            mem_filter, mem_univ, true_and] at hobj
-          grind [Tripartition.mem_iff]
-        · exact ABC.coe_mem_toFinset.mpr <| hF hx
-      simp only [Tripartition.mem_iff] at hxABC
-      grind
   · simp only [ge_iff_le, tsub_le_iff_right] at h'
     calc eval G ABC
       _ = eval G ABC - eval (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F)

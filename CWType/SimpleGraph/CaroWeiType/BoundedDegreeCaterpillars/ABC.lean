@@ -114,7 +114,7 @@ noncomputable def eval {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
 def Objective {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) : Prop :=
   ∃ s : Finset (Fin n),
-    s ⊆ ABC.toFinset ∧ G.InducesLinearForest s ∧ ABC.respects s G ∧ eval G ABC ≤ #s
+    s ⊆ ABC.toFinset ∧ G.InducesForest s ∧ ABC.respects s G ∧ eval G ABC ≤ #s
 
 end ABC
 end CaroWeiType
