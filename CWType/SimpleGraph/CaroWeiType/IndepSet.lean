@@ -6,27 +6,33 @@ namespace CaroWeiType
 open FiniteSimpleGraph
 open Finset
 
+private lemma notMem_of_empty_inter {n : ℕ} {s t : Finset (Fin n)} (h : s ∩ t = ∅) {x} :
+    x ∈ t → x ∉ s := by
+  intro ht hs
+  suffices x ∈ (∅ : Finset _) by exact (List.mem_nil_iff x).mp this
+  exact h ▸ mem_inter.mpr ⟨hs, ht⟩
+
 theorem Is0DegenerateSet_iff_IsIndepSet {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (s : Finset (Fin n)) :
     G.IsDegenerateSet 0 s ↔ G.IsIndepSet s := by
   constructor
-  · intro h x hx y hy hne hxy
-    obtain ⟨z, ⟨hz, h⟩⟩ := h {x, y} (by grind) (by simp)
+  · intro h x hx y hy hne
+    obtain ⟨z, hz, hzdeg⟩ := h {x, y} (by grind) (by simp)
     simp only [mem_insert, mem_singleton] at hz
-    simp only [nonpos_iff_eq_zero, card_eq_zero, filter_eq_empty_iff, mem_insert, mem_singleton,
-      forall_eq_or_imp, forall_eq] at h
-    cases hz with
-    | inl hz => exact h.2 (hz ▸ hxy)
-    | inr hz => exact h.1 <| (hz ▸ hxy.symm)
+    simp only [degree_in, nonpos_iff_eq_zero, card_eq_zero] at hzdeg
+    rcases hz with hz | hz
+    · suffices y ∉ G.neighborFinset z by grind [mem_neighborFinset]
+      refine notMem_of_empty_inter hzdeg (by grind)
+    · subst hz
+      suffices x ∉ G.neighborFinset z by grind [mem_neighborFinset, mem_neighborFinset_symm]
+      refine notMem_of_empty_inter hzdeg (by grind)
   · intro h s' hs' hs'ne
-    obtain x := @Classical.choice s' <| Nonempty.to_subtype (by grind)
-    refine ⟨x.1, x.2, ?_⟩
-    simp only [nonpos_iff_eq_zero, card_eq_zero, filter_eq_empty_iff]
-    intro y hy
-    if hxy : x = y then
-      exact hxy.symm ▸ G.irrefl
-    else
-      exact h (hs' x.2) (hs' hy) hxy
+    obtain ⟨x, hx⟩ := nonempty_def.mp <| nonempty_iff_ne_empty.mpr hs'ne
+    refine ⟨x, hx, ?_⟩
+    simp only [degree_in, nonpos_iff_eq_zero, card_eq_zero]
+    ext y
+    simp only [mem_inter, mem_neighborFinset, notMem_empty, iff_false, not_and]
+    exact fun hxy hy ↦ h (hs' hx) (hs' hy) hxy.ne hxy
 
 theorem IndepSet_LowerBound_iff_1DegenerateSet_LowerBound (f : ℕ → ℝ) :
     IsCaroWeiTypeLowerBound f (fun G s ↦ G.graph.IsIndepSet s)

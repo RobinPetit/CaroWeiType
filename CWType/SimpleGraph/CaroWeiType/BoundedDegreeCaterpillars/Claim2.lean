@@ -37,43 +37,13 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     have _ : y ∉ G.closed_neighborFinset_of_Finset F := by grind
     contradiction
   refine ⟨s' ∪ F, fun _ _ ↦ by grind [Tripartition.toFinset_mono], ?_, hresp, ?_⟩
-  · intro t ht htne
-    have _ : (t ∩ s') ⊆ s' := inter_subset_right
-    if hcap : t ∩ s' = ∅ then exact h.1 t (by grind) htne
-    else ?_
-    obtain ⟨x, hx, hx'⟩ := hlf (t ∩ s') (inter_subset_right) hcap
-    refine ⟨x, mem_of_mem_filter x hx, ?_⟩
-    refine le_trans ?_ hx'
-    refine Finset.card_le_card ?_
-    intro y
-    simp only [mem_filter, mem_inter, and_imp, deleteIncidencesOf, deleteIncidenceSet]
-    intro hy hxy
-    simp only [hy, true_and, closed_neighborFinset_of_Finset, mem_filter, mem_univ,
-      incidenceSet, inf_adj, hxy, iInf_adj, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet,
-      Sym2.mem_iff, not_or, ne_eq, hxy.ne, not_false_eq_true, and_true]
-    have hnotinF {z} (hz : z ∈ s') : z ∉ G.closed_neighborFinset_of_Finset F := by
-      let hobj := hs' hz
-      simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
-        mem_filter, mem_univ, true_and] at hobj
-      grind
-    refine ⟨?_, ?_⟩
-    · rcases mem_union.mp <| ht hy with hy | hy
-      · exact hy
-      · refine (hnotinF <| (mem_inter.mp hx).2) ?_ |>.elim
-        simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
-        exact Or.inr ⟨y, hy, hxy⟩
-    · intro w h
-      have hw : w ∈ G.closed_neighborFinset_of_Finset F := by
-        simp [h, closed_neighborFinset_of_Finset]
-      constructor
-      · exact fun heq ↦ (hnotinF (mem_inter.mp hx).2) (heq ▸ hw)
-      · suffices y ∉ G.closed_neighborFinset_of_Finset F by
-          exact fun heq ↦ this (heq ▸ hw)
-        rcases mem_union.mp <| ht hy with hy | hy
-        · exact hnotinF hy
-        · refine (hnotinF (mem_inter.mp hx).2) ?_ |>.elim
-          simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
-          exact Or.inr ⟨y, hy, hxy⟩
+  · refine InducesForest_union_disjoint_neighborhoods ?_ h.1 ?_
+    · exact G.InducesForest_mono' s' _ (by grind [sdiff_toFinset]) hlf
+    · intro x hx y hy
+      let hobj := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs' hx) |>.2
+      simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and, not_or,
+        not_exists, not_and] at hobj
+      exact hobj.2 _ hy
   · simp only [ge_iff_le, tsub_le_iff_right] at h'
     calc eval G ABC
       _ = eval G ABC - eval (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F)

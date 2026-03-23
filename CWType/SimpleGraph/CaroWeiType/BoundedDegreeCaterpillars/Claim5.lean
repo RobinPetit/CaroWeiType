@@ -209,17 +209,16 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
       if hxt :x ∈ t then
         refine ⟨x, hxt, ?_⟩
         refine le_trans ?_ (le_of_eq hdegx)
-        refine card_le_card (fun y ↦ by simp)
+        refine card_le_card inter_subset_left
       else
         obtain ⟨z, hzt, hzdeg⟩ := hsf t (by grind) htne
         refine ⟨z, hzt, ?_⟩
         refine le_trans ?_ hzdeg
         refine card_le_card ?_
         intro y
-        simp only [mem_filter, deleteIncidenceSet, incidenceSet, deleteEdges_adj,
+        simp only [mem_inter, mem_neighborFinset, deleteIncidenceSet, incidenceSet, deleteEdges_adj,
           Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, and_imp]
-        refine fun hy hzy ↦ ⟨hy, hzy, fun _ ↦ ⟨?_, ?_⟩⟩
-        <;> { intro heq; subst heq; contradiction }
+        refine fun hzy hy ↦ ⟨⟨hzy, fun _ ↦ by grind [Adj.ne]⟩, hy⟩
     · have : ((ABC \ {x}).demote u).toFinset = ABC.toFinset \ {x} := by
         rw [← demote_toFinset_eq]
         exact ABC.sdiff_toFinset

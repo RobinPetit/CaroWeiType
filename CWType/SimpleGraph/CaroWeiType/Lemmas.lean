@@ -35,6 +35,10 @@ lemma p_and_p_implies {p q : Prop} : (p → (p ∧ q)) ↔ (p → q) :=
   ⟨fun h hp ↦ h hp |>.2, fun hpq hp ↦ ⟨hp, hpq hp⟩⟩
 
 @[simp]
+lemma p_imp_q_imp_p {p q : Prop} : p → q → p :=
+  fun h _ ↦ h
+
+@[simp]
 private lemma eq_of_subset_and_eq_card {α : Type*} {A B : Finset α} (h : A ⊆ B) (h' : #A = #B) :
     A = B := by
   classical
@@ -504,16 +508,6 @@ lemma induced_degree_eq {V : Type*} [DecidableEq V]
       SetLike.mem_coe, SetLike.coe_sort_coe, Set.mem_image, comap_adj, Subtype.exists,
       exists_and_right, exists_eq_right] at hy ⊢
     exact ⟨hy.2, hy.1⟩
-
-lemma induced_degree_eq' {n : ℕ}
-    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (s : Finset (Fin n)) (v : Fin n) (hv : v ∈ s) :
-    (G.induce s).degree ⟨v, hv⟩ = ({w ∈ s | G.Adj v w}).card := by
-  classical
-  rw [induced_degree_eq]
-  refine congrArg _ ?_
-  ext w
-  simp only [mem_inter, mem_neighborFinset, mem_filter, And.comm]
 
 namespace SimpleGraph
 

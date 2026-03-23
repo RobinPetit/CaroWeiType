@@ -242,13 +242,13 @@ lemma Claim7 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         refine le_trans ?_ (le_of_eq <| card_singleton w)
         refine card_le_card ?_
         intro u hu
-        simp only [mem_filter, mem_singleton] at hu ⊢
-        let _ := hNv ▸ G.mem_neighborFinset .. |>.mpr hu.2
+        simp only [mem_inter, mem_neighborFinset, mem_singleton] at hu ⊢
+        let _ := hNv ▸ G.mem_neighborFinset .. |>.mpr hu.1
         by_contra
         have hu' : u = y ∨ u = z := by grind
         rcases hu' with hu' | hu' <;> {
           subst hu'
-          rcases mem_union.mp (ht hu.1) with h' | h'
+          rcases mem_union.mp (ht hu.2) with h' | h'
           · grind [mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs h') |>.2]
           · grind [G.irrefl]
         }
@@ -264,15 +264,13 @@ lemma Claim7 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         refine le_trans ?_ hx'
         refine card_le_card ?_
         intro u hu
-        simp only [mem_filter] at hu
-        simp only [deleteIncidencesOf, mem_insert, mem_singleton, deleteIncidenceSet, incidenceSet,
-          inf_adj, iInf_adj, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and,
-          not_or, ne_eq, mem_filter, hu.1, hu.2, forall_const, true_and, hu.2.ne, not_false_eq_true,
-          and_true, forall_eq_or_imp, forall_eq]
-        have h'x' : x' ∉ ({v, y, z} : Finset _) :=
-          mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs (hts hx't)) |>.2
-        have h'u : u ∉ ({v, y, z} : Finset _) :=
-          mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs (hts hu.1)) |>.2
+        simp only [mem_inter, mem_neighborFinset] at hu
+        simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, mem_inter,
+          mem_neighborFinset, mem_insert, mem_singleton, inf_adj, hu.1, iInf_adj, deleteEdges_adj,
+          Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, true_and, not_or, ne_eq, hu.1.ne,
+          not_false_eq_true, and_true, forall_eq_or_imp, forall_eq, hu.2]
+        let h'x' := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs (hts hx't)) |>.2
+        let h'u := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs (hts hu.2)) |>.2
         grind
     · calc eval G ABC
         _ ≤ eval (G.deleteIncidencesOf {v, y, z}) (ABC \ {v, y, z}) + 1 :=
