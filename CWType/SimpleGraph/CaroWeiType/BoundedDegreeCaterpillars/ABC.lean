@@ -68,7 +68,7 @@ def respects {n : ℕ} (s : Finset (Fin n)) (G : SimpleGraph (Fin n)) [Decidable
 
 end Tripartition
 
-@[simp]
+@[simp, reducible]
 noncomputable def fA (d : ℕ) : ℝ :=
   if d = 0 then 1
   else if d = 1 then 5 / (6 : ℝ)
@@ -103,6 +103,15 @@ noncomputable def γ {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (A
   if ABC.A v      then exact fA (G.degree v - 1) - fA (G.degree v)
   else if ABC.B v then exact fB (G.degree v - 1) - fB (G.degree v)
   else if ABC.C v then exact fC (G.degree v - 1) - fC (G.degree v)
+  else                 exact 0
+
+@[simp]
+noncomputable def ℓ {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
+    (v : Fin n) : ℝ := by
+  classical
+  if ABC.A v      then exact fA (G.degree v) - fA (G.degree v + 1)
+  else if ABC.B v then exact fB (G.degree v) - fB (G.degree v + 1)
+  else if ABC.C v then exact fC (G.degree v) - fC (G.degree v + 1)
   else                 exact 0
 
 @[simp]

@@ -13,8 +13,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
   induction hcard : ABC.card using Nat.strong_induction_on generalizing G ABC with | h k ih
   if hk : k = 0 then
     refine ⟨∅, ?_, ?_, ?_, ?_⟩ <;>
-    simp [respects, card_eq_zero.mp <| hk ▸ hcard,
-      InducesLinearForest, InducesForest, IsDegenerateSet]
+    simp [respects, card_eq_zero.mp <| hk ▸ hcard, InducesForest, IsDegenerateSet]
   else
   have ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       ABC'.card < ABC.card → Objective G' ABC' :=
