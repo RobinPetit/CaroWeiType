@@ -48,6 +48,31 @@ lemma mem_iff {n : ℕ} (ABC : Tripartition n) {x : Fin n} :
   rfl
 end Tripartition
 
+@[simp]
+lemma zero_le_fA {d : ℕ} : 0 ≤ fA d := by
+  rw [fA]
+  split_ifs
+  · exact zero_le_one
+  · grind
+  · exact div_nonneg zero_le_two (le_of_lt add_one_pos)
+
+@[simp]
+lemma zero_le_fB {d : ℕ} : 0 ≤ fB d := by
+  rw [fB]
+  split_ifs
+  · exact zero_le_one
+  · grind
+  · grind
+  · refine div_nonneg (by grind) (le_of_lt add_one_pos)
+
+@[simp]
+lemma zero_le_fC {d : ℕ} : 0 ≤ fC d := by
+  rw [fC]
+  split_ifs
+  · exact zero_le_one
+  · grind
+  · refine div_nonneg (by grind) (le_of_lt add_one_pos)
+
 -- f(0)
 
 @[simp]
@@ -475,7 +500,7 @@ lemma demote_from_A {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.A v) 
 @[simp]
 lemma demote_from_A' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.A v) :
     ¬(ABC.demote v).A v := by
-  exact fun hA ↦ (ABC.demote v).sound v |>.1 ⟨hA, ABC.demote_from_A v hv⟩
+  exact not_A_of_B <| demote_from_A ABC v hv
 
 @[simp]
 lemma demote_from_B {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
@@ -485,7 +510,7 @@ lemma demote_from_B {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) 
 @[simp]
 lemma demote_from_B' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
     ¬(ABC.demote v).B v := by
-  exact fun hB ↦ (ABC.demote v).sound v |>.2.2 ⟨hB, ABC.demote_from_B v hv⟩
+  exact not_B_of_C <| demote_from_B ABC v hv
 
 @[simp]
 lemma demote_from_C {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.C v) :
@@ -521,11 +546,66 @@ lemma mem_of_mem_demote {n : ℕ} (ABC : Tripartition n) {x y : Fin n} :
     x ∈ ABC.demote y → x ∈ ABC := by
   grind [mem_iff, demote, demote_A, demote_B]
 
+lemma promote_from_A {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.A v) :
+    (ABC.promote v).A v := by
+  simp only [promote, hv, not_B_of_A, ↓reduceDIte, not_C_of_A]
+
+lemma promote_from_B {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
+    (ABC.promote v).A v := by
+  simp [promote, promote_B, hv]
+
+lemma promote_from_B' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
+    ¬(ABC.promote v).B v := by
+  refine not_B_of_A <| promote_from_B ABC v hv
+
+lemma promote_from_C {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.C v) :
+    (ABC.promote v).B v := by
+  simp [promote, promote_C, hv]
+
+lemma promote_from_C' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.C v) :
+    ¬(ABC.promote v).C v := by
+  exact not_C_of_B <| promote_from_C ABC v hv
+
+@[simp]
+lemma A_of_promote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
+    ABC.A v → (ABC.promote w).A v := by
+  intro hA
+  simp only [promote, promote_B, promote_C]
+  split_ifs <;> simp [h, hA]
+
+@[simp]
+lemma B_of_promote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
+    ABC.B v → (ABC.promote w).B v := by
+  intro hB
+  simp only [promote, promote_B, promote_C]
+  split_ifs <;> simp [h, hB]
+
+@[simp]
+lemma C_of_promote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
+    ABC.C v → (ABC.promote w).C v := by
+  intro hC
+  simp only [promote, promote_B, promote_C]
+  split_ifs <;> simp [h, hC]
+
+lemma mem_promote_of_mem {n : ℕ} (ABC : Tripartition n) {x y : Fin n} :
+    x ∈ ABC → x ∈ ABC.promote y := by
+  grind [mem_iff, promote, promote_B, promote_C]
+
+lemma mem_of_mem_promote {n : ℕ} (ABC : Tripartition n) {x y : Fin n} :
+    x ∈ ABC.promote y → x ∈ ABC := by
+  grind [mem_iff, promote, promote_B, promote_C]
+
 lemma demote_toFinset_eq {n : ℕ} (ABC : Tripartition n) {x : Fin n} :
     ABC.toFinset = (ABC.demote x).toFinset := by
   ext y
   simp only [← coe_mem_toFinset]
   exact ⟨mem_demote_of_mem ABC, mem_of_mem_demote ABC⟩
+
+lemma promote_toFinset_eq {n : ℕ} (ABC : Tripartition n) {x : Fin n} :
+    ABC.toFinset = (ABC.promote x).toFinset := by
+  ext y
+  simp only [← coe_mem_toFinset]
+  exact ⟨mem_promote_of_mem ABC, mem_of_mem_promote ABC⟩
 
 @[simp 100]
 lemma sdiff_empty {n : ℕ} (ABC : Tripartition n) : (ABC \ ∅) = ABC := by
@@ -541,6 +621,12 @@ lemma card_demote_eq_card {n : ℕ} {ABC : Tripartition n} {x : Fin n} :
     ABC.card = (ABC.demote x).card := by
   simp only [card]
   rw [demote_toFinset_eq]
+
+@[simp]
+lemma card_promote_eq_card {n : ℕ} {ABC : Tripartition n} {x : Fin n} :
+    ABC.card = (ABC.promote x).card := by
+  simp only [card]
+  rw [promote_toFinset_eq]
 
 @[simp]
 lemma sdiff_notMem {n : ℕ} (ABC : Tripartition n) (s : Finset (Fin n)) :
