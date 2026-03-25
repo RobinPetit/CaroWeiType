@@ -46,6 +46,7 @@ lemma coe_mem_toFinset {n : ℕ} (ABC : Tripartition n) {x : Fin n} :
 lemma mem_iff {n : ℕ} (ABC : Tripartition n) {x : Fin n} :
     x ∈ ABC ↔ ABC.A x ∨ ABC.B x ∨ ABC.C x := by
   rfl
+
 end Tripartition
 
 @[simp]
@@ -72,6 +73,52 @@ lemma zero_le_fC {d : ℕ} : 0 ≤ fC d := by
   · exact zero_le_one
   · grind
   · refine div_nonneg (by grind) (le_of_lt add_one_pos)
+
+@[simp]
+lemma fA_le_one {d : ℕ} : fA d ≤ 1 := by
+  rw [fA]
+  split_ifs
+  · exact le_refl _
+  · grind
+  · refine div_le_one₀ add_one_pos |>.mpr ?_
+    rw [← Nat.cast_one, ← Nat.cast_add]
+    refine Nat.cast_le.mpr <| by grind
+
+@[simp]
+lemma fB_le_one {d : ℕ} : fB d ≤ 1 := by
+  rw [fB]
+  split_ifs
+  · exact le_refl _
+  · grind
+  · grind
+  · refine div_le_one₀ add_one_pos |>.mpr ?_
+    rw [← Nat.cast_one, ← Nat.cast_add]
+    have H : 4 / 3 ≤ (2 : ℝ) := by grind
+    refine le_trans H ?_
+    refine Nat.cast_le.mpr <| by grind
+
+@[simp]
+lemma fC_le_one {d : ℕ} : fC d ≤ 1 := by
+  rw [fC]
+  split_ifs
+  · exact le_refl _
+  · grind
+  · refine div_le_one₀ add_one_pos |>.mpr ?_
+    rw [← Nat.cast_one, ← Nat.cast_add]
+    have H : 2 / 3 ≤ (1 : ℝ) := by grind
+    refine le_trans H ?_
+    rw [← Nat.cast_one]
+    refine Nat.cast_le.mpr <| by grind
+
+@[simp]
+lemma f_le_one {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+    {v : Fin n} : f G ABC v ≤ 1 := by
+  rw [f]
+  split_ifs
+  · exact fA_le_one
+  · exact fB_le_one
+  · exact fC_le_one
+  · exact zero_le_one
 
 -- f(0)
 
@@ -150,6 +197,13 @@ lemma fC3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripar
     (hC : ABC.C v) (hv : G.degree v = 3) : f G ABC v = 1 / 6 := by
   simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, Nat.succ_ne_self, or_self, Nat.cast_ofNat, one_div]
+  grind only
+
+@[simp]
+lemma fC4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hC : ABC.C v) (hv : G.degree v = 4) : f G ABC v = 2 / 15 := by
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
+    OfNat.ofNat_ne_one, Nat.cast_ofNat, one_div]
   grind only
 
 @[simp]
@@ -267,7 +321,6 @@ lemma fC_le_16_if_1_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
 lemma f_le_1_over_2_of_3_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} {v : Fin n} (hv : 3 ≤ G.degree v) :
     f G ABC v ≤ 1 / 2 := by
-  -- simp only [f]
   if hvABC : v ∈ ABC then
     rcases ABC.mem_iff.mp hvABC with hA | hB | hC
     · exact fA_le_12_of_3_le_deg hA hv
@@ -546,6 +599,11 @@ lemma mem_of_mem_demote {n : ℕ} (ABC : Tripartition n) {x y : Fin n} :
     x ∈ ABC.demote y → x ∈ ABC := by
   grind [mem_iff, demote, demote_A, demote_B]
 
+@[simp]
+lemma mem_iff_mem_demote {n : ℕ} (ABC : Tripartition n) {x y : Fin n} :
+    x ∈ ABC ↔ x ∈ ABC.demote y :=
+  ⟨ABC.mem_demote_of_mem, ABC.mem_of_mem_demote⟩
+
 lemma promote_from_A {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.A v) :
     (ABC.promote v).A v := by
   simp only [promote, hv, not_B_of_A, ↓reduceDIte, not_C_of_A]
@@ -633,6 +691,23 @@ lemma sdiff_notMem {n : ℕ} (ABC : Tripartition n) (s : Finset (Fin n)) :
     ∀ x ∈ s, x ∉ ABC \ s := by
   intro x hx
   simp [sdiff, hx]
+
+@[simp]
+lemma sdiff_mem {n : ℕ} (ABC : Tripartition n) (s : Finset (Fin n)) :
+    ∀ x ∈ ABC, x ∉ s → x ∈ ABC \ s := by
+  intro x hx hxs
+  simp only [mem_iff] at hx
+  rcases hx with hx | hx | hx
+  · exact (mem_iff _).mpr <| Or.inl ⟨hx, hxs⟩
+  · exact (mem_iff _).mpr <| Or.inr <| Or.inl ⟨hx, hxs⟩
+  · exact (mem_iff _).mpr <| Or.inr <| Or.inr ⟨hx, hxs⟩
+
+@[simp]
+lemma mem_sdiff_iff {n : ℕ} (ABC : Tripartition n) (s : Finset (Fin n)) {x : Fin n} :
+    x ∈ ABC \ s ↔ (x ∈ ABC ∧ x ∉ s) := by
+  refine ⟨?_, fun ⟨hx, hxs⟩ ↦ sdiff_mem ABC s x hx hxs⟩
+  refine fun hx ↦ ⟨?_, fun this ↦ ABC.sdiff_notMem s _ this hx |>.elim⟩
+  rcases (mem_iff _).mpr hx with h | h | h <;> simp [mem_iff, h.1]
 
 @[simp]
 lemma toFinset_mono {n : ℕ} {ABC : Tripartition n} {s : Finset (Fin n)} :
@@ -884,9 +959,7 @@ lemma f_pos_of_mem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC
     grind
 
 lemma f_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n)
-    (v : Fin n) : v ∉ ABC → 0 = f G ABC v := by
-  intro hv
+    {ABC : Tripartition n} {v : Fin n} (hv : v ∉ ABC) : 0 = f G ABC v := by
   simp only [Tripartition.mem_iff, not_or] at hv
   obtain ⟨hvA, hvB, hvC⟩ := hv
   simp [f, hvA, hvB, hvC]
@@ -945,7 +1018,7 @@ lemma eval_lt {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           if hv : v ∈ ABC then
             exact le_of_lt <| f_pos_of_mem G ABC v hv
           else
-            exact le_of_eq <| f_eq_zero_of_notMem G ABC v hv
+            exact le_of_eq <| f_eq_zero_of_notMem G hv
         _ = ∑ v ∈ (W ∩ ABC.toFinset), f G ABC v := sum_inter_add_sum_diff ..
     _ = ∑ v ∈ ABC.toFinset, f G ABC v := by
       have _ {s t : Finset (Fin n)} : s ∩ t = t ∩ s := by exact inter_comm s t

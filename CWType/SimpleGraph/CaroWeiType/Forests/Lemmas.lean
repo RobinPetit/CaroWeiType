@@ -10,9 +10,34 @@ lemma InducesForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel 
     exists_false, imp_self, forall_eq, singleton_ne_empty, not_false_eq_true, mem_singleton,
     exists_eq_left, mem_neighborFinset, SimpleGraph.irrefl, inter_singleton_of_notMem, and_self]
 
+lemma InducesForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {v w : Fin n} : G.InducesForest {v, w} := by
+  simp only [InducesForest, IsDegenerateSet]
+  intro t ht htne
+  obtain ⟨u, hu⟩ := nonempty_def.mp <| nonempty_iff_ne_empty.mpr htne
+  refine ⟨u, hu, ?_⟩
+  have H : ({v, w} \ {u} : Finset _).card ≤ 1 := by grind
+  refine le_trans ?_ H
+  refine card_le_card ?_
+  intro x hx
+  simp only [mem_inter, mem_neighborFinset, mem_sdiff, mem_insert, mem_singleton] at hx ⊢
+  grind [Adj.ne']
+
 lemma InducesLinearForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {v : Fin n} : G.InducesLinearForest {v} := by
   simp [InducesLinearForest, InducesForest_singleton]
+
+lemma InducesLinearForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {v w : Fin n} : G.InducesLinearForest {v, w} := by
+  simp only [InducesLinearForest, InducesForest_pair, mem_insert, mem_singleton, degree_in,
+    forall_eq_or_imp, mem_neighborFinset, SimpleGraph.irrefl, not_false_eq_true,
+    inter_insert_of_notMem, forall_eq, true_and]
+  refine ⟨?_, ?_⟩
+  · refine le_trans ?_ <| one_le_two
+    rw [← card_singleton w]
+    exact card_le_card inter_subset_right
+  · refine le_trans ?_ <| @card_le_two _ _ v w
+    exact card_le_card inter_subset_right
 
 lemma InducesForest_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
     [DecidableRel G₁.Adj] [DecidableRel G₂.Adj]
@@ -25,6 +50,12 @@ lemma InducesForest_mono' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Ad
     (h : (G.deleteIncidencesOf s₂).InducesForest s₁) :
     G.InducesForest s₁ := by
   exact IsDegenerateSet_mono' G 1 s₁ s₂ hs h
+
+lemma InducesForest_union_leaf {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (s : Finset (Fin n)) (hs : G.InducesForest s) {v : Fin n} (hv : G.degree_in s v ≤ 1) :
+    G.InducesForest (s ∪ {v}) := by
+  simp only [InducesForest] at hs ⊢
+  exact G.IsDegenerateSet_union_singleton s hs hv
 
 lemma InducesForest_union_disjoint_neighborhoods {n : ℕ} {G : SimpleGraph (Fin n)}
     [DecidableRel G.Adj] {s₁ s₂ : Finset (Fin n)} (hs₁ : G.InducesForest s₁)

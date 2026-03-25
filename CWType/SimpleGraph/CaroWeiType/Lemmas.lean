@@ -26,6 +26,11 @@ lemma add_one_add_one_pos {n : ℕ} : 0 < n + (1 : ℝ) + 1 := by
   exact add_one_pos
 
 @[simp]
+lemma add_two_pos {n : ℕ} : 0 < n + (2 : ℝ) := by
+  rw [← one_add_one_eq_two, ← add_assoc]
+  exact add_one_add_one_pos
+
+@[simp]
 lemma one_add_pos {n : ℕ} : 0 < (1 : ℝ) + n := by
   rw [← Nat.cast_one, ← Nat.cast_add, Nat.cast_pos]
   exact Nat.pos_of_neZero (1 + n)
@@ -39,7 +44,7 @@ lemma p_imp_q_imp_p {p q : Prop} : p → q → p :=
   fun h _ ↦ h
 
 @[simp]
-private lemma eq_of_subset_and_eq_card {α : Type*} {A B : Finset α} (h : A ⊆ B) (h' : #A = #B) :
+lemma eq_of_subset_and_eq_card {α : Type*} {A B : Finset α} (h : A ⊆ B) (h' : #A = #B) :
     A = B := by
   classical
   induction hA : #A generalizing A B with
@@ -293,6 +298,41 @@ lemma closed_neighborFinset_of_singleton_eq {V : Type*} [Fintype V] [DecidableEq
     simp only [h, false_or]
     exact ⟨fun h ↦ h.symm, fun h ↦ h.symm⟩
 
+lemma mem_closed_neighborFinset_iff {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] {v : V} {F : Finset V} :
+    v ∈ G.closed_neighborFinset_of_Finset F
+      ↔ v ∈ F ∨ ∃ x ∈ F, v ∈ G.neighborFinset x := by
+  simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
+  constructor
+  · intro hv
+    rcases hv with hv | hv
+    · exact Or.inl hv
+    · obtain ⟨x, hx, hvx⟩ := hv
+      exact Or.inr ⟨x, hx, G.mem_neighborFinset .. |>.mpr hvx.symm⟩
+  · intro hv
+    rcases hv with hv | hv
+    · exact Or.inl hv
+    · obtain ⟨x, hx, hvx⟩ := hv
+      exact Or.inr ⟨x, hx, Adj.symm <| G.mem_neighborFinset .. |>.mp hvx⟩
+
+lemma closed_neighborFinset_pair_eq {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] {v w : V} :
+    G.closed_neighborFinset_of_Finset {v, w}
+      = G.closed_neighborFinset_of_Finset {v} ∪ G.closed_neighborFinset_of_Finset {w} := by
+  ext u
+  simp only [mem_closed_neighborFinset_iff, mem_insert, mem_singleton, mem_neighborFinset,
+    exists_eq_or_imp, ↓existsAndEq, true_and, mem_union, exists_eq_left]
+  grind
+
+lemma closed_neighborFinset_pair_eq' {V : Type*} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] {v w : V} :
+    G.closed_neighborFinset_of_Finset {v, w}
+      = {v, w} ∪ G.neighborFinset v ∪ G.neighborFinset w := by
+  ext u
+  simp only [mem_closed_neighborFinset_iff, mem_insert, mem_singleton, mem_neighborFinset,
+    exists_eq_or_imp, ↓existsAndEq, true_and, insert_union, singleton_union, mem_union]
+  grind
+
 lemma closed_neighborFinset_contains_Finset {V : Type*} [Fintype V] [DecidableEq V]
     (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) :
     s ⊆ G.closed_neighborFinset_of_Finset s := by
@@ -330,6 +370,15 @@ lemma deleteIncidencesOf_notadj {n : ℕ} (G : SimpleGraph (Fin n)) {s : Finset 
     Decidable.not_not]
   intro hxy h
   exact false_of_ne (h x |>.1 hx |>.2 hxy |>.1) |>.elim
+
+lemma deleteIncidencesOf_le_mono {n : ℕ} {G₁ G₂ : SimpleGraph (Fin n)} {s : Finset (Fin n)}
+    (hle : G₁ ≤ G₂) : G₁.deleteIncidencesOf s ≤ G₂.deleteIncidencesOf s := by
+  intro u v
+  simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, inf_adj, iInf_adj,
+    deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq, and_imp]
+  intro h₁uv h hne
+  simp only [hle h₁uv, forall_const, true_and, hne, not_false_eq_true, and_true]
+  exact fun _ hw ↦  h _ |>.1 hw |>.2 h₁uv
 
 theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
     (G : SimpleGraph (Fin n))
@@ -647,10 +696,50 @@ lemma neighborFinset_eq_deg3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel 
     · grind
   refine ⟨σ 2, σ 1, σ 0, hσ.symm.trans this, by grind⟩
 
+lemma notMem_of_degree_in_eq_zero_of_adj {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {s : Finset (Fin n)} {v w : Fin n} (hdv : G.degree_in s v = 0) (hvw : G.Adj v w) :
+    w ∉ s := by
+  intro hw
+  suffices 1 ≤ 0 by grind
+  rw [← hdv, ← card_singleton w]
+  refine card_le_card ?_
+  simp [hvw, hw]
+
 lemma degree_in_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {u : Fin n} {s : Finset (Fin n)} :
     G.degree_in s u ≤ G.degree u := by
   refine card_le_card inter_subset_left
+
+lemma degree_in_mono {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u : Fin n} {s t : Finset (Fin n)} (h : s ⊆ t) :
+    G.degree_in s u ≤ G.degree_in t u := by
+  exact card_le_card <| inter_subset_inter (subset_refl _) h
+
+lemma degree_in_union_self {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u : Fin n} {s : Finset (Fin n)} :
+    G.degree_in s u = G.degree_in (s ∪ {u}) u := by
+  refine congrArg Finset.card ?_
+  ext v
+  simp only [mem_inter, mem_neighborFinset, union_singleton, SimpleGraph.irrefl, not_false_eq_true,
+    inter_insert_of_notMem]
+
+lemma degree_in_union_le {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u : Fin n} {s t : Finset (Fin n)} :
+    G.degree_in (s ∪ t) u ≤ G.degree_in s u + #t := by
+  simp_rw [degree_in]
+  suffices G.neighborFinset u ∩ (s ∪ t) ⊆ (G.neighborFinset u ∩ s) ∪ t by
+    exact le_trans (card_le_card this) <| card_union_le ..
+  grind
+
+lemma degree_in_union_eq {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u : Fin n} {s t : Finset (Fin n)} (ht : t ∩ G.neighborFinset u = ∅) :
+    G.degree_in (s ∪ t) u = G.degree_in s u := by
+  refine congrArg Finset.card ?_
+  ext w
+  simp only [mem_inter, mem_neighborFinset, mem_union, and_congr_right_iff, or_iff_left_iff_imp]
+  intro huw hwt
+  have h : w ∈ (∅ : Finset _) := ht ▸ mem_inter.mpr ⟨hwt, G.mem_neighborFinset .. |>.mpr huw⟩
+  simp at h
 
 lemma degree_in_deleteIncidenceSet {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     {u v : Fin n} (s : Finset (Fin n)) (hu : u ∉ s) (hu' : u ≠ v) :

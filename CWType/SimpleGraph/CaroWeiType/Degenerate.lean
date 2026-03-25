@@ -138,6 +138,22 @@ lemma IsDegenerateSet_union {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.
         refine mem_inter.mpr ⟨hy, hy'⟩
     exact hs₁ t ht' htne
 
+lemma IsDegenerateSet_union_singleton {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {k : ℕ}
+    (s : Finset (Fin n)) (hs : G.IsDegenerateSet k s) {v : Fin n} (hv : G.degree_in s v ≤ k) :
+    G.IsDegenerateSet k (s ∪ {v}) := by
+  intro t ht htne
+  if hvt : v ∈ t then
+    refine ⟨v, hvt, ?_⟩
+    refine le_trans ?_ hv
+    rw [@degree_in_union_self _ _ _ _ s]
+    exact degree_in_mono ht
+  else
+    refine hs t ?_ htne
+    intro x hx
+    rcases mem_union.mp (ht hx) with hx | hx'
+    · exact hx
+    · exact hvt ((mem_singleton.mp hx') ▸ hx) |>.elim
+
 lemma IsDegenerateSet_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
     [DecidableRel G₁.Adj] [DecidableRel G₂.Adj] (hle : G₁ ≤ G₂) (k : ℕ)
     (s : Finset (Fin n)) (h : G₂.IsDegenerateSet k s) : G₁.IsDegenerateSet k s := by

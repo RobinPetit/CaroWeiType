@@ -1,5 +1,6 @@
 import CWType.SimpleGraph.CaroWeiType.Forests.Lemmas
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Lemmas
+import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim5
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim8
 
 namespace CaroWeiType
@@ -47,6 +48,7 @@ private lemma degree_G_le_degree_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) 
     rcases hu with hu | hu
     · exact fun _ _ ↦ by grind only [= mem_insert]
     · exact fun _ _ ↦ hu
+
 private lemma f_G_le_f_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     {ABC : Tripartition n} {v x y z w : Fin n} (hw : w ∉ ({v, x, y, z} : Finset _)) :
     f G ABC w ≤ f (_op G x y z) ((ABC \ {z}).promote v) w := by
@@ -317,6 +319,22 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
               simp only [← hNv, mem_neighborFinset, h1.1]
             grind
           rw [← fA2 hA'v hdv']
+
+lemma Corollary9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+    (hG : G.support.toFinset ⊆ ABC.toFinset) {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
+      ABC'.card < ABC.card → Objective G' ABC') :
+    (∃ w, G.Adj v w ∧ ABC.C w) → Objective G ABC := by
+  intro ⟨w, hvw, hCw⟩
+  if hdw : G.degree w ≤ 1 then
+    refine Claim5 G ABC (Set.toFinset_subset.mp hG) ih ⟨w, ?_, hdw⟩
+    exact ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr
+      <| G.mem_support |>.mpr ⟨v, hvw.symm⟩
+  else
+    refine Claim9 hG hBv hdv ih ⟨w, hvw, ?_⟩
+    refine fC_le_16_if_2_le_deg hCw ?_
+    simp only [not_le] at hdw
+    exact Nat.succ_le_of_lt hdw
 
 end Tripartition
 end ABC

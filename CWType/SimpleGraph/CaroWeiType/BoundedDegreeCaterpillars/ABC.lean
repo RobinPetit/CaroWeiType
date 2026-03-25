@@ -91,14 +91,14 @@ noncomputable def fA (d : ℕ) : ℝ :=
   else if d = 1 then 5 / (6 : ℝ)
   else 2 / (d + 1 : ℝ)
 
-@[simp]
+@[simp, reducible]
 noncomputable def fB (d : ℕ) : ℝ :=
   if d = 0 then 1
   else if d = 1 then 5 / (6 : ℝ)
   else if d = 2 then 1 / (3 : ℝ)
   else (4 / 3) / (d + 1 : ℝ)
 
-@[simp]
+@[simp, reducible]
 noncomputable def fC (d : ℕ) : ℝ :=
   if d = 0 then 1
   else if d = 1 ∨ d = 2 then 1 / (6 : ℝ)
