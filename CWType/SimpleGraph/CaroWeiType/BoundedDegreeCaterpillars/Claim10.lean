@@ -260,7 +260,7 @@ private lemma diff_f_BC {d d' : ℕ} (hd : 3 ≤ d) (hdd' : d' ≤ d + 1) :
         refine mul_le_mul_of_nonneg ?_ ?_ zero_le_four (le_of_lt add_two_pos)
         · exact four_le_d_plus_one
         · exact five_le_d_plus_two
-  grind
+  linarith
 
 lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     (hG : G.support.toFinset ⊆ ABC.toFinset) {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)

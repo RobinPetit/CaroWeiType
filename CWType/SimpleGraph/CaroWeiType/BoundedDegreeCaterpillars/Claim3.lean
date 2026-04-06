@@ -21,12 +21,16 @@ lemma Claim3 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     _ = ∑ w ∈ G.neighborFinset v ∪ {v}, f G ABC w := by
       rw [closed_neighborFinset_of_singleton_eq]
     _ = ∑ w ∈ G.neighborFinset v, f G ABC w + f G ABC v := by
-      have _ : f G ABC v = ∑ w ∈ {v}, f G ABC w := by exact Eq.symm (sum_singleton (f G ABC) v)
+      have _ : f G ABC v = ∑ w ∈ {v}, f G ABC w := Eq.symm (sum_singleton (f G ABC) v)
       rw [← sum_singleton (f G ABC ·) v]
       rw [← sum_union_inter]
-      suffices G.neighborFinset v ∩ {v} = ∅ by grind
-      ext; simp
-    _ ≤ 1 := by grind
+      suffices G.neighborFinset v ∩ {v} = ∅ by
+        simp only [union_singleton, mem_neighborFinset, SimpleGraph.irrefl, not_false_eq_true,
+          sum_insert, inter_singleton_of_notMem, add_zero, sum_empty]
+      ext
+      simp only [mem_neighborFinset, SimpleGraph.irrefl, not_false_eq_true,
+        inter_singleton_of_notMem, notMem_empty]
+    _ ≤ 1 := le_sub_iff_add_le.mp h
     _ = (#{v} : ℝ) := by
       rw [← Nat.cast_one]
       refine Eq.symm <| Nat.cast_inj.mpr <| card_singleton _
@@ -44,23 +48,20 @@ lemma Corollary3 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       exact sum_le_sum h
     _ = (G.degree v) * (1 - f G ABC v) / (G.degree v : ℝ) := by
       simp only [sum_const, card_neighborFinset_eq_degree, nsmul_eq_mul]
-      grind
-    _ = (G.degree v) * (1 - f G ABC v) * (G.degree v : ℝ)⁻¹ := by
-      grind
-    _ = ((G.degree v) * (G.degree v : ℝ)⁻¹) * (1 - f G ABC v) := by
-      grind
+      exact mul_div_assoc' ..
+    _ = (G.degree v) * (1 - f G ABC v) * (G.degree v : ℝ)⁻¹ := div_eq_mul_inv ..
+    _ = ((G.degree v) * (G.degree v : ℝ)⁻¹) * (1 - f G ABC v) := mul_right_comm ..
     _ = 1 - f G ABC v := by
       if hdegv : G.degree v = 0 then
-        have _ : 1 - f G ABC v = 0 := by
-          simp [Tripartition.mem_iff] at hv
-          simp only [f, fA, hdegv, ↓reduceIte, fB, fC, dite_eq_ite]
-          split_ifs
-          any_goals grind
-        grind
+        have f_eq_zero : 1 - f G ABC v = 0 := by
+          rcases hv with hv | hv | hv <;>
+            simp only [f, hv, ↓reduceDIte, if_pos hdegv, sub_self, dite_eq_ite, ite_self, sub_self]
+        simp only [f_eq_zero, mul_zero]
       else
-        have : (G.degree v) * (G.degree v : ℝ)⁻¹ = 1 := by
-          exact mul_inv_cancel₀ <| Nat.cast_ne_zero.mpr hdegv
-        grind
+        have hdegv' : G.degree v ≠ (0 : ℝ) := by
+          simp only [ne_eq, Nat.cast_eq_zero, hdegv, not_false_eq_true]
+        rw [mul_inv_cancel₀ hdegv']
+        exact one_mul (1 - f G ABC v)
 
 end Tripartition
 end ABC

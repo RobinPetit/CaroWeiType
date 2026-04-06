@@ -8,6 +8,11 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
+private lemma hAiff {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
+    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hw : w ∉ G.closed_neighborFinset_of_Finset F) :
+    ABC.A w ↔ (ABC \ G.closed_neighborFinset_of_Finset F).A w := by
+  exact ⟨fun h ↦ by simp [Tripartition.sdiff, h, hw], fun h ↦ h.1⟩
+
 lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) (F : Finset (Fin n)) (hFne : F.Nonempty)
     (hF : F ⊆ ABC.toFinset) (hF' : respects F G ABC)
@@ -34,7 +39,7 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     let hobj := hs' hy
     simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
       mem_filter, mem_univ, true_and] at hobj
-    have _ : y ∉ G.closed_neighborFinset_of_Finset F := by grind
+    have _ : y ∉ G.closed_neighborFinset_of_Finset F := and_or_3.mp hobj |>.2
     contradiction
   refine ⟨s' ∪ F, fun _ _ ↦ by grind [Tripartition.toFinset_mono], ?_, hresp, ?_⟩
   · refine InducesForest_union_disjoint_neighborhoods ?_ h.1 ?_
@@ -71,6 +76,103 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         have hfinal : x ∉ G.closed_neighborFinset_of_Finset F := by grind
         exact fun hx ↦ hfinal <| closed_neighborFinset_contains_Finset G F hx
 
+private lemma hdeg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {w : Fin n}
+    {F : Finset (Fin n)} (hw : w ∈ G.N2_of_Finset F) :
+    (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F)).degree w + 1 ≤ G.degree w := by
+  refine Order.add_one_le_iff.mpr ?_
+  refine Finset.card_lt_card ⟨?_, ?_⟩
+  · intro x hx
+    simp only [closed_neighborFinset_of_Finset, deleteIncidencesOf, deleteIncidenceSet,
+      incidenceSet, mem_neighborFinset, mem_filter, mem_univ, true_and, inf_adj, iInf_adj,
+      deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq,
+      N2_of_Finset] at hx hw
+    exact (G.mem_neighborFinset ..).mpr hx.1
+  · refine sdiff_nonempty.mp ?_
+    simp only [N2_of_Finset, mem_filter, mem_univ, true_and] at hw
+    obtain ⟨x, hx, y, hy, hwy, hyx⟩ := hw.2.2
+    refine ⟨y, ?_⟩
+    refine mem_sdiff.mpr ⟨(G.mem_neighborFinset w y).mpr hwy, ?_⟩
+    have hy' : y ∈ G.closed_neighborFinset_of_Finset F := by
+      simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
+      exact Or.inr ⟨x, hx, hyx⟩
+    simp only [mem_neighborFinset]
+    exact Adj.symm.mt <| deleteIncidencesOf_notadj G hy'
+
+private lemma d_minues_one_plus_one {d : ℕ} (hd : 1 ≤ d) : (((d - 1) : ℕ) : ℝ) + 1 = d := by
+  simp only [Nat.cast_one, sub_add_cancel, Nat.cast_sub hd]
+
+private lemma cast_add_one {m n : ℕ} (h : m + 1 ≤ n) : (m : ℝ) + 1 ≤ (n : ℝ) := by
+  rw [← Nat.cast_one, ← Nat.cast_add, Nat.cast_le]
+  exact h
+
+private lemma _ok_A {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
+    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hA : ABC.A w) (hdw : 1 ≤ G.degree w)
+    (hw : w ∈ G.N2_of_Finset F) (hwNF : w ∉ G.closed_neighborFinset_of_Finset F) :
+    γ G ABC w ≤
+      f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
+        (ABC \ G.closed_neighborFinset_of_Finset F) w -
+      f G ABC w := by
+  rw [γ, f]
+  simp only [hA, ↓reduceDIte, f, tsub_le_iff_right, sub_add_cancel, (hAiff hwNF).mp hA, fA,
+    Nat.pred_eq_succ_iff, zero_add, d_minues_one_plus_one hdw]
+  split_ifs
+  any_goals grind [hdeg hw]
+  · refine mul_le_one (Nat.cast_pos'.mpr hdw) (Nat.ofNat_le_cast.mpr <| by lia)
+  · refine le_trans ?_ two_thirds_le_five_sixths
+    refine div_le_div_of_nonneg_left zero_le_two three_pos ?_
+    exact Nat.ofNat_le_cast.mpr <| by lia
+  · exact div_le_div_of_nonneg_left zero_le_two add_one_pos <| cast_add_one <| hdeg hw
+
+private lemma _ok_B {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
+    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hB : ABC.B w) (hdw : 1 ≤ G.degree w)
+    (hw : w ∈ G.N2_of_Finset F) (hwNF : w ∉ G.closed_neighborFinset_of_Finset F) :
+    γ G ABC w ≤
+      f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
+        (ABC \ G.closed_neighborFinset_of_Finset F) w -
+      f G ABC w := by
+  rw [γ, f]
+  simp only [hB, not_A_of_B, ↓reduceDIte, fB, Nat.pred_eq_succ_iff, zero_add, Nat.reduceAdd,
+    d_minues_one_plus_one hdw, sdiff, false_and, true_and, not_C_of_B, dite_eq_ite, ite_not, f,
+    tsub_le_iff_right, sub_add_cancel]
+  have hdeg_pos : (0 : ℝ) < G.degree w := Nat.cast_pos'.mpr hdw
+  split_ifs
+  any_goals grind [hdeg hw]
+  · refine div_le_comm₀ one_pos hdeg_pos |>.mp ?_
+    simp_rw [div_one]
+    refine le_trans four_thirds_le_two <| Nat.cast_le.mpr <| by lia
+  · refine div_le_comm₀ ?_ hdeg_pos |>.mp ?_
+    · refine div_pos ?_ ?_ <;> exact Nat.ofNat_pos'
+    · exact @le_trans _ _ _ 2 _ (by linarith) (Nat.cast_le.mpr <| by lia)
+  · refine div_le_comm₀ one_third_pos hdeg_pos |>.mp ?_
+    rw [div_div_div_eq]
+    simp only [mul_one, isUnit_iff_ne_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true,
+      IsUnit.mul_div_cancel_right, Nat.ofNat_le_cast]
+    lia
+  · exact div_le_div_of_nonneg_left zero_le_four_thirds add_one_pos <| cast_add_one <| hdeg hw
+
+private lemma _ok_C {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
+    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hC : ABC.C w) (hdw : 1 ≤ G.degree w)
+    (hw : w ∈ G.N2_of_Finset F) (hwNF : w ∉ G.closed_neighborFinset_of_Finset F) :
+    γ G ABC w ≤
+      f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
+        (ABC \ G.closed_neighborFinset_of_Finset F) w -
+      f G ABC w := by
+  rw [γ, f]
+  simp only [hC, not_A_of_C, ↓reduceDIte, fC, Nat.pred_eq_succ_iff, zero_add, Nat.reduceAdd,
+    d_minues_one_plus_one hdw, sdiff, false_and, true_and, not_B_of_C, dite_eq_ite, ite_not, f,
+    tsub_le_iff_right, sub_add_cancel]
+  have hdeg_pos : (0 : ℝ) < G.degree w := Nat.cast_pos'.mpr hdw
+  split_ifs
+  any_goals grind [hdeg hw]
+  · refine div_le_comm₀ one_pos hdeg_pos |>.mp ?_
+    simp_rw [div_one]
+    refine le_trans ?_ (Nat.cast_le.mpr hdw)
+    rw [Nat.cast_one]
+    exact two_thirds_le_one
+  · exact div_le_comm₀ one_sixth_pos hdeg_pos |>.mp
+      <| @le_trans _ _ _ 4 _ (by linarith) (Nat.cast_le.mpr <| by lia)
+  · exact div_le_div_of_nonneg_left zero_le_two_thirds add_one_pos <| cast_add_one <| hdeg hw
+
 private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) (F : Finset (Fin n)) :
     ∑ w ∈ G.N2_of_Finset F, γ G ABC w ≤ ∑ w ∈ G.N2_of_Finset F,
@@ -78,112 +180,17 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           (ABC \ G.closed_neighborFinset_of_Finset F) w - f G ABC w) := by
   refine sum_le_sum ?_
   intro w hw
-  have hwNF : w ∉ G.closed_neighborFinset_of_Finset F := by
-    exact fun _ ↦ by grind [closed_neighborFinset_of_Finset, N2_of_Finset]
-  have hdeg : (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F).degree w + 1
-      ≤ G.degree w := by
-    refine Order.add_one_le_iff.mpr ?_
-    repeat rw [degree]
-    refine Finset.card_lt_card ⟨?_, ?_⟩
-    · intro x hx
-      simp only [closed_neighborFinset_of_Finset, deleteIncidencesOf, deleteIncidenceSet,
-        incidenceSet, mem_neighborFinset, mem_filter, mem_univ, true_and, inf_adj, iInf_adj,
-        deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq,
-        N2_of_Finset] at hx hw
-      exact (G.mem_neighborFinset ..).mpr hx.1
-    · refine sdiff_nonempty.mp ?_
-      simp only [N2_of_Finset, mem_filter, mem_univ, true_and] at hw
-      obtain ⟨x, hx, y, hy, hwy, hyx⟩ := hw.2.2
-      refine ⟨y, ?_⟩
-      refine mem_sdiff.mpr ⟨(G.mem_neighborFinset w y).mpr hwy, ?_⟩
-      have hy' : y ∈ G.closed_neighborFinset_of_Finset F := by
-        simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
-        exact Or.inr ⟨x, hx, hyx⟩
-      simp only [mem_neighborFinset]
-      exact Adj.symm.mt <| deleteIncidencesOf_notadj G hy'
-  have hdegw : 1 ≤ G.degree w := Nat.one_le_of_lt hdeg
-  have h1 : ((((G.degree w- 1) : ℕ) : ℝ) + 1) = (G.degree w : ℝ) := by
+  have hwNF : w ∉ G.closed_neighborFinset_of_Finset F :=
+    fun _ ↦ by grind [closed_neighborFinset_of_Finset, N2_of_Finset]
+  have hdegw : 1 ≤ G.degree w := Nat.one_le_of_lt <| hdeg hw
+  have h1 : ((((G.degree w - 1) : ℕ) : ℝ) + 1) = (G.degree w : ℝ) := by
     simp only [Nat.cast_one, sub_add_cancel, Nat.cast_sub hdegw]
-  rw [γ, f]
-  have hAiff : ABC.A w ↔ (ABC \ G.closed_neighborFinset_of_Finset F).A w := by
-    exact ⟨fun h ↦ by simp [Tripartition.sdiff, h, hwNF], fun h ↦ h.1⟩
-  have hBiff : ABC.B w ↔ (ABC \ G.closed_neighborFinset_of_Finset F).B w := by
-    exact ⟨fun h ↦ by simp [Tripartition.sdiff, h, hwNF], fun h ↦ h.1⟩
-  have hCiff : ABC.C w ↔ (ABC \ G.closed_neighborFinset_of_Finset F).C w := by
-    exact ⟨fun h ↦ by simp [Tripartition.sdiff, h, hwNF], fun h ↦ h.1⟩
   if hA : ABC.A w then
-    simp only [hA, ↓reduceDIte, f, tsub_le_iff_right, sub_add_cancel,
-      ge_iff_le, hAiff.mp hA, fA, Nat.pred_eq_succ_iff, zero_add]
-    split_ifs
-    any_goals grind [f_le_56]
-    · rw [h1]
-      exact mul_le_one (Nat.cast_pos'.mpr hdegw) (Nat.ofNat_le_cast.mpr (by grind))
-    · rw [h1]
-      ring_nf
-      calc ((G.degree w) : ℝ)⁻¹ * 2
-        _ ≤ (3 : ℝ)⁻¹ * 2 := by
-          simp only [Nat.ofNat_pos, mul_le_mul_iff_left₀]
-          exact inv_anti₀ three_pos (Nat.cast_le.mpr (by grind))
-      grind
-    · ring_nf
-      simp only [Nat.ofNat_pos, mul_le_mul_iff_left₀]
-      refine inv_anti₀ (by grind) ?_
-      simp only [add_le_add_iff_left, Nat.cast_le]
-      grind
+    exact _ok_A hA hdegw hw hwNF
   else if hB : ABC.B w then
-    simp only [hA, ↓reduceDIte, hB, fB, Nat.pred_eq_succ_iff, zero_add, Nat.reduceAdd, one_div,
-      Tripartition.sdiff, false_and, true_and, fC, dite_eq_ite, ite_not, f, tsub_le_iff_right,
-      sub_add_cancel, ge_iff_le, h1]
-    split_ifs
-    any_goals grind
-    · ring_nf
-      calc (G.degree w : ℝ)⁻¹ * (4 / (3 : ℝ))
-        _ ≤ (2 : ℝ)⁻¹ * (4 / (3 : ℝ)) := by
-          simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
-          exact inv_anti₀ two_pos (Nat.cast_le.mpr (by grind))
-        _ ≤ 1 := by grind
-    · ring_nf
-      calc (G.degree w : ℝ)⁻¹ * (4 / (3 : ℝ))
-        _ ≤ (2 : ℝ)⁻¹ * (4 / (3 : ℝ)) := by
-          simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
-          exact inv_anti₀ two_pos (Nat.cast_le.mpr (by grind))
-        _ ≤ 5 / (6 : ℝ) := by grind
-    · ring_nf
-      suffices (4 : ℝ) ≤ G.degree w by
-        calc (G.degree w : ℝ)⁻¹ * (4 / (3 : ℝ))
-          _ ≤ (4 : ℝ)⁻¹ * (4 / (3 : ℝ)) := by
-            simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
-            exact inv_anti₀ four_pos this
-          _ ≤ 1 / (3 : ℝ) := by grind
-      exact Nat.cast_le.mpr <| by grind
-    · refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr ?_
-      rw [← Nat.cast_one, ← Nat.cast_add _ 1]
-      exact Nat.cast_le.mpr hdeg
+    exact _ok_B hB hdegw hw hwNF
  else if hC : ABC.C w then
-    simp only [hA, ↓reduceDIte, hB, hC, fC, Nat.pred_eq_succ_iff, zero_add, Nat.reduceAdd, one_div,
-      h1, Tripartition.sdiff, false_and, true_and, dite_eq_ite, ite_not, f, tsub_le_iff_right,
-      sub_add_cancel, ge_iff_le]
-    split_ifs
-    any_goals grind
-    · ring_nf
-      calc (G.degree w : ℝ)⁻¹ * (2 / (3 : ℝ))
-        _ ≤ 1⁻¹ * (2 / (3 : ℝ)) := by
-          simp only [inv_one, one_mul, Nat.ofNat_pos, div_pos_iff_of_pos_left,
-            mul_le_iff_le_one_left]
-          rw [← inv_one]
-          refine inv_anti₀ one_pos ?_
-          exact @Nat.cast_one ℝ _ ▸ Nat.cast_le.mpr hdegw
-        _ ≤ 1 := by grind
-    · ring_nf
-      calc (G.degree w : ℝ)⁻¹ * (2 / (3 : ℝ))
-        _ ≤ (4 : ℝ)⁻¹ * (2 / (3 : ℝ)) := by
-          simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
-          refine inv_anti₀ four_pos ?_
-          exact @Nat.cast_four ℝ _ ▸ Nat.cast_le.mpr (by grind)
-        _ ≤ (1 / (6 : ℝ)) := by grind
-    · refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr ?_
-      rw [← Nat.cast_one, ← Nat.cast_add]
-      exact Nat.cast_le.mpr hdeg
+    exact _ok_C hC hdegw hw hwNF
   else
     simp [hA, hB, hC]
 

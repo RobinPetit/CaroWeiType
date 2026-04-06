@@ -13,10 +13,10 @@ private lemma f_le_16_of_deg_ge_3 {n : ℕ} {G : SimpleGraph (Fin n)} [Decidable
   intro h
   calc (2 / 3) / (G.degree v + 1 : ℝ)
     _ ≤ (2 / 3) / (4 : ℝ) := by
-      refine div_le_div_iff_of_pos_left (by grind) (by grind) four_pos |>.mpr ?_
+      refine div_le_div_iff_of_pos_left two_thirds_pos add_one_pos four_pos |>.mpr ?_
       rw [← Nat.cast_one, ← Nat.cast_four, ← Nat.cast_add]
-      refine Nat.cast_le.mpr (by grind)
-    _ ≤ 1 / 6 := by grind
+      refine Nat.cast_le.mpr <| by lia
+    _ ≤ 1 / 6 := by linarith
 
 lemma Claim4_A {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} (hA : ABC.A v)
@@ -27,27 +27,27 @@ lemma Claim4_A {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
     ring_nf
     calc ((2 : ℝ) + G'.degree v)⁻¹ * 2
       _ ≤ (2 : ℝ)⁻¹ * 2 := by
-        refine mul_le_mul_iff_of_pos_right two_pos |>.mpr ?_
-        refine inv_anti₀ two_pos (by simp)
-      _ = 1 := by simp
+        refine mul_le_mul_iff_of_pos_right two_pos |>.mpr
+          <| inv_anti₀ two_pos <| by simp only [le_add_iff_nonneg_right, Nat.cast_nonneg]
+      _ = 1 := inv_mul_cancel₀ <| NeZero.ne _
   split_ifs
   any_goals grind
   · calc 2 / ((G'.degree v) + 1 + 1 : ℝ)
       _ = 2 / (4 : ℝ) := by
         refine congrArg (fun x ↦ 2 / x) ?_
         rw [← Nat.cast_one, ← Nat.cast_add, ← Nat.cast_add, ← Nat.cast_four, Nat.cast_inj]
-        grind
-      _ ≤ 1 / 6 + 1 / 3 := by grind
+        lia
+      _ ≤ 1 / 6 + 1 / 3 := by linarith
   · calc 2 / (G'.degree v + 1 + 1 : ℝ)
       _ = 2 * (G'.degree v + 1 + 1 : ℝ)⁻¹ := by ring_nf
       _ ≤ 2 * (G'.degree v + 1 : ℝ)⁻¹ := by
         simp only [Nat.ofNat_pos, mul_le_mul_iff_right₀]
-        refine inv_anti₀ (Nat.cast_add_one_pos _) le_add_one
+        exact inv_anti₀ (Nat.cast_add_one_pos _) le_add_one
       _ = (2 / 3) * (G'.degree v + 1 : ℝ)⁻¹ + (4 / 3) * (G'.degree v + 1 : ℝ)⁻¹ := by
-        grind
+        linarith
       _ ≤ 1 / 6 + (4 / 3) * (G'.degree v + 1 : ℝ)⁻¹ := by
         simp only [add_le_add_iff_right]
-        exact f_le_16_of_deg_ge_3 (by grind)
+        exact f_le_16_of_deg_ge_3 <| by lia
 
 lemma Claim4_B {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} (hB : ABC.B v)
@@ -59,20 +59,21 @@ lemma Claim4_B {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
   any_goals grind
   · calc (4 / 3) / (G'.degree v + 1 + 1 : ℝ)
       _ ≤ (4 / 3) / (2 + 1 + 1) := by
-        refine div_le_div_iff_of_pos_left (by grind)
-          add_one_add_one_pos add_one_add_one_pos |>.mpr ?_
+        refine div_le_div_iff_of_pos_left four_thirds_pos add_one_add_one_pos
+          add_one_add_one_pos |>.mpr ?_
         simp only [Nat.cast_ofNat, add_le_add_iff_right, Nat.ofNat_le_cast]
-        rename_i hor
-        rcases hor <;> grind
-    grind
+        lia
+    linarith
   · calc (4 / 3) / (G'.degree v + 1 + 1 : ℝ)
       _ ≤ (4 / 3) / (G'.degree v + 1 : ℝ) := by
-        refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr (by grind)
+        exact div_le_div_iff_of_pos_left four_thirds_pos add_one_add_one_pos add_one_pos
+          |>.mpr le_add_one
       _ = (2 / 3) / (G'.degree v + 1 : ℝ) + (2 / 3) / (G'.degree v + 1 : ℝ) := by
-        grind
+        rw [← two_mul, mul_div_assoc']
+        refine congrArg (· / _) (by linarith)
       _ ≤ 1 / 6 + (2 / 3) / (G'.degree v + 1 : ℝ) := by
         simp only [add_le_add_iff_right]
-        exact f_le_16_of_deg_ge_3 (by grind)
+        exact f_le_16_of_deg_ge_3 (by lia)
 
 lemma Claim4_C {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} (hC : ABC.C v)
@@ -86,8 +87,9 @@ lemma Claim4_C {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
     rcases H with h | h <;> { rw [h]; grind }
   · calc (2 / 3) / (G'.degree v + 1 + 1 : ℝ)
       _ ≤ (2 / 3) / (G'.degree v + 1 : ℝ) := by
-        refine div_le_div_iff_of_pos_left (by grind) (by grind) (by grind) |>.mpr (by grind)
-    grind
+        exact div_le_div_iff_of_pos_left two_thirds_pos add_one_add_one_pos add_one_pos
+          |>.mpr le_add_one
+    exact le_of_lt <| lt_add_of_pos_left _ one_sixth_pos
 
 lemma Claim4 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n}
@@ -102,8 +104,10 @@ lemma Claim4 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tri
     simp only [f, hA, ↓reduceDIte, hB, hC, fA, fB, one_div, fC, dite_eq_ite, zero_sub]
     have this {c : ℝ} (hc : 0 ≤ c) : 0 ≤ c / (G'.degree v + 1 : ℝ) := by
       ring_nf
-      exact Left.mul_nonneg hc <| inv_nonneg_of_nonneg (by grind)
-    have H16 : 0 ≤ (6 : ℝ)⁻¹ := by grind
+      refine Left.mul_nonneg hc <| inv_nonneg_of_nonneg <| le_of_lt one_add_pos
+    have H16 : 0 ≤ (6 : ℝ)⁻¹ := by
+      rw [← one_div]
+      exact le_of_lt one_sixth_pos
     split_ifs
     any_goals grind
 

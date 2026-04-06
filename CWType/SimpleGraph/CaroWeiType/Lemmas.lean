@@ -44,6 +44,11 @@ lemma p_imp_q_imp_p {p q : Prop} : p → q → p :=
   fun h _ ↦ h
 
 @[simp]
+lemma neq_of_notin {α : Type*} {s : Finset α} {x y : α} (hy : y ∈ s) (hx : x ∉ s) :
+    x ≠ y := by
+  exact fun heq ↦ hx <| heq ▸ hy
+
+@[simp]
 lemma eq_of_subset_and_eq_card {α : Type*} {A B : Finset α} (h : A ⊆ B) (h' : #A = #B) :
     A = B := by
   classical
@@ -124,6 +129,14 @@ private lemma sorted_finset {α : Type*} [DecidableEq α] {s : Finset α} (k : �
           rw [← hσ]
           refine mem_image_of_mem σ <| mem_univ _
 
+lemma pairwise_ne_of_triplet {α : Type*} [DecidableEq α] {x y z : α}
+    (h : #({x, y, z} : Finset _) = 3) : x ≠ y ∧ x ≠ z ∧ y ≠ z := by
+  refine ⟨?_, ?_, ?_⟩ <;> {
+    intro heq; subst heq
+    suffices 3 ≤ 2 by grind
+    simp [← h, card_le_two]
+  }
+
 @[simp]
 lemma ne_of_mem_finset_empty_inter {α : Type*} [DecidableEq α]
     {x y : α} (s t : Finset α)
@@ -132,6 +145,14 @@ lemma ne_of_mem_finset_empty_inter {α : Type*} [DecidableEq α]
   intro this
   haveI := mem_inter.mpr ⟨hx, this ▸ hy⟩
   grind
+
+lemma eq_of_mem_of_notMem {α : Type*} [DecidableEq α] {u v x y z : α}
+    (hu : u ∈ ({v, x, y} : Finset _)) (hu' : u ∉ ({x, y, z} : Finset _)) : u = v := by
+  simp only [mem_insert, mem_singleton, not_or] at hu hu'
+  rcases hu with h | h | h
+  · exact h
+  · exact hu'.1 h |>.elim
+  · exact hu'.2.1 h |>.elim
 
 open SimpleGraph
 open CaroWeiType
@@ -240,6 +261,10 @@ lemma sum_const' {ι : Type*} {f : ι → ℝ} {c : ℝ} (X : Finset ι) (h : �
 
 lemma ne_symm {α : Type*} {a b : α} (h : ¬a = b) : ¬b = a :=
   fun hba ↦ h hba.symm
+
+theorem deleteIncidenceSet_notAdj {n : ℕ} {G : SimpleGraph (Fin n)} {v w : Fin n} :
+    ¬(G.deleteIncidenceSet v).Adj v w := by
+  simp only [deleteIncidenceSet, deleteEdges_adj, mem_incidenceSet, and_not_self, not_false_eq_true]
 
 theorem deleteIncidenceSet_degree {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (v : Fin n) : ∀ w ∈ G.neighborFinset v, (G.deleteIncidenceSet v).degree w = G.degree w - 1 := by

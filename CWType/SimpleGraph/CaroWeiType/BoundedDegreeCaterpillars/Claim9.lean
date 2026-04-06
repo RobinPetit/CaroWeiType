@@ -89,13 +89,8 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
   have h₃' : G.Adj v z :=
     G.mem_neighborFinset .. |>.mp <| by simp only [hNv, mem_insert, mem_singleton, or_true]
   have hneNv : x ≠ y ∧ x ≠ z ∧ y ≠ z := by
-    refine ⟨?_, ?_, ?_⟩ <;> {
-      intro h; subst h
-      have hobj : ¬3 ≤ 2 := by simp only [Nat.reduceLeDiff, not_false_eq_true]
-      refine hobj ?_
-      rw [← hdv, degree, hNv]
-      simp only [mem_insert, mem_singleton, true_or, or_true, insert_eq_of_mem, card_le_two]
-    }
+    rw [degree] at hdv
+    exact pairwise_ne_of_triplet (hNv ▸ hdv)
     -- Could have gone with: `<;> { intro h; subst h; grind [degree] }`
     -- but this is way slower due to `grind [degree]`
   obtain ⟨H₁, H₂, H₃⟩ := hneNv

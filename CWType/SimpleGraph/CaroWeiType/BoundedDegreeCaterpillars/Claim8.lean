@@ -57,19 +57,20 @@ lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           · exact h
           · have H : f G ABC x ≤ 1 / 3 := fB_le_13_if_2_le_deg h <| Nat.le_of_not_ge hdx
             rw [hfx] at H
-            grind
+            linarith
           · have H : f G ABC x ≤ 1 / 6 := fC_le_16_if_2_le_deg h <| Nat.le_of_not_ge hdx
             rw [hfx] at H
-            grind
+            linarith
         have hdx : G.degree x = 3 := by
           if hdx : 4 ≤ G.degree x then
             have hobj : f G ABC x ≤ fA 4 := by simp only [f, hAx, ↓reduceDIte, fA_decreasing hdx]
             rw [hfx] at hobj
-            grind
+            simp only [fA, four_ne_zero, ↓reduceIte, Nat.add_one_add_one_ne_one] at hobj
+            linarith
           else
             grind
         rw [γA3 hA hdy, γA3 hAx hdx]
-        grind
+        linarith
       · simp [ℓ, hB, hdy] at hℓy
         grind
       · simp [ℓ, hC, hdy] at hℓy

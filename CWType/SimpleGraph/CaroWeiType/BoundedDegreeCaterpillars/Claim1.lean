@@ -24,14 +24,11 @@ lemma Claim1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       _ = ∑ x ∈ (ABC \ {v}).toFinset, f G ABC x + f G ABC v := by
         have h : (ABC \ {v}).toFinset = ABC.toFinset \ {v} := by
           ext x
-          simp [Tripartition.sdiff, Tripartition.toFinset]
-          grind
+          simp only [toFinset, sdiff, mem_singleton, mem_iff, and_or_3, mem_filter, mem_univ,
+            true_and, mem_sdiff]
         rw [h]
-        have _ : f G ABC v = ∑ x ∈ {v}, f G ABC x := by
-          exact Eq.symm (sum_singleton (f G ABC) v)
         rw [← sum_singleton (f G ABC) v]
-        refine Eq.symm <| sum_sdiff ?_
-        refine singleton_subset_iff.mpr ?_
+        refine Eq.symm <| sum_sdiff <| singleton_subset_iff.mpr ?_
         exact Tripartition.coe_mem_toFinset .. |>.mp hv
       _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
         + ∑ x ∈ G.neighborFinset v, f G ABC x + f G ABC v := by
@@ -39,14 +36,12 @@ lemma Claim1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         refine Eq.symm <| sum_sdiff ?_
         intro x hx
         have hxnev : x ≠ v := G.mem_neighborFinset .. |>.mp hx |>.ne'
-        have hxABC : x ∈ ABC := Tripartition.coe_mem_toFinset .. |>.mpr <| hNv hx
         refine Tripartition.coe_mem_toFinset .. |>.mp ?_
-        simp only [Tripartition.sdiff, mem_singleton, Tripartition.mem_iff, hxnev,
-          not_false_eq_true, and_true]
-        exact Tripartition.mem_iff .. |>.mpr hxABC
+        refine (ABC.mem_sdiff_iff _).mpr ⟨ABC.coe_mem_toFinset.mpr <| hNv hx, ?_⟩
+        simp only [mem_singleton, hxnev, not_false_eq_true]
       _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
         + (∑ x ∈ G.neighborFinset v, f G ABC x + f G ABC v) := by
-          grind
+          lia
       _ ≤ ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
         + (∑ x ∈ G.neighborFinset v, f G ABC x
         + ∑ x ∈ G.neighborFinset v, γ G ABC x) := by
@@ -69,7 +64,7 @@ lemma Claim1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           refine Eq.symm <| f_eq_in_sdiff G ABC ?_
           let hobj := mem_sdiff.mp hx |>.1
           simp [Tripartition.sdiff, Tripartition.toFinset] at hobj
-          grind
+          exact mem_sdiff.mp (ABC.sdiff_toFinset ▸ mem_sdiff.mp hx |>.1) |>.2
       _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v,
             f (G.deleteIncidencesOf {v}) (ABC \ {v}) x
         + ∑ x ∈ G.neighborFinset v, f (G.deleteIncidencesOf {v}) (ABC \ {v}) x := by
@@ -79,8 +74,7 @@ lemma Claim1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         suffices (G.deleteIncidencesOf {v}).degree x = G.degree x by
           simp only [f, Tripartition.sdiff_eq, inter_assoc, inter_self, fA, fB, one_div, fC,
             dite_eq_ite, this]
-        unfold degree
-        refine congrArg _ ?_
+        refine congrArg Finset.card ?_
         ext w
         simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, mem_neighborFinset,
           mem_singleton, iInf_iInf_eq_left, inf_adj, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet,
@@ -122,17 +116,14 @@ lemma Corollary1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ γ G ABC w → Objective G ABC := by
   intro h
-  refine Claim1 G ABC v hv hNv ih ?_
-  refine le_trans h ?_
+  refine Claim1 G ABC v hv hNv ih <| le_trans h ?_
   calc γ G ABC w
     _ = ∑ x ∈ {w}, γ G ABC x := Eq.symm <| sum_singleton ..
     _ = 0 + ∑ x ∈ {w}, γ G ABC x := by simp only [zero_add, sum_singleton]
     _ ≤ ∑ x ∈ G.neighborFinset v \ {w}, γ G ABC x + ∑ x ∈ {w}, γ G ABC x := by
-      refine add_le_add_left ?_ _
-      refine sum_nonneg (fun _ _ ↦ γ_nonneg G ABC)
+      exact add_le_add_left (sum_nonneg (fun _ _ ↦ γ_nonneg G ABC)) _
     _ = ∑ x ∈ G.neighborFinset v, γ G ABC x := by
-      refine sum_sdiff ?_
-      simp [hw]
+      exact sum_sdiff <| singleton_subset_iff.mpr <| G.mem_neighborFinset .. |>.mpr hw
 
 end Tripartition
 end ABC
