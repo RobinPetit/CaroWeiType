@@ -56,4 +56,3 @@ theorem IndepSet_LowerBound_iff (f : ℕ → ℝ) :
 
 end CaroWeiType
 end SimpleGraph
-#min_imports

@@ -14,21 +14,6 @@ structure Tripartition (n : ℕ) where
   B : Fin n → Prop
   C : Fin n → Prop
   sound : ∀ x, ¬(A x ∧ B x) ∧ ¬(A x ∧ C x) ∧ ¬(B x ∧ C x)
-  -- cover : ∀ x, (A x ∨ B x ∨ C x)
-
-def demote_A {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hv : ABC.A v) :
-    Tripartition n where
-  A w := ABC.A w ∧ w ≠ v
-  B w := ABC.B w ∨ w = v
-  C w := ABC.C w
-  sound := fun x ↦ by grind [ABC.sound x]
-
-def demote_B {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hv : ABC.B v) :
-    Tripartition n where
-  A w := ABC.A w
-  B w := ABC.B w ∧ w ≠ v
-  C w := ABC.C w ∨ w = v
-  sound := by grind [ABC.sound]
 
 def promote_B {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hv : ABC.B v) : Tripartition n where
   A w := ABC.A w ∨ w = v
@@ -44,10 +29,14 @@ def promote_C {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hv : ABC.C v) : Trip
 
 namespace Tripartition
 
-noncomputable def demote {n : ℕ} (ABC : Tripartition n) (v : Fin n) : Tripartition n := by
-  if      hA : ABC.A v then exact CaroWeiType.ABC.demote_A hA
-  else if hB : ABC.B v then exact CaroWeiType.ABC.demote_B hB
-  else                      exact ABC
+def demote_finset {n : ℕ} (ABC : Tripartition n) (s : Finset (Fin n)) : Tripartition n where
+  A w := ABC.A w ∧ w ∉ s
+  B w := ABC.B w ∧ w ∉ s ∨ ABC.A w ∧ w ∈ s
+  C w := ABC.C w ∨ ABC.B w ∧ w ∈ s
+  sound := by grind [ABC.sound]
+
+def demote {n : ℕ} (ABC : Tripartition n) (v : Fin n) : Tripartition n :=
+  ABC.demote_finset {v}
 
 noncomputable def promote {n : ℕ} (ABC : Tripartition n) (v : Fin n) : Tripartition n := by
   if      hB : ABC.B v then exact CaroWeiType.ABC.promote_B hB

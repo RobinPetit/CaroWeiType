@@ -97,9 +97,9 @@ private lemma B'_of_ne {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n}
 private lemma C'_of_ne {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n}
     (hu : u ∉ ({v, x, y, z} : Finset _)) (hCu : ABC.C u) :
     (_op_t ABC v x y z).C u := by
-  refine C_of_demote_ne _ (by grind) ?_
-  refine C_of_demote_ne _ (by grind) ?_
-  refine C_of_demote_ne _ (by grind) ?_
+  refine C_of_demote_ne _ ?_
+  refine C_of_demote_ne _ ?_
+  refine C_of_demote_ne _ ?_
   exact ⟨hCu, by grind⟩
 
 private lemma B'_of_demote {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n} (huv : u ≠ v)
@@ -111,13 +111,13 @@ private lemma B'_of_demote {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n} 
   · subst hx
     refine B_of_demote_ne _ hxz ?_
     refine B_of_demote_ne _ hxy ?_
-    refine demote_from_A _ _  hA'
+    refine demote_from_A _ hA'
   · subst hy
     refine B_of_demote_ne _ hyz ?_
-    refine demote_from_A _ _ ?_
+    refine demote_from_A _ ?_
     refine A_of_demote_ne _ hxy.symm hA'
   · subst hz
-    refine demote_from_A _ _ ?_
+    refine demote_from_A _ ?_
     refine A_of_demote_ne _ hyz.symm ?_
     refine A_of_demote_ne _ hxz.symm hA'
 
@@ -128,15 +128,15 @@ private lemma C'_of_demote {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n} 
   have hB' : (ABC \ {v}).B u := ⟨hBu, by simp [huv]⟩
   rcases hu with hx | hy | hz
   · subst hx
-    refine C_of_demote_ne _ hxz ?_
-    refine C_of_demote_ne _ hxy ?_
-    refine demote_from_B _ _ hB'
+    refine C_of_demote_ne _ ?_
+    refine C_of_demote_ne _ ?_
+    refine demote_from_B _ hB'
   · subst hy
-    refine C_of_demote_ne _ hyz ?_
-    refine demote_from_B _ _ ?_
+    refine C_of_demote_ne _ ?_
+    refine demote_from_B _ ?_
     refine B_of_demote_ne _ hxy.symm hB'
   · subst hz
-    refine demote_from_B _ _ ?_
+    refine demote_from_B _ ?_
     refine B_of_demote_ne _ hyz.symm ?_
     refine B_of_demote_ne _ hxz.symm hB'
 

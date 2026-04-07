@@ -100,13 +100,13 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
     refine ⟨?_, ?_⟩
     · intro hAz
       have hB'z : ((ABC \ {x}).demote z).B z := by
-        refine demote_from_A (ABC \ {x}) z ?_
+        refine demote_from_A (ABC \ {x}) ?_
         simp [Tripartition.sdiff, hAz, hxu.ne']
       exact le_trans (degree_in_deleteIncidenceSet' G s hxnotins hxu)
         <| add_le_add_left (hsresp z hz |>.2.1 hB'z) 1
     · intro hBz
       have hC'z : ((ABC \ {x}).demote z).C z := by
-        refine demote_from_B (ABC \ {x}) z ?_
+        refine demote_from_B (ABC \ {x}) ?_
         simp [Tripartition.sdiff, hBz, hxu.ne']
       exact le_trans (degree_in_deleteIncidenceSet' G s hxnotins hxu)
         <| add_le_add_left (le_of_eq <| hsresp z hz |>.2.2 hC'z) 1
@@ -139,7 +139,7 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
       refine ⟨?_, ?_, ?_⟩
       · exact fun hA ↦ h₁ <| A_of_demote_ne _ heq ⟨hA, hznotinx⟩
       · exact fun hB ↦ h₂ <| B_of_demote_ne _ heq ⟨hB, hznotinx⟩
-      · exact fun hC ↦ h₃ <| C_of_demote_ne _ heq ⟨hC, hznotinx⟩
+      · exact fun hC ↦ h₃ <| C_of_demote_ne _ ⟨hC, hznotinx⟩
 
 lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (hG : G.support ⊆ ABC.toFinset)
@@ -274,7 +274,7 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
               · exact hB h |>.elim
               · exact h
             have hC' : (ABC \ {x}).demote u |>.C v := by
-              refine C_of_demote_ne _ hv.2 ⟨hC, ?_⟩
+              refine C_of_demote_ne _ ⟨hC, ?_⟩
               simp only [mem_singleton, hv.1, not_false_eq_true]
             simp only [f, not_A_of_C, ↓reduceDIte, not_B_of_C, hC, hC', fC, hdegeq]
         _ = ∑ v ∈ ((ABC \ {x}).demote u).toFinset \ {u},
@@ -329,19 +329,19 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
             simp only [mem_singleton]
             exact hu.ne'
           rcases hABu with hA | hB
-          · have hB : (ABC.demote u).B u := demote_from_A _ _ hA
-            have hB' : ((ABC \ {x}).demote u).B u := demote_from_A _ _ ⟨hA, hunotinx⟩
-            have hA' : ¬((ABC \ {x}).demote u).A u := demote_from_A' _ _ ⟨hA, hunotinx⟩
+          · have hB : (ABC.demote u).B u := demote_from_A _ hA
+            have hB' : ((ABC \ {x}).demote u).B u := demote_from_A _ ⟨hA, hunotinx⟩
+            have hA' : ¬((ABC \ {x}).demote u).A u := demote_from_A' _ ⟨hA, hunotinx⟩
             simp only [f, demote_from_A, demote_from_A', hA, hA', hB', ↓reduceDIte]
-          · have hC : (ABC.demote u).C u := demote_from_B _ _ hB
-            have hC' : ((ABC \ {x}).demote u).C u := demote_from_B _ _ ⟨hB, hunotinx⟩
-            have hB' : ¬((ABC \ {x}).demote u).B u := demote_from_B' _ _ ⟨hB, hunotinx⟩
+          · have hC : (ABC.demote u).C u := demote_from_B _ hB
+            have hC' : ((ABC \ {x}).demote u).C u := demote_from_B _ ⟨hB, hunotinx⟩
+            have hB' : ¬((ABC \ {x}).demote u).B u := demote_from_B' _ ⟨hB, hunotinx⟩
             have hA : ¬(ABC.demote u).A u := fun h ↦ Tripartition.sound _ u |>.2.1 ⟨h, hC⟩
             have hA' : ¬((ABC \ {x}).demote u).A u := fun h ↦ Tripartition.sound _ u |>.2.1 ⟨h, hC'⟩
             simp only [f, demote_from_B, demote_from_B', hB, hB', hC', hA, hA', ↓reduceDIte]
         _ ≤ 1 / 6 - 1 / (6 : ℝ) := by
           refine add_le_add_left ?_ _
-          refine Claim4 G ABC (G.deleteIncidenceSet x) ?_
+          refine Claim4' G ABC (G.deleteIncidenceSet x) ?_
           calc G.degree u
             _ = #((G.neighborFinset u \ {x}) ∪ {x}) := by
               refine congrArg Finset.card ?_

@@ -536,60 +536,87 @@ lemma ℓ_le_1_over_15_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [Decid
 namespace Tripartition
 
 @[simp]
-lemma demote_from_A {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.A v) :
+lemma demote_finset_from_A {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hAv : ABC.A v)
+    {s : Finset _} (hv : v ∈ s) : (ABC.demote_finset s).B v := by
+  exact Or.inr ⟨hAv, hv⟩
+
+@[simp]
+lemma demote_finset_from_B {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hBv : ABC.B v)
+    {s : Finset _} (hv : v ∈ s) : (ABC.demote_finset s).C v := by
+  exact Or.inr ⟨hBv, hv⟩
+
+@[simp]
+lemma demote_finset_from_C {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hCv : ABC.C v)
+    {s : Finset _} : (ABC.demote_finset s).C v := by
+  exact Or.inl hCv
+
+@[simp]
+lemma demote_from_A {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hAv : ABC.A v) :
     (ABC.demote v).B v := by
-  simp [demote, demote_A, hv]
+  exact demote_finset_from_A ABC hAv (mem_singleton.mpr rfl)
 
 @[simp]
-lemma demote_from_A' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.A v) :
+lemma demote_from_A' {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hAv : ABC.A v) :
     ¬(ABC.demote v).A v := by
-  exact not_A_of_B <| demote_from_A ABC v hv
+  exact not_A_of_B <| demote_from_A ABC hAv
 
 @[simp]
-lemma demote_from_B {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
+lemma demote_from_B {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hBv : ABC.B v) :
     (ABC.demote v).C v := by
-  simp only [demote, hv, not_A_of_B, ↓reduceDIte, demote_B, ne_eq, not_C_of_B, or_true]
+  exact demote_finset_from_B _  hBv (mem_singleton.mpr rfl)
 
 @[simp]
-lemma demote_from_B' {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.B v) :
+lemma demote_from_B' {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hv : ABC.B v) :
     ¬(ABC.demote v).B v := by
-  exact not_B_of_C <| demote_from_B ABC v hv
+  exact not_B_of_C <| demote_from_B ABC hv
 
 @[simp]
-lemma demote_from_C {n : ℕ} (ABC : Tripartition n) (v : Fin n) (hv : ABC.C v) :
+lemma demote_from_C {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hv : ABC.C v) :
     (ABC.demote v).C v := by
-  simp only [demote, hv, not_A_of_C, ↓reduceDIte, not_B_of_C]
+  exact Or.inl hv
 
 @[simp]
 lemma A_of_demote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
     ABC.A v → (ABC.demote w).A v := by
   intro hA
-  simp only [demote, demote_A, demote_B]
-  split_ifs <;> simp only [hA, ne_eq, h, not_false_eq_true, and_self]
-
+  refine ⟨hA, not_iff_not.mpr mem_singleton |>.mpr h⟩
 
 @[simp]
 lemma B_of_demote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
     ABC.B v → (ABC.demote w).B v := by
   intro hB
-  simp only [demote, demote_A, demote_B]
-  split_ifs <;> simp only [hB, ne_eq, h, not_false_eq_true, and_self, or_false]
-
+  refine Or.inl ⟨hB, not_iff_not.mpr mem_singleton |>.mpr h⟩
 
 @[simp]
-lemma C_of_demote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} (h : v ≠ w) :
+lemma C_of_demote_ne {n : ℕ} (ABC : Tripartition n) {v w : Fin n} :
     ABC.C v → (ABC.demote w).C v := by
   intro hC
-  simp only [demote, demote_A, demote_B]
-  split_ifs <;> simp only [h, hC, or_false]
+  refine Or.inl hC
 
 lemma mem_demote_of_mem {n : ℕ} (ABC : Tripartition n) {x y : Fin n} :
     x ∈ ABC → x ∈ ABC.demote y := by
-  grind only [mem_iff, demote, demote_A, demote_B]
+  intro h
+  if heq : x = y then
+    rcases h with h | h | h
+    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inl <| Or.inr ⟨h, mem_singleton.mpr heq⟩
+    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inr <| Or.inr ⟨h, mem_singleton.mpr heq⟩
+    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inr <| Or.inl h
+  else
+    rcases h with h | h | h
+    · exact Tripartition.mem_iff _ |>.mpr <| Or.inl <| ⟨h, not_iff_not.mpr mem_singleton |>.mpr heq⟩
+    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inl <| Or.inl
+        <| ⟨h, not_iff_not.mpr mem_singleton |>.mpr heq⟩
+    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inr <| Or.inl h
 
 lemma mem_of_mem_demote {n : ℕ} (ABC : Tripartition n) {x y : Fin n} :
     x ∈ ABC.demote y → x ∈ ABC := by
-  grind only [mem_iff, demote, demote_A, demote_B]
+  intro h
+  rcases h with h | h | h
+  · simp only [mem_iff, h.1, true_or]
+  · rcases h with h | h <;> simp only [mem_iff, h.1, true_or, or_true]
+  · rcases h with h | h
+    · simp only [mem_iff, h, or_true]
+    · simp only [mem_iff, h.1, or_true, true_or]
 
 @[simp]
 lemma mem_iff_mem_demote {n : ℕ} (ABC : Tripartition n) {x y : Fin n} :
