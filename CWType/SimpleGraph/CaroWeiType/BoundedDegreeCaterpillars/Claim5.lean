@@ -359,6 +359,7 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
                 deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or,
                 and_congr_right_iff]
               grind
+          exact le_refl _
         _ = 0 := sub_self _
 
 lemma Claim5 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)

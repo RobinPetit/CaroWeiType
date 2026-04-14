@@ -59,7 +59,7 @@ The proof in itself just consists in (1) the equivalence of $0$-degenerate sets 
 
 ### Alon-Kahn-Seymour's theorem for $k$-degenerate induced subgraphs
 
-Caro-Wei's theorem (1987) states that if $\alpha_k(G)$ denotes the maximal size of an induced $k$-degenerate subgraph,
+Alon-Kahn-Seymour's theorem (1987) states that if $\alpha_k(G)$ denotes the maximal size of an induced $k$-degenerate subgraph,
 then $\alpha_k(G) \ge \sum_{v \in V(G)} \min\{1, \frac {k + 1}{d(v) + 1}\}$,
 and this bound is tight (as witnessed by by the complete graphs).
 
@@ -105,7 +105,7 @@ Complete characterization of CW-type lower bounds for induced bounded-degree cat
   - [x] Claim 8
   - [x] Claim 9
   - [x] Claim 10
-  - [ ] Claim 11
+  - [x] Claim 11
   - [ ] Claim 12
   - [ ] Claim 13
   - [ ] define `vstar`

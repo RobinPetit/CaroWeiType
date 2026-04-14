@@ -163,6 +163,14 @@ lemma mem_neighborFinset_symm {V : Type*} [Fintype V] {G : SimpleGraph V} [Decid
   simp only [mem_neighborFinset] at hu ⊢
   exact hu.symm
 
+lemma ne_of_mem_neighborFinset {V : Type*} [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj]
+    {u v : V} : u ∈ G.neighborFinset v → u ≠ v := by
+  exact fun h ↦ Adj.ne' <| G.mem_neighborFinset .. |>.mp h
+
+lemma ne'_of_mem_neighborFinset {V : Type*} [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj]
+    {u v : V} : u ∈ G.neighborFinset v → v ≠ u := by
+  exact fun h ↦ Adj.ne' <| G.mem_neighborFinset .. |>.mp <| mem_neighborFinset_symm h
+
 lemma Nonempty_if_card_pos {α : Type*} {s : Finset α} (h : 0 < s.card) :
     Nonempty s := by
   exact Nonempty.to_subtype <| card_pos.mp h

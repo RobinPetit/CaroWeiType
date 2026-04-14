@@ -20,11 +20,11 @@ private lemma f_le_16_of_deg_ge_3 {n : ℕ} {G : SimpleGraph (Fin n)} [Decidable
 
 lemma Claim4_A {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} {s : Finset _} (hv : v ∈ s)
-    (hAv : ABC.A v) (h : G.degree v = G'.degree v + 1) :
+    (hAv : ABC.A v) (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote_finset s) v ≤ 1 / (6 : ℝ) := by
-  simp only [f, hAv, ↓reduceDIte, fA, h, Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte,
-    Nat.add_eq_right, Nat.cast_add, Nat.cast_one, not_A_of_B, fB, tsub_le_iff_right,
-    ABC.demote_finset_from_A hAv hv]
+  simp only [f, hAv, ↓reduceDIte, not_A_of_B, tsub_le_iff_right, ABC.demote_finset_from_A hAv hv]
+  refine le_trans (fA_decreasing h) ?_
+  simp only [fA, fB]
   have : 2 / (G'.degree v + 1 + 1 : ℝ) ≤ 1 := by
     ring_nf
     calc ((2 : ℝ) + G'.degree v)⁻¹ * 2
@@ -34,14 +34,15 @@ lemma Claim4_A {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
       _ = 1 := inv_mul_cancel₀ <| NeZero.ne _
   split_ifs
   any_goals grind
-  · calc 2 / ((G'.degree v) + 1 + 1 : ℝ)
+  · calc 2 / ((((G'.degree v + 1) : ℕ) : ℝ) + 1)
       _ = 2 / (4 : ℝ) := by
         refine congrArg (fun x ↦ 2 / x) ?_
-        rw [← Nat.cast_one, ← Nat.cast_add, ← Nat.cast_add, ← Nat.cast_four, Nat.cast_inj]
+        rename_i h
+        rw [h]
         lia
       _ ≤ 1 / 6 + 1 / 3 := by linarith
-  · calc 2 / (G'.degree v + 1 + 1 : ℝ)
-      _ = 2 * (G'.degree v + 1 + 1 : ℝ)⁻¹ := by ring_nf
+  · calc 2 / ((((G'.degree v + 1) : ℕ) : ℝ) + 1)
+      _ = 2 * (G'.degree v + 1 + 1 : ℝ)⁻¹ := by lia
       _ ≤ 2 * (G'.degree v + 1 : ℝ)⁻¹ := by
         simp only [Nat.ofNat_pos, mul_le_mul_iff_right₀]
         exact inv_anti₀ (Nat.cast_add_one_pos _) le_add_one
@@ -53,24 +54,23 @@ lemma Claim4_A {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
 
 lemma Claim4_B {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} {s : Finset _} (hv : v ∈ s)
-    (hBv : ABC.B v) (h : G.degree v = G'.degree v + 1) :
+    (hBv : ABC.B v) (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote_finset s) v ≤ 1 / (6 : ℝ) := by
-  simp only [f, hBv, not_A_of_B, ↓reduceDIte, fB, h, Nat.add_eq_zero_iff, one_ne_zero, and_false,
-    ↓reduceIte, Nat.add_eq_right, Nat.reduceEqDiff, Nat.cast_add, Nat.cast_one,
-    ABC.demote_finset_from_B hBv hv, not_A_of_C, not_B_of_C, fC, tsub_le_iff_right]
+  simp only [f, hBv, not_A_of_B, ↓reduceDIte, ABC.demote_finset_from_B hBv hv, not_A_of_C,
+    not_B_of_C, tsub_le_iff_right]
+  refine le_trans (fB_decreasing h) ?_
+  simp only [fB, fC]
   split_ifs
   any_goals grind
-  · calc (4 / 3) / (G'.degree v + 1 + 1 : ℝ)
+  · calc (4 / 3) / ((((G'.degree v + 1) : ℕ) : ℝ) + 1)
       _ ≤ (4 / 3) / (2 + 1 + 1) := by
-        refine div_le_div_iff_of_pos_left four_thirds_pos add_one_add_one_pos
-          add_one_add_one_pos |>.mpr ?_
-        simp only [Nat.cast_ofNat, add_le_add_iff_right, Nat.ofNat_le_cast]
-        lia
+        refine div_le_div_iff_of_pos_left four_thirds_pos add_one_pos (by lia) |>.mpr ?_
+        simp only [Nat.cast_add, Nat.cast_one, add_le_add_iff_right, Nat.ofNat_le_cast]
+        grind
     linarith
-  · calc (4 / 3) / (G'.degree v + 1 + 1 : ℝ)
-      _ ≤ (4 / 3) / (G'.degree v + 1 : ℝ) := by
-        exact div_le_div_iff_of_pos_left four_thirds_pos add_one_add_one_pos add_one_pos
-          |>.mpr le_add_one
+  · calc (4 / 3) / ((((G'.degree v + 1) : ℕ) : ℝ) + 1)
+      _ ≤ (4 / 3) / (G'.degree v + 1 : ℝ) :=
+        div_le_div_iff_of_pos_left four_thirds_pos add_one_pos add_one_pos |>.mpr <| by lia
       _ = (2 / 3) / (G'.degree v + 1 : ℝ) + (2 / 3) / (G'.degree v + 1 : ℝ) := by
         rw [← two_mul, mul_div_assoc']
         refine congrArg (· / _) (by linarith)
@@ -80,24 +80,18 @@ lemma Claim4_B {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
 
 lemma Claim4_C {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} {s : Finset _}
-    (hCv : ABC.C v) (h : G.degree v = G'.degree v + 1) :
+    (hCv : ABC.C v) (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote_finset s) v ≤ 1 / (6 : ℝ) := by
-  simp only [f, hCv, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, h, Nat.add_eq_zero_iff, one_ne_zero,
-    and_false, ↓reduceIte, Nat.add_eq_right, Nat.reduceEqDiff, Nat.cast_add, Nat.cast_one,
-    ABC.demote_finset_from_C hCv, tsub_le_iff_right]
-  split_ifs
-  any_goals grind
-  · rename_i H
-    rcases H with h | h <;> { rw [h]; grind }
-  · calc (2 / 3) / (G'.degree v + 1 + 1 : ℝ)
-      _ ≤ (2 / 3) / (G'.degree v + 1 : ℝ) := by
-        exact div_le_div_iff_of_pos_left two_thirds_pos add_one_add_one_pos add_one_pos
-          |>.mpr le_add_one
-    exact le_of_lt <| lt_add_of_pos_left _ one_sixth_pos
+  simp only [f, hCv, not_A_of_C, ↓reduceDIte, not_B_of_C, ABC.demote_finset_from_C hCv]
+  have H1 : fC (G.degree v) - fC (G'.degree v) ≤ fC (G'.degree v) - fC (G'.degree v) := by
+    simp only [tsub_le_iff_right, sub_add_cancel]
+    exact fC_decreasing <| Nat.le_of_succ_le h
+  refine le_trans H1 ?_
+  grind
 
 lemma Claim4 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} {s : Finset _} (hv : v ∈ s)
-    (h : G.degree v = G'.degree v + 1) :
+    (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote_finset s) v ≤ 1 / (6 : ℝ) := by
   if hA : ABC.A v then
     exact Claim4_A G ABC G' hv hA h
@@ -118,7 +112,7 @@ lemma Claim4 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tri
 
 lemma Claim4' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n}
-    (h : G.degree v = G'.degree v + 1) :
+    (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote v) v ≤ 1 / (6 : ℝ) := by
   exact Claim4 G ABC G' (mem_singleton.mpr rfl) h
 
