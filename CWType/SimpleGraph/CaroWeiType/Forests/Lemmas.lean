@@ -39,14 +39,14 @@ lemma InducesLinearForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
   · refine le_trans ?_ <| @card_le_two _ _ v w
     exact card_le_card inter_subset_right
 
-lemma InducesForest_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
+lemma InducesForest_mono {n : ℕ} {G₁ G₂ : SimpleGraph (Fin n)}
     [DecidableRel G₁.Adj] [DecidableRel G₂.Adj]
-    (s : Finset (Fin n)) (hle : G₁ ≤ G₂) (h : G₂.InducesForest s) : G₁.InducesForest s := by
+    {s : Finset (Fin n)} (hle : G₁ ≤ G₂) (h : G₂.InducesForest s) : G₁.InducesForest s := by
   simp only [InducesForest] at h ⊢
   exact IsDegenerateSet_mono G₁ G₂ hle 1 s h
 
-lemma InducesForest_mono' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (s₁ s₂ : Finset (Fin n)) (hs : s₁ ∩ s₂ = ∅)
+lemma InducesForest_mono' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {s₁ s₂ : Finset (Fin n)} (hs : s₁ ∩ s₂ = ∅)
     (h : (G.deleteIncidencesOf s₂).InducesForest s₁) :
     G.InducesForest s₁ := by
   exact IsDegenerateSet_mono' G 1 s₁ s₂ hs h

@@ -20,7 +20,7 @@ lemma Claim0 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
   refine ⟨s, ?_, ?_, ?_, ?_⟩
   · simp only [Tripartition.toFinset, Tripartition.mem_iff] at hs1 ⊢
     exact subset_trans hs1 toFinset_mono
-  · exact InducesForest_mono' _ _ _ hsW hs2
+  · exact InducesForest_mono' hsW hs2
   · intro x hx
     suffices (G.deleteIncidencesOf W).degree_in s x = G.degree_in s x by
       rw [← this]

@@ -280,12 +280,12 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     simp only [← mem_neighborFinset, hNv, mem_insert, mem_singleton, or_true]
   else if hdz : G.degree z ≤ 2 then
     if hdz : G.degree z ≤ 1 then
-      refine Claim5 G ABC (Set.toFinset_subset.mp hG) ih ⟨z, hzABC, hdz⟩
+      refine Claim5 hG ih ⟨z, hzABC, hdz⟩
     else
       have hz : ABC.A z ∨ ABC.B z := by grind [mem_iff]
       rcases hz with hAz | hBz
-      · exact Claim7 G ABC hG ih ⟨v, z, hdv, hBv, by grind, hAz, hvz⟩
-      · exact Claim6 G ABC hG ih ⟨z, by grind, not_A_of_B hBz⟩
+      · exact Claim7 hG ih ⟨v, z, hdv, hBv, by grind, hAz, hvz⟩
+      · exact Claim6 hG ih ⟨z, by grind, not_A_of_B hBz⟩
   else
     have hdz : 3 ≤ G.degree z := by grind
     obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
@@ -326,8 +326,8 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
       · simp only [_op_t, ← demote_toFinset_eq, sdiff_toFinset] at hs
         exact mem_sdiff.mp (hs hu) |>.1
     · refine G.InducesForest_union_leaf s ?_ hdegsv
-      refine G.InducesForest_mono' s {v} (by simp [hvnotins]) ?_
-      refine InducesForest_mono _ _ _ ?_ hsf
+      refine @InducesForest_mono' _ _ _ _ {v} (by simp [hvnotins]) ?_
+      refine InducesForest_mono ?_ hsf
       refine deleteIncidencesOf_le_mono ?_
       intro u u' huu'
       simp only [Set.union_insert, Set.union_singleton, fromEdgeSet_adj, Set.mem_insert_iff,

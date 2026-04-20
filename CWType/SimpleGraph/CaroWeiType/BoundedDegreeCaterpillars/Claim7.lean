@@ -177,8 +177,8 @@ private lemma _Claim7_resp {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
       · exact fun h ↦ h₂ ⟨h, hu'⟩
       · exact fun h ↦ h₃ ⟨h, hu'⟩
 
-lemma Claim7 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) (hG : G.support.toFinset ⊆ ABC.toFinset)
+lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       ABC'.card < ABC.card → Objective G' ABC') :
     (∃ v w, (G.degree v = 3 ∧ ABC.B v ∧ G.degree w = 2 ∧ ABC.A w ∧ G.Adj v w))
@@ -210,7 +210,7 @@ lemma Claim7 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           rw [degree] at hdegv
           refine ⟨?_, ?_, ?_⟩ <;> { intro heq; subst heq; grind [hNv ▸ hdegv] }
   else if hδ : ∃ u ∈ ABC, G.degree u ≤ 1 then
-    exact Claim5 G ABC (Set.toFinset_subset.mp hG) ih hδ
+    exact Claim5 hG ih hδ
   else
     simp only [not_exists, not_and, not_le] at hδ
     have hfw : f G ABC w = 2 / 3 := fA2 hAw hdegw

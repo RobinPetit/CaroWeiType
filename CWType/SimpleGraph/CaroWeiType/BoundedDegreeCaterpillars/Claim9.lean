@@ -113,12 +113,13 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
       simp only [mem_singleton, not_true_eq_false] at bla
     refine ⟨s, ?_, ?_, ?_, ?_⟩
     · exact subset_trans hs <| by simp only [← promote_toFinset_eq, toFinset_mono]
-    · refine InducesForest_mono G (fromEdgeSet (G.edgeSet ∪ {s(x, y)})) s ?_ ?_
-      · intro _ _ h
+    · have hG_le : G ≤ (fromEdgeSet (G.edgeSet ∪ {s(x, y)})) := by
+        intro _ _ h
         simp only [Set.union_singleton, fromEdgeSet_adj, Set.mem_insert_iff, mem_edgeSet, h,
           or_true, ne_eq, h.ne, not_false_eq_true, and_self]
-      · exact InducesForest_mono' _ _ _
-          (by simp only [hznotins, not_false_eq_true, inter_singleton_of_notMem]) hsf
+      refine InducesForest_mono hG_le ?_
+      exact InducesForest_mono'
+        (by simp only [hznotins, not_false_eq_true, inter_singleton_of_notMem]) hsf
     · intro u hu
       if heq : v = u then
         subst heq
@@ -322,7 +323,7 @@ lemma Corollary9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC :
     (∃ w, G.Adj v w ∧ ABC.C w) → Objective G ABC := by
   intro ⟨w, hvw, hCw⟩
   if hdw : G.degree w ≤ 1 then
-    refine Claim5 G ABC (Set.toFinset_subset.mp hG) ih ⟨w, ?_, hdw⟩
+    refine Claim5 hG ih ⟨w, ?_, hdw⟩
     exact ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr
       <| G.mem_support |>.mpr ⟨v, hvw.symm⟩
   else

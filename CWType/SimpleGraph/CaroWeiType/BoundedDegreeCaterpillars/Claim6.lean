@@ -11,14 +11,14 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-lemma Claim6 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) (hG : G.support.toFinset ⊆ ABC.toFinset)
+lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       ABC'.card < ABC.card → Objective G' ABC') :
     (∃ v, G.degree v = 2 ∧ ¬ABC.A v) → Objective G ABC := by
   intro h
   if hwdeg : ∃ w ∈ ABC, G.degree w ≤ 1 then
-    refine Claim5 G ABC (Set.toFinset_subset.mp hG) ih hwdeg
+    refine Claim5 hG ih hwdeg
   else
   simp only [not_exists, not_and, not_le] at hwdeg
   obtain ⟨v, hdegv, hAv⟩ := h

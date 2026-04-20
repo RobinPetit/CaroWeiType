@@ -19,11 +19,11 @@ private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
     {v w : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3) (hvw : G.Adj v w)
     (hw : w ∈ ABC) (hdw : G.degree w ≤ 2) : Objective G ABC := by
   if hdw : G.degree w ≤ 1 then
-    exact Claim5 G ABC (Set.toFinset_subset.mp hG) ih ⟨_, hw, hdw⟩
+    exact Claim5 hG ih ⟨_, hw, hdw⟩
   else if hAw : ABC.A w then
-    exact Claim7 G ABC hG ih ⟨_, _, hdv, hBv, by grind, hAw, hvw⟩
+    exact Claim7 hG ih ⟨_, _, hdv, hBv, by grind, hAw, hvw⟩
   else
-    exact Claim6 G ABC hG ih ⟨_, by grind, hAw⟩
+    exact Claim6 hG ih ⟨_, by grind, hAw⟩
 
 lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) (hG : G.support.toFinset ⊆ ABC.toFinset)

@@ -8,6 +8,12 @@ open Finset
 
 open SimpleGraph
 
+lemma disjoint_of_sdiff {α : Type*} [DecidableEq α] {X Y Z : Finset α} (h : X ⊆ Y \ Z) :
+    X ∩ Z = ∅ := by
+  ext x
+  simp only [mem_inter, notMem_empty, iff_false, not_and]
+  exact fun hx ↦ mem_sdiff.mp (h hx) |>.2
+
 @[simp]
 lemma and_or_3 {p₁ p₂ p₃ q : Prop} : (p₁ ∧ q) ∨ (p₂ ∧ q) ∨ (p₃ ∧ q) ↔ (p₁ ∨ p₂ ∨ p₃) ∧ q := by
   constructor
@@ -870,7 +876,7 @@ lemma linear_forest_of_forest_respects {n : ℕ} (s : Finset (Fin n)) (G : Simpl
   · exact h₁ hA
   · exact le_trans (h₂ hB) one_le_two
   · exact le_of_eq_of_le (h₃ hC) zero_le_two
--- Δf_
+
 lemma respects_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} {v : Fin n} : respects {v} G ABC := by
   simp only [respects, mem_singleton, degree_in, card_eq_zero, forall_eq, mem_neighborFinset,
@@ -1081,6 +1087,20 @@ lemma f_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Ad
   obtain ⟨hvA, hvB, hvC⟩ := hv
   simp only [f, hvA, ↓reduceDIte, hvB, hvC]
 
+lemma f_mono {n : ℕ} {G₁ G₂ : SimpleGraph (Fin n)} [DecidableRel G₁.Adj] [DecidableRel G₂.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hle : G₂ ≤ G₁) :
+    f G₁ ABC v ≤ f G₂ ABC v := by
+  if hv : v ∈ ABC then
+    rcases ABC.mem_iff.mp hv with hA | hB | hC
+    · simp only [f, hA, ↓reduceDIte]
+      refine fA_decreasing <| degree_le_of_le hle
+    · simp only [f, not_A_of_B, hB, ↓reduceDIte]
+      refine fB_decreasing <| degree_le_of_le hle
+    · simp only [f, not_A_of_C, not_B_of_C, hC, ↓reduceDIte]
+      refine fC_decreasing <| degree_le_of_le hle
+  else
+    rw [← f_eq_zero_of_notMem G₁ hv, ← f_eq_zero_of_notMem G₂ hv]
+
 @[simp, grind! .]
 lemma γ_nonneg {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     {v : Fin n} : 0 ≤ γ G ABC v := by
@@ -1163,34 +1183,46 @@ lemma eval_lt {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
 
 lemma degree_deleteIncidencesOf_neighbor {n : ℕ}
     (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {v w : Fin n} (hw : G.Adj v w) :
-    G.degree w = (G.deleteIncidencesOf {v}).degree w + 1 := by
-  suffices G.neighborFinset w = (G.deleteIncidencesOf {v}).neighborFinset w ∪ {v} by
+    {w : Fin n} {s : Finset (Fin n)} (hs : s ⊆ G.neighborFinset w) :
+    G.degree w = (G.deleteIncidencesOf s).degree w + #s := by
+  suffices G.neighborFinset w = (G.deleteIncidencesOf s).neighborFinset w ∪ s by
     simp only [degree, congrArg card this]
-    calc #((G.deleteIncidencesOf {v}).neighborFinset w ∪ {v})
-      _ = #((G.deleteIncidencesOf {v}).neighborFinset w ∪ {v})
-        + #((G.deleteIncidencesOf {v}).neighborFinset w ∩ {v}) := by
-        simp only [union_singleton, Nat.left_eq_add, card_eq_zero]
-        ext x
-        simp [deleteIncidencesOf, deleteIncidenceSet, incidenceSet]
-      _ = #((G.deleteIncidencesOf {v}).neighborFinset w) + #({v} : Finset _) := by
-        exact card_union_add_card_inter ..
-      _ = #((G.deleteIncidencesOf {v}).neighborFinset w) + 1 := by
-        simp only [card_neighborFinset_eq_degree, card_singleton]
-  ext x
-  simp only [mem_neighborFinset, deleteIncidencesOf, deleteIncidenceSet, incidenceSet,
-    union_singleton, mem_insert, mem_singleton, iInf_iInf_eq_left, inf_adj, deleteEdges_adj,
-    Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, and_self_left]
+    refine card_union_of_disjoint ?_
+    refine disjoint_iff_inter_eq_empty.mpr ?_
+    ext u
+    simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, mem_inter, mem_neighborFinset,
+      inf_adj, iInf_adj, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and,
+      not_or, ne_eq, notMem_empty, iff_false, and_imp]
+    intro hwu h hne hus
+    exact (h u |>.1 hus |>.2 hwu |>.2) rfl
+  ext u
+  simp only [mem_neighborFinset, deleteIncidencesOf, deleteIncidenceSet, incidenceSet, mem_union,
+    inf_adj, iInf_adj, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and,
+    not_or, ne_eq]
   constructor
-  · intro hwx
-    if heq : x = v then
-      exact Or.inl heq
+  · intro h
+    simp only [h, forall_const, true_and, h.ne, not_false_eq_true, and_true]
+    if hus : u ∈ s then
+      exact Or.inr hus
     else
-      exact Or.inr (by simp only [hwx, hw.ne, not_false_eq_true, Ne.symm heq, and_self, imp_self])
+      refine Or.inl ?_
+      intro i hi
+      refine ⟨?_, ?_⟩
+      · have hws : w ∉ s := hs.mt <| notMem_neighborFinset_self G _
+        exact fun heq ↦ hws (heq ▸ hi)
+      · exact fun heq ↦ hus (heq ▸ hi)
   · intro h
     rcases h with h | h
-    · exact h ▸ hw.symm
     · exact h.1
+    · exact G.mem_neighborFinset .. |>.mp <| hs h
+
+lemma degree_deleteIncidencesOf_neighbor_singleton {n : ℕ}
+    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    {v w : Fin n} (hw : G.Adj v w) :
+    G.degree w = (G.deleteIncidencesOf {v}).degree w + 1 := by
+  rw [← card_singleton v]
+  refine degree_deleteIncidencesOf_neighbor G ?_
+  simp only [singleton_subset_iff, mem_neighborFinset, hw.symm]
 
 lemma f_deleteIncidencesOf_singleton {n : ℕ} (ABC : Tripartition n)
     (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
@@ -1198,7 +1230,7 @@ lemma f_deleteIncidencesOf_singleton {n : ℕ} (ABC : Tripartition n)
     f (G.deleteIncidencesOf {v}) (ABC \ {v}) w = f G ABC w + γ G ABC w := by
   simp only [f, Tripartition.sdiff_eq, inter_assoc, inter_self, fA, fB, one_div, fC, dite_eq_ite, γ,
     Nat.pred_eq_succ_iff, zero_add, Nat.reduceAdd]
-  rw [degree_deleteIncidencesOf_neighbor G hw]
+  rw [degree_deleteIncidencesOf_neighbor_singleton G hw]
   simp only [Tripartition.sdiff, mem_singleton, hw.ne', not_false_eq_true, and_true,
     Tripartition.sdiff.eq_1, Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte,
     Nat.add_eq_right, Nat.cast_add, Nat.cast_one, Nat.reduceEqDiff, add_tsub_cancel_right]

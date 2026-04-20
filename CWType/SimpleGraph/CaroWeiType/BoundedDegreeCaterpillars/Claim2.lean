@@ -43,7 +43,7 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     contradiction
   refine ⟨s' ∪ F, fun _ _ ↦ by grind [Tripartition.toFinset_mono], ?_, hresp, ?_⟩
   · refine InducesForest_union_disjoint_neighborhoods ?_ h.1 ?_
-    · exact G.InducesForest_mono' s' _ (by grind [sdiff_toFinset]) hlf
+    · exact InducesForest_mono' (by grind [sdiff_toFinset]) hlf
     · intro x hx y hy
       let hobj := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs' hx) |>.2
       simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and, not_or,

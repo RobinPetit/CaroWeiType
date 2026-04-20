@@ -137,6 +137,23 @@ lemma pairwise_ne_of_triplet {α : Type*} [DecidableEq α] {x y z : α}
     simp [← h, card_le_two]
   }
 
+lemma triplet_of_2 {α : Type*} [DecidableEq α] {x y : α} {s : Finset α}
+    (hs : #s = 3) (hx : x ∈ s) (hy : y ∈ s) (hxy : x ≠ y) :
+    ∃ z, s = {x, y, z} := by
+  have _ : #(s \ {x, y}) = #s - 2 := by
+    rw [← card_pair hxy]
+    refine card_sdiff_of_subset ?_
+    intro z hz
+    simp only [mem_insert, mem_singleton] at hz
+    rcases hz with hz | hz
+    · exact hz ▸ hx
+    · exact hz ▸ hy
+  have _ : ∃ z, (s \ {x, y}) = {z} := card_eq_one.mp <| by lia
+  grind only [= card_sdiff_of_subset, = card_sdiff, usr card_sdiff_add_card_inter,
+    = insert_eq_of_mem, = subset_iff, usr card_union_add_card_inter, = inter_insert,
+    = mem_singleton, = singleton_inter, = union_insert, = union_singleton, = mem_insert,
+    = mem_sdiff, = mem_inter]
+
 @[simp]
 lemma ne_of_mem_finset_empty_inter {α : Type*} [DecidableEq α]
     {x y : α} (s t : Finset α)

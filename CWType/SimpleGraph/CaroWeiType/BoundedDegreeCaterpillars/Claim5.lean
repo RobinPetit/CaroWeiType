@@ -142,7 +142,7 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
       · exact fun hC ↦ h₃ <| C_of_demote_ne _ ⟨hC, hznotinx⟩
 
 lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (hG : G.support ⊆ ABC.toFinset)
+    (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x = 1) → Objective G ABC := by
@@ -152,9 +152,11 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
     ext y
     simp only [mem_neighborFinset, mem_singleton]
     exact ⟨hu' y, fun heq ↦ heq ▸ hu⟩
-  have huABC : u ∈ ABC := ABC.coe_mem_toFinset.mpr <| hG <| G.mem_support.mpr ⟨x, hu.symm⟩
+  have huABC : u ∈ ABC :=
+    ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨x, hu.symm⟩
   have hNu : G.neighborFinset u ⊆ ABC.toFinset :=
-    fun z hz ↦ hG <| G.mem_support.mpr ⟨u, G.mem_neighborFinset .. |>.mp hz |>.symm⟩
+    fun z hz ↦ hG <| Set.mem_toFinset.mpr <|
+      G.mem_support.mpr ⟨u, G.mem_neighborFinset .. |>.mp hz |>.symm⟩
   simp only at hu hu'
   have hx' : (ABC.A x ∨ ABC.B x) ∨ ABC.C x := by grind [ABC.mem_iff.mp hx]
   cases hx' with
@@ -362,8 +364,8 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
           exact le_refl _
         _ = 0 := sub_self _
 
-lemma Claim5 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (hG : G.support ⊆ ABC.toFinset)
+lemma Claim5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+    (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x ≤ 1) → Objective G ABC := by
