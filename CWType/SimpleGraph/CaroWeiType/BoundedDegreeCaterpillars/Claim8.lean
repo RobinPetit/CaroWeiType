@@ -75,7 +75,7 @@ lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         grind
       · simp [ℓ, hC, hdy] at hℓy
         grind
-    refine Claim1 G ABC v hv ?_ ih ?_
+    refine Claim1 hv ?_ ih ?_
     · exact fun _ hw ↦ ABC.coe_mem_toFinset.mp <| hinABC <| ((G.mem_neighborFinset ..).mp hw).symm
     · refine le_trans (fB3 hBv hdegv ▸ hγ) ?_
       have h' : ∑ w ∈ {x, y}, γ G ABC w ≤ ∑ w ∈ G.neighborFinset v, γ G ABC w := by

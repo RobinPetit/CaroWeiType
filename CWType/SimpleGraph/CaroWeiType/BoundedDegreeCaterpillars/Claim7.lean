@@ -195,9 +195,8 @@ lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
   have hy : y ∈ ABC := hinABC_Nv (by simp [hNv])
   have hz : z ∈ ABC := hinABC_Nv (by simp [hNv])
   if h' : 1 / 3 ≤ γ G ABC x + γ G ABC y + γ G ABC z then
-    refine Claim1 G ABC v ?_ ?_ ih ?_
-    · refine ABC.coe_mem_toFinset.mpr <| hG ?_
-      exact Set.mem_toFinset.mpr <| (mem_support G).mpr ⟨w, hvw⟩
+    let hv := ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr <| (mem_support G).mpr ⟨w, hvw⟩
+    refine Claim1 hv ?_ ih ?_
     · intro u hu
       refine hG <| Set.mem_toFinset.mpr <| (mem_support G).mpr ⟨v, ?_⟩
       exact Adj.symm <| G.mem_neighborFinset .. |>.mp hu

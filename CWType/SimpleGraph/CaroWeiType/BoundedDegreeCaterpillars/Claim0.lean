@@ -8,8 +8,8 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-lemma Claim0 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) (W : Finset (Fin n)) (hWABC' : W ∩ ABC.toFinset ≠ ∅)
+lemma Claim0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {W : Finset (Fin n)} (hWABC' : W ∩ ABC.toFinset ≠ ∅)
     (h : eval G ABC ≤ eval (G.deleteIncidencesOf W) (ABC \ W))
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       ABC'.card < ABC.card → Objective G' ABC') :

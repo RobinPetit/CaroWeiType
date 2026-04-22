@@ -383,7 +383,7 @@ lemma Claim11 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     refine ⟨?_, ?_, ?_⟩ <;> exact G.mem_neighborFinset .. |>.mp <| by simp [hNv]
   have hvABC : v ∈ ABC := by simp only [mem_iff, hAv, true_or]
   if hfz : f G ABC z ≤ 1 / 6 then
-    refine Corollary1 G ABC z v ?_ ?_ hvz.symm ih ?_
+    refine Corollary1 ?_ ?_ hvz.symm ih ?_
     · exact ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr (G.mem_support.mpr ⟨v, hvz.symm⟩)
     · refine fun u hu ↦ hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨z, ?_⟩
       exact Adj.symm <| G.mem_neighborFinset .. |>.mp <| hu

@@ -162,14 +162,14 @@ lemma Claim5_1 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
   cases hx' with
   | inl hABx => ?_
   | inr hCx =>
-      refine Corollary1 G ABC u x huABC hNu hu.symm ih ?_
+      refine Corollary1 huABC hNu hu.symm ih ?_
       refine le_trans (f_le_56 G ABC hu.symm.degree_pos_left) (le_of_eq ?_)
       simp only [γ, not_A_of_C, ↓reduceDIte, not_B_of_C, hCx, fC, hdegx, tsub_self, ↓reduceIte,
         one_ne_zero, OfNat.one_ne_ofNat, or_false, one_div]
       linarith
   -- x ∈ A ∪ B
   if hCu : ABC.C u then
-    refine Corollary1 G ABC u x huABC hNu hu.symm ih ?_
+    refine Corollary1 huABC hNu hu.symm ih ?_
     have hγ : γ G ABC x = 1 / 6 := by
       simp only [γ, fA, hdegx, tsub_self, ↓reduceIte, one_ne_zero, fB, dite_eq_ite]
       split_ifs <;> grind
