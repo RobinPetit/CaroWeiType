@@ -329,7 +329,7 @@ private lemma _eval_ok {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] 
         simp [Ne.symm, hvnez]
       simp only [f, hCz', hCz'', not_A_of_C, not_B_of_C]
   rw [H]
-  refine Claim4 _ _ _ ?_ ?_
+  refine Claim4 ?_ ?_
   · simp only [mem_insert, mem_singleton, or_true]
   · refine ge_of_eq ?_
     simp_rw [degree, ← card_singleton v]
@@ -375,7 +375,7 @@ lemma Claim11 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     {x y z : Fin n} (hNv : G.neighborFinset v = {x, y, z}) (hBx : ABC.B x) (hBy : ABC.B y)
     (hdx : G.degree x = 3) (hdy : G.degree y = 3)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   rw [degree] at hdv
   obtain ⟨hxney, hxnez, hynez⟩ := pairwise_ne_of_triplet (hNv ▸ hdv)
@@ -383,10 +383,8 @@ lemma Claim11 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     refine ⟨?_, ?_, ?_⟩ <;> exact G.mem_neighborFinset .. |>.mp <| by simp [hNv]
   have hvABC : v ∈ ABC := by simp only [mem_iff, hAv, true_or]
   if hfz : f G ABC z ≤ 1 / 6 then
-    refine Corollary1 ?_ ?_ hvz.symm ih ?_
+    refine Corollary1 ?_ hG hvz.symm ih ?_
     · exact ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr (G.mem_support.mpr ⟨v, hvz.symm⟩)
-    · refine fun u hu ↦ hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨z, ?_⟩
-      exact Adj.symm <| G.mem_neighborFinset .. |>.mp <| hu
     · exact le_of_le_of_eq hfz <| symm <| γA3 hAv hdv
   else if hCz : ABC.C z then
     have hdz : ¬1 ≤ G.degree z := fC_le_16_if_1_le_deg hCz |>.mt hfz
@@ -394,12 +392,32 @@ lemma Claim11 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     contradiction
   else
     obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
-      refine ih (_op_g G v x y) (_op_t ABC v x y z) ?_
-      simp only [_op_t, ← card_demote_finset_eq_card]
-      refine sdiff_card ABC <| nonempty_iff_ne_empty.mp <| nonempty_def.mpr ⟨v, ?_⟩
-      refine mem_inter.mpr ⟨?_, ?_⟩
-      · exact mem_singleton.mpr rfl
-      · exact ABC.coe_mem_toFinset.mp hvABC
+      refine ih (_op_g G v x y) (_op_t ABC v x y z) ?_ ?_
+      · intro u
+        simp only [support, _op_g, deleteIncidenceSet, Set.union_singleton, incidenceSet,
+          edgeSet_fromEdgeSet, Set.mem_diff, Set.mem_insert_iff, Sym2.mem_diagSet,
+          deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, sdiff_adj, fromEdgeSet_adj, Prod.mk.eta,
+          Sym2.eq, Sym2.rel_iff', Prod.swap_prod_mk, ne_eq, Set.mem_setOf_eq,
+          Sym2.isDiag_iff_proj_eq, not_and, Decidable.not_not, and_imp, Set.mem_toFinset,
+          SetRel.mem_dom, Prod.mk.injEq, mem_edgeSet, Sym2.mem_iff, _op_t,
+          ← demote_finset_toFinset_eq, toFinset_eq, mem_sdiff, mem_singleton, forall_exists_index]
+        intro u' h₁ h₂ h₃
+        simp only [h₁, h₂, not_false_eq_true, imp_false, not_or, forall_const] at h₃
+        refine ⟨?_, Ne.symm h₃.1⟩
+        refine hG <| Set.mem_toFinset.mpr <| ?_
+        rcases h₁ with ⟨h | h⟩ | h
+        · refine G.mem_support.mpr ⟨v, ?_⟩
+          refine Adj.symm <| G.mem_neighborFinset .. |>.mp ?_
+          simp only [hNv, h.1, mem_insert, mem_singleton, true_or]
+        · refine G.mem_support.mpr ⟨v, ?_⟩
+          refine Adj.symm <| G.mem_neighborFinset .. |>.mp ?_
+          simp only [hNv, h.1, mem_insert, mem_singleton, true_or, or_true]
+        · exact G.mem_support.mpr ⟨u', h⟩
+      · simp only [_op_t, ← card_demote_finset_eq_card]
+        refine sdiff_card ABC <| nonempty_iff_ne_empty.mp <| nonempty_def.mpr ⟨v, ?_⟩
+        refine mem_inter.mpr ⟨?_, ?_⟩
+        · exact mem_singleton.mpr rfl
+        · exact ABC.coe_mem_toFinset.mp hvABC
     have hxy_not_both_in_s : ¬{x, y} ⊆ s := by
       intro this
       have hobj : 0 < (_op_g G v x y).degree_in s x := by

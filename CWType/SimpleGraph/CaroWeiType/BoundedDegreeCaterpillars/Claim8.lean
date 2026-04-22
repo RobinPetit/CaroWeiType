@@ -15,7 +15,7 @@ open Finset
 private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC')
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v w : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3) (hvw : G.Adj v w)
     (hw : w ∈ ABC) (hdw : G.degree w ≤ 2) : Objective G ABC := by
   if hdw : G.degree w ≤ 1 then
@@ -28,8 +28,8 @@ private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
 lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') {v : Fin n} (hBv : ABC.B v)
-    (hdegv : G.degree v = 3) {x y : Fin n} (hx : G.Adj x v) (hy : G.Adj y v)
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
+    {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
     (hne : x ≠ y) (hyx : f G ABC y ≤ f G ABC x) :
     ℓ G ABC x + ℓ G ABC y > 1 / 6 → Objective G ABC := by
   intro h
@@ -75,16 +75,15 @@ lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         grind
       · simp [ℓ, hC, hdy] at hℓy
         grind
-    refine Claim1 hv ?_ ih ?_
-    · exact fun _ hw ↦ ABC.coe_mem_toFinset.mp <| hinABC <| ((G.mem_neighborFinset ..).mp hw).symm
-    · refine le_trans (fB3 hBv hdegv ▸ hγ) ?_
-      have h' : ∑ w ∈ {x, y}, γ G ABC w ≤ ∑ w ∈ G.neighborFinset v, γ G ABC w := by
-        refine sum_le_sum_of_subset_of_nonneg ?_ ?_
-        · intro w hw
-          simp only [mem_insert, mem_singleton] at hw
-          rcases hw with h | h <;> { subst h; simp [hx.symm, hy.symm] }
-        · exact fun _ _ _ ↦ γ_nonneg G ABC
-      grind
+    refine Claim1 hv hG ih ?_
+    refine le_trans (fB3 hBv hdegv ▸ hγ) ?_
+    have h' : ∑ w ∈ {x, y}, γ G ABC w ≤ ∑ w ∈ G.neighborFinset v, γ G ABC w := by
+      refine sum_le_sum_of_subset_of_nonneg ?_ ?_
+      · intro w hw
+        simp only [mem_insert, mem_singleton] at hw
+        rcases hw with h | h <;> { subst h; simp [hx.symm, hy.symm] }
+      · exact fun _ _ _ ↦ γ_nonneg
+    grind
 
 end Tripartition
 end ABC

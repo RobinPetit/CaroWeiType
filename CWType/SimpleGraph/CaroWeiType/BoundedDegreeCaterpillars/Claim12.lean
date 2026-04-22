@@ -16,7 +16,7 @@ lemma _notA23 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     (hBu : ABC.B u) (hdu : G.degree u = 3) (hBv : ABC.B v) (hdv : G.degree v = 3)
     {x : Fin n} (hx : x ∈ (G.neighborFinset u ∩ G.neighborFinset v))
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC')
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     (hAx : ABC.A x) (hdx : (G.degree x = 2 ∨ G.degree x = 3)) :
     Objective G ABC := by
   rcases hdx with hdx | hdx
@@ -34,7 +34,7 @@ lemma Claim12 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     {x y : Fin n} (hxy : x ≠ y)
     (hxyNuv : {x, y} ⊆ (G.neighborFinset u ∩ G.neighborFinset v))
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   if hx : (ABC.A x ∧ (G.degree x = 2 ∨ G.degree x = 3)) then
     refine _notA23 hG huv hBu hdu hBv hdv (hxyNuv ?_) ih hx.1 hx.2
@@ -78,7 +78,7 @@ lemma Claim12 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
             _ = 1 / 6 := rfl
             _ < 1 / 2 := by linarith
       obtain ⟨s, hs, hsforest, hsrespect, hcard⟩ := by
-        refine ih (G.deleteIncidencesOf {x, y}) (ABC \ {x, y}) <| sdiff_card ABC ?_
+        refine ih (G.deleteIncidencesOf {x, y}) (ABC \ {x, y}) (hsupp_mono hG) <| sdiff_card ABC ?_
         suffices x ∈ ABC.toFinset by
           refine nonempty_iff_ne_empty.mp <| nonempty_def.mpr ⟨x, mem_inter.mpr ⟨?_, this⟩⟩
           simp only [mem_insert, mem_singleton, true_or]

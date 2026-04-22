@@ -180,7 +180,7 @@ private lemma _Claim7_resp {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
 lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ v w, (G.degree v = 3 ∧ ABC.B v ∧ G.degree w = 2 ∧ ABC.A w ∧ G.Adj v w))
       → Objective G ABC := by
   intro h
@@ -196,18 +196,15 @@ lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
   have hz : z ∈ ABC := hinABC_Nv (by simp [hNv])
   if h' : 1 / 3 ≤ γ G ABC x + γ G ABC y + γ G ABC z then
     let hv := ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr <| (mem_support G).mpr ⟨w, hvw⟩
-    refine Claim1 hv ?_ ih ?_
-    · intro u hu
-      refine hG <| Set.mem_toFinset.mpr <| (mem_support G).mpr ⟨v, ?_⟩
-      exact Adj.symm <| G.mem_neighborFinset .. |>.mp hu
-    · calc f G ABC v
-        _ = 1 / 3 := fB3 hBv hdegv
-        _ ≤ γ G ABC x + γ G ABC y + γ G ABC z := h'
-        _ = ∑ u ∈ G.neighborFinset v, γ G ABC u := by
-          rw [hNv]
-          suffices x ≠ y ∧ x ≠ z ∧ y ≠ z by grind
-          rw [degree] at hdegv
-          refine ⟨?_, ?_, ?_⟩ <;> { intro heq; subst heq; grind [hNv ▸ hdegv] }
+    refine Claim1 hv hG ih ?_
+    calc f G ABC v
+      _ = 1 / 3 := fB3 hBv hdegv
+      _ ≤ γ G ABC x + γ G ABC y + γ G ABC z := h'
+      _ = ∑ u ∈ G.neighborFinset v, γ G ABC u := by
+        rw [hNv]
+        suffices x ≠ y ∧ x ≠ z ∧ y ≠ z by grind
+        rw [degree] at hdegv
+        refine ⟨?_, ?_, ?_⟩ <;> { intro heq; subst heq; grind [hNv ▸ hdegv] }
   else if hδ : ∃ u ∈ ABC, G.degree u ≤ 1 then
     exact Claim5 hG ih hδ
   else
@@ -231,8 +228,8 @@ lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       rcases hw with hx | hy | hz <;> grind
     subst heq
     obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
-      refine ih (G.deleteIncidencesOf {v, y, z}) (ABC \ {v, y, z}) (ABC.sdiff_card ?_)
-      exact nonempty_iff_ne_empty.mp ⟨y, by simp [ABC.coe_mem_toFinset.mp hy]⟩
+      refine ih (G.deleteIncidencesOf {v, y, z}) (ABC \ {v, y, z}) (hsupp_mono hG) ?_
+      exact ABC.sdiff_card <| nonempty_iff_ne_empty.mp ⟨y, by simp [ABC.coe_mem_toFinset.mp hy]⟩
     have h₁ : s ∪ {v} ⊆ ABC.toFinset := by
       intro u
       simp only [union_singleton, mem_insert, ← coe_mem_toFinset]

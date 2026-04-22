@@ -13,11 +13,12 @@ private lemma hAiff {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartiti
     ABC.A w ↔ (ABC \ G.closed_neighborFinset_of_Finset F).A w := by
   exact ⟨fun h ↦ by simp [Tripartition.sdiff, h, hw], fun h ↦ h.1⟩
 
-lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) (F : Finset (Fin n)) (hFne : F.Nonempty)
+lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {F : Finset (Fin n)} (hFne : F.Nonempty)
     (hF : F ⊆ ABC.toFinset) (hF' : respects F G ABC)
+    (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ eval G ABC - eval (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F)
                              (ABC \ G.closed_neighborFinset_of_Finset F) →
@@ -29,7 +30,7 @@ lemma Claim2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     refine ⟨x, mem_inter.mpr ⟨closed_neighborFinset_contains_Finset G F <| hx, hF hx⟩⟩
   obtain ⟨s', hs', hlf, hresp, hcard'⟩ :=
     ih (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F)
-      (ABC \ (G.closed_neighborFinset_of_Finset F)) (Tripartition.sdiff_card ABC hcap)
+      (ABC \ (G.closed_neighborFinset_of_Finset F)) (hsupp_mono hG) (ABC.sdiff_card hcap)
   have hresp : respects (s' ∪ F) G ABC := by
     refine respects_union G ABC (respects_mono G ABC hs' hresp) hF' ?_
     intro y hy z hz this
@@ -200,13 +201,13 @@ lemma Claim2' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (hF : F ⊆ ABC.toFinset)
     (hF' : respects F G ABC)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset F, f G ABC v
         - ∑ w ∈ G.N2_of_Finset F, γ G ABC w →
         Objective G ABC := by
   intro h h'
-  refine Claim2 G ABC F hFne hF hF' ih h ?_
+  refine Claim2 hFne hF hF' hG ih h ?_
   simp_all only [ge_iff_le]
   simp only [eval]
   calc ∑ v ∈ ABC.toFinset, f G ABC v
@@ -320,13 +321,13 @@ lemma Claim2' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       intro w hw
       exact Eq.symm <| neg_sub ..
 
-lemma Corollary2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) (F : Finset (Fin n)) (hFne : F.Nonempty)
+lemma Corollary2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {F : Finset (Fin n)} (hFne : F.Nonempty)
     (hG : G.support.toFinset ⊆ ABC.toFinset)
     (hF : F ⊆ ABC.toFinset)
     (hF' : respects F G ABC)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset F, f G ABC v →
         Objective G ABC := by
@@ -335,7 +336,7 @@ lemma Corollary2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
   simp only [ge_iff_le, tsub_le_iff_right] at h' ⊢
   refine le_trans h' ?_
   simp only [le_add_iff_nonneg_right]
-  refine sum_nonneg <| fun _ _ ↦ γ_nonneg G ABC
+  refine sum_nonneg <| fun _ _ ↦ γ_nonneg
 
 end Tripartition
 end ABC

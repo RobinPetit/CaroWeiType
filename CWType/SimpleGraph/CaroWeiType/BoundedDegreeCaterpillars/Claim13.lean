@@ -30,7 +30,7 @@ private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
     {v w : Fin n} (hCv : ABC.C v) (hCw : ABC.C w) (hvw : G.Adj v w)
     (hdv : G.degree v = 3) (hdw : G.degree w = 3)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (Objective G ABC) ∨
       (∃ u₁ u₂ : Fin n,
         G.neighborFinset v = {w, u₁, u₂}
@@ -40,7 +40,7 @@ private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
     rw [degree, hNv] at hdv
     grind
   if hfs : f G ABC u₁ + f G ABC u₂ + f G ABC w ≤ 1 - f G ABC v then
-    refine Or.inl <| Claim3 G ABC (ABC.mem_iff.mpr <| Or.inr <| Or.inr hCv) hG ih ?_
+    refine Or.inl <| Claim3 (ABC.mem_iff.mpr <| Or.inr <| Or.inr hCv) hG ih ?_
     rw [hNv]
     exact le_of_eq_of_le (by grind) hfs
   else
@@ -63,7 +63,7 @@ private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
       fun _ hu ↦ hG <| Set.mem_toFinset.mpr <|
         G.mem_support.mpr ⟨v, (G.mem_neighborFinset .. |>.mp hu).symm⟩
     if hγu₁ : 1 / 6 ≤ γ G ABC u₁ then
-      refine Or.inl <| Corollary1 (ABC.mem_iff.mpr <| Or.inr <| Or.inr hCv) hNvABC hu₁v.symm ih ?_
+      refine Or.inl <| Corollary1 (ABC.mem_iff.mpr <| Or.inr <| Or.inr hCv) hG hu₁v.symm ih ?_
       refine le_of_eq_of_le ?_ hγu₁
       rw [fC3 hCv hdv]
     else
@@ -75,7 +75,8 @@ private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
           have _ : 0 < G.degree u₁ := G.degree_pos_iff_exists_adj _ |>.mpr ⟨v, hu₁v⟩
           grind only [γA1, γA2, γA3]
         if hγu₂ : 1 / 15 ≤ γ G ABC u₂ then
-          refine Or.inl <| Claim1 (by simp only [mem_iff, hCv, or_true]) hNvABC ih ?_
+          have hv : v ∈ ABC := by simp only [mem_iff, hCv, or_true]
+          refine Or.inl <| Claim1 hv hG ih ?_
           rw [hNv]
           calc f G ABC v
             _ = 1 / 6 := fC3 hCv hdv
@@ -153,7 +154,7 @@ lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     (hG : G.support.toFinset ⊆ ABC.toFinset) {v w : Fin n} (hvw : G.Adj v w)
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   cases (_neighborhood_3' hG hCv hCw hvw hdv hdw ih) with
   | inl h => exact h
@@ -193,7 +194,7 @@ lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     have hvwABC : {v, w} ∩ ABC.toFinset ≠ ∅ := by
       refine nonempty_iff_ne_empty.mp (nonempty_def.mpr ⟨v, mem_inter.mpr ⟨mem_insert_self .., ?_⟩⟩)
       exact ABC.coe_mem_toFinset.mp <| ABC.mem_iff.mpr <| Or.inr <| Or.inr hCv
-    refine Claim0 hvwABC ?_ ih
+    refine Claim0 hvwABC hG ?_ ih
     have hxy : {x, y} ⊆ ABC.toFinset \ {v, w} := by
       intro u hu
       simp only [mem_insert, mem_singleton] at hu

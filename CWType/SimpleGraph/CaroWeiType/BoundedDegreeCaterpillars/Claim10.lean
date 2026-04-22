@@ -76,69 +76,34 @@ private lemma _op_g_deg_xyz {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.
 
 @[simp, reducible]
 private noncomputable def _op_t {n : ℕ} (ABC : Tripartition n) (v x y z : Fin n) : Tripartition n :=
-  (ABC \ {v}) |>.demote x |>.demote y |>.demote z
+  (ABC \ {v}) |>.demote_finset {x, y, z}
 
 private lemma A'_of_ne {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n}
     (hu : u ∉ ({v, x, y, z} : Finset _)) (hAu : ABC.A u) :
-    (_op_t ABC v x y z).A u := by
-  refine A_of_demote_ne _ (by grind) ?_
-  refine A_of_demote_ne _ (by grind) ?_
-  refine A_of_demote_ne _ (by grind) ?_
-  exact ⟨hAu, by grind⟩
+    (_op_t ABC v x y z).A u :=
+  A_of_demote_finset_notin _ (by grind) ⟨hAu, by grind⟩
 
 private lemma B'_of_ne {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n}
     (hu : u ∉ ({v, x, y, z} : Finset _)) (hBu : ABC.B u) :
-    (_op_t ABC v x y z).B u := by
-  refine B_of_demote_ne _ (by grind) ?_
-  refine B_of_demote_ne _ (by grind) ?_
-  refine B_of_demote_ne _ (by grind) ?_
-  exact ⟨hBu, by grind⟩
+    (_op_t ABC v x y z).B u :=
+  B_of_demote_finset_notin _ (by grind) ⟨hBu, by grind⟩
 
 private lemma C'_of_ne {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n}
     (hu : u ∉ ({v, x, y, z} : Finset _)) (hCu : ABC.C u) :
-    (_op_t ABC v x y z).C u := by
-  refine C_of_demote_ne _ ?_
-  refine C_of_demote_ne _ ?_
-  refine C_of_demote_ne _ ?_
-  exact ⟨hCu, by grind⟩
+    (_op_t ABC v x y z).C u :=
+  C_of_demote_finset_notin _ ⟨hCu, by grind⟩
 
 private lemma B'_of_demote {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n} (huv : u ≠ v)
-    (hxy : x ≠ y) (hxz : x ≠ z) (hyz : y ≠ z) (hu : u ∈ ({x, y, z} : Finset _)) (hAu : ABC.A u) :
-    (_op_t ABC v x y z).B u := by
+    (hu : u ∈ ({x, y, z} : Finset _)) (hAu : ABC.A u) : (_op_t ABC v x y z).B u := by
   simp only [mem_insert, mem_singleton] at hu
   have hA' : (ABC \ {v}).A u := ⟨hAu, by simp [huv]⟩
-  rcases hu with hx | hy | hz
-  · subst hx
-    refine B_of_demote_ne _ hxz ?_
-    refine B_of_demote_ne _ hxy ?_
-    refine demote_from_A _ hA'
-  · subst hy
-    refine B_of_demote_ne _ hyz ?_
-    refine demote_from_A _ ?_
-    refine A_of_demote_ne _ hxy.symm hA'
-  · subst hz
-    refine demote_from_A _ ?_
-    refine A_of_demote_ne _ hyz.symm ?_
-    refine A_of_demote_ne _ hxz.symm hA'
+  rcases hu with hx | hy | hz <;> exact demote_finset_from_A _ hA' (by grind)
 
 private lemma C'_of_demote {n : ℕ} (ABC : Tripartition n) {u v x y z : Fin n} (huv : u ≠ v)
-    (hxy : x ≠ y) (hxz : x ≠ z) (hyz : y ≠ z) (hu : u ∈ ({x, y, z} : Finset _)) (hBu : ABC.B u) :
-    (_op_t ABC v x y z).C u := by
+    (hu : u ∈ ({x, y, z} : Finset _)) (hBu : ABC.B u) : (_op_t ABC v x y z).C u := by
   simp only [mem_insert, mem_singleton] at hu
   have hB' : (ABC \ {v}).B u := ⟨hBu, by simp [huv]⟩
-  rcases hu with hx | hy | hz
-  · subst hx
-    refine C_of_demote_ne _ ?_
-    refine C_of_demote_ne _ ?_
-    refine demote_from_B _ hB'
-  · subst hy
-    refine C_of_demote_ne _ ?_
-    refine demote_from_B _ ?_
-    refine B_of_demote_ne _ hxy.symm hB'
-  · subst hz
-    refine demote_from_B _ ?_
-    refine B_of_demote_ne _ hyz.symm ?_
-    refine B_of_demote_ne _ hxz.symm hB'
+  rcases hu with hx | hy | hz <;> exact demote_finset_from_B _ hB' (by grind)
 
 private lemma pairwise_ne {n : ℕ} {x y z : Fin n} {s : Finset (Fin n)} (hs : s = {x, y, z})
     (hs' : #s = 3) : x ≠ y ∧ x ≠ z ∧ y ≠ z := by
@@ -175,7 +140,7 @@ private lemma degree_in_eq_outside {n : ℕ} {G : SimpleGraph (Fin n)} [Decidabl
 private lemma f_eq_outside {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} {u v x y z : Fin n}
     (hu : u ∉ ({v, x, y, z} : Finset _)) (hv : G.neighborFinset v = {x, y, z}) :
-    f G ABC u = f (_op_g G v x y z) ((((ABC \ {v}).demote x).demote y).demote z) u := by
+    f G ABC u = f (_op_g G v x y z) ((ABC \ {v}).demote_finset {x, y, z}) u := by
   if huABC : u ∈ ABC then
     simp only [mem_iff] at huABC
     rcases huABC with hA | hB | hC
@@ -186,9 +151,8 @@ private lemma f_eq_outside {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
     · simp only [f, not_A_of_C, not_B_of_C, hC, ABC.C'_of_ne hu hC, ↓reduceDIte]
       exact congrArg (fC ∘ Finset.card) <| neighborFinset_eq_outside hu hv
   else
-    have huABC' : u ∉ ((((ABC \ {v}).demote x).demote y).demote z) := by
-      simp only [← mem_iff_mem_demote, mem_sdiff_iff, mem_singleton, not_and, not_not,
-        huABC, IsEmpty.forall_iff]
+    have huABC' : u ∉ (ABC \ {v}).demote_finset {x, y, z} := by
+      simp only [← mem_iff_mem_demote_tofinset, huABC, mem_sdiff_iff, false_and, not_false_eq_true]
     rw [← f_eq_zero_of_notMem _ huABC]
     rw [← f_eq_zero_of_notMem _ huABC']
 
@@ -265,7 +229,7 @@ private lemma diff_f_BC {d d' : ℕ} (hd : 3 ≤ d) (hdd' : d' ≤ d + 1) :
 lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     (hG : G.support.toFinset ⊆ ABC.toFinset) {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x y, x ≠ y ∧ G.Adj v x ∧ G.Adj v y ∧ ABC.B x ∧ ABC.B y ∧ G.degree x = 3 ∧ G.degree y = 3)
       → Objective G ABC := by
   intro ⟨x, y, hne, hvx, hvy, hBx, hBy, hdx, hdy⟩
@@ -289,15 +253,38 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
   else
     have hdz : 3 ≤ G.degree z := by grind
     obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
-      refine ih (_op_g G v x y z) (_op_t ABC v x y z) ?_
-      simp only [_op_t, ← card_demote_eq_card]
-      refine sdiff_card _ <| nonempty_iff_ne_empty.mp <| nonempty_def.mpr ⟨v, ?_⟩
-      simp only [← ABC.coe_mem_toFinset, mem_iff, hBv, or_true, not_A_of_B, not_C_of_B,
-        or_false, singleton_inter_of_mem, mem_singleton]
+      refine ih (_op_g G v x y z) (_op_t ABC v x y z) ?_ ?_
+      · intro u hu
+        simp only [support, _op_g, deleteIncidencesOf, Set.union_insert, Set.union_singleton,
+          mem_singleton, deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff,
+          Set.mem_insert_iff, Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff,
+          iInf_iInf_eq_left, sdiff_le_iff, le_sup_right, inf_of_le_right, sdiff_adj,
+          fromEdgeSet_adj, Prod.mk.eta, Sym2.eq, Sym2.rel_iff', Prod.swap_prod_mk, ne_eq,
+          Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq, not_and, Decidable.not_not, and_imp,
+          Set.mem_toFinset, SetRel.mem_dom, Prod.mk.injEq, mem_edgeSet, Sym2.mem_iff] at hu
+        simp only [_op_t, ← demote_finset_toFinset_eq, sdiff_toFinset]
+        obtain ⟨w, hu', hu''⟩ := hu
+        simp only [hu'.2, not_false_eq_true, and_true, imp_false, not_or, forall_const] at hu' hu''
+        refine mem_sdiff.mpr ⟨?_, ?_⟩
+        · have H {u'} : u' ∈ G.neighborFinset v → u' ∈ ABC.toFinset :=
+            fun hu' ↦ hG <| Set.mem_toFinset.mpr <|
+              G.mem_support.mpr ⟨v, Adj.symm <| G.mem_neighborFinset .. |>.mp hu'⟩
+          rcases hu' with ⟨hu' | hu'⟩ | ⟨⟨hu' | hu'⟩ | ⟨⟨hu' | hu'⟩ | hu'⟩⟩
+          any_goals simp only [hu'.1, hNv, mem_insert, mem_singleton, true_or, or_true, H]
+          exact hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨w, hu'⟩
+        · grind only [= mem_singleton]
+      · simp only [_op_t, ← card_demote_finset_eq_card]
+        refine sdiff_card _ <| nonempty_iff_ne_empty.mp <| nonempty_def.mpr ⟨v, ?_⟩
+        simp only [← ABC.coe_mem_toFinset, mem_iff, hBv, or_true, not_A_of_B, not_C_of_B,
+          or_false, singleton_inter_of_mem, mem_singleton]
     have _ : x ∈ s → y ∉ s ∧ z ∉ s := by
       intro hx
-      have hd'x : (_op_g G v x y z).degree_in s x = 0 :=
-        hsresp x hx |>.2.2 <| C'_of_demote _ hvx.ne' hne hxnez hynez (by simp) hBx
+      have hd'x : (_op_g G v x y z).degree_in s x = 0 := by
+        refine hsresp x hx |>.2.2 <| ?_
+        refine demote_finset_from_B _ ?_ ?_
+        · refine ⟨hBx, ?_⟩
+          simp only [mem_singleton, Adj.ne' hvx, not_false_eq_true]
+        · simp only [mem_insert, mem_singleton, true_or]
       constructor
       · refine notMem_of_degree_in_eq_zero_of_adj hd'x  ?_
         refine _op_g_adj_xy _ _ _ _ _ hxney hvx.ne hvy.ne
@@ -306,7 +293,11 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     have _ : y ∈ s → z ∉ s ∧ x ∉ s := by
       intro hy
       have hd'y : (_op_g G v x y z).degree_in s y = 0 := by
-        refine hsresp y hy |>.2.2 <| C'_of_demote _ hvy.ne' hne hxnez hynez (by simp) hBy
+        refine hsresp y hy |>.2.2 <| ?_  -- C'_of_demote _ hvy.ne' hne hxnez hynez (by simp) hBy
+        refine demote_finset_from_B _ ?_ ?_
+        · refine ⟨hBy, ?_⟩
+          simp only [mem_singleton, Adj.ne' hvy, not_false_eq_true]
+        · simp only [mem_insert, mem_singleton, true_or, or_true]
       constructor
       · refine notMem_of_degree_in_eq_zero_of_adj hd'y  ?_
         refine _op_g_adj_yz _ _ _ _ _ hynez hvy.ne hvz.ne
@@ -314,7 +305,7 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         refine _op_g_adj_xy _ _ _ _ _ hxney hvx.ne hvy.ne
     have hdegsv : G.degree_in s v ≤ 1 := by grind
     have hvnotins : v ∉ s :=  by
-      simp only [_op_t, ← demote_toFinset_eq, sdiff_toFinset] at hs
+      simp only [_op_t, ← demote_finset_toFinset_eq, sdiff_toFinset] at hs
       intro hvs
       let hobj := mem_sdiff.mp (hs hvs) |>.2
       simp at hobj
@@ -323,7 +314,7 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
       simp only [union_singleton, mem_insert] at hu
       rcases hu with hu | hu
       · simp [hu, hBv, ← ABC.coe_mem_toFinset]
-      · simp only [_op_t, ← demote_toFinset_eq, sdiff_toFinset] at hs
+      · simp only [_op_t, ← demote_finset_toFinset_eq, sdiff_toFinset] at hs
         exact mem_sdiff.mp (hs hu) |>.1
     · refine G.InducesForest_union_leaf s ?_ hdegsv
       refine @InducesForest_mono' _ _ _ _ {v} (by simp [hvnotins]) ?_
@@ -348,22 +339,8 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
               le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj, Sym2.eq, Sym2.rel_iff',
               mem_edgeSet, Set.mem_setOf_eq]
             grind [Adj.ne]
-          rcases huNv with heq | heq | heq
-          · subst heq
-            simp only [hBx, not_A_of_B, degree_in, IsEmpty.forall_iff,
-              forall_const, not_C_of_B, card_eq_zero, and_true, true_and]
-            refine le_trans degree_in_union_le ?_
-            simp only [card_singleton, add_le_iff_nonpos_left]
-            refine le_of_eq <| Eq.trans H_degree_in <| hsresp u hu |>.2.2 ?_
-            exact C'_of_demote ABC hvx.ne' hne hxnez hynez (by simp) hBx
-          · subst heq
-            simp only [hBy, not_A_of_B, degree_in, IsEmpty.forall_iff,
-              forall_const, not_C_of_B, card_eq_zero, and_true, true_and]
-            refine le_trans degree_in_union_le ?_
-            simp only [card_singleton, add_le_iff_nonpos_left]
-            refine le_of_eq <| Eq.trans H_degree_in <| hsresp u hu |>.2.2 ?_
-            exact C'_of_demote ABC hvy.ne' hne hxnez hynez (by simp) hBy
-          · subst heq
+          if huz : u = z then
+            subst huz
             simp only [hCz, card_eq_zero, IsEmpty.forall_iff, and_true]
             constructor
             · intro hAu
@@ -371,12 +348,32 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
               simp only [card_singleton, Order.add_one_le_iff]
               refine Nat.add_le_add_right ?_ 1
               refine H_degree_in ▸ hsresp u hu |>.2.1 ?_
-              exact B'_of_demote _ hvz.ne' hne hxnez hynez (by simp) hAu
+              refine demote_finset_from_A (ABC \ {v}) ⟨hAu, ?_⟩ ?_
+              · simp only [mem_singleton, hvz.ne', not_false_eq_true]
+              · simp only [mem_insert, mem_singleton, or_true]
             · intro hBu
               refine le_trans degree_in_union_le ?_
               simp only [card_singleton, add_le_iff_nonpos_left]
               refine le_of_eq <| H_degree_in ▸ hsresp u hu |>.2.2 ?_
-              exact C'_of_demote _ hvz.ne' hne hxnez hynez (by simp) hBu
+              refine demote_finset_from_B (ABC \ {v}) ⟨hBu, ?_⟩ ?_
+              · simp only [mem_singleton, hvz.ne', not_false_eq_true]
+              · simp only [mem_insert, mem_singleton, or_true]
+          else
+            simp only [huz, or_false] at huNv
+            rcases huNv with heq | heq <;> {
+              subst heq
+              simp only [hBx, hBy, not_A_of_B, not_C_of_B, degree_in, IsEmpty.forall_iff,
+                true_and, and_true, true_and, forall_const, IsEmpty.forall_iff]
+              refine le_trans (@degree_in_union_le _ G _ _ _ _) ?_
+              simp only [card_singleton, add_le_iff_nonpos_left]
+              refine le_of_eq ?_
+              refine Eq.trans H_degree_in <| hsresp u hu |>.2.2 ?_
+              simp only [_op_t]
+              refine demote_finset_from_B (ABC \ {v}) ⟨?_, ?_⟩ ?_
+              · simp only [hBx, hBy]
+              · simp [hvx.ne', hvy.ne']
+              · simp only [mem_insert, mem_singleton, true_or, or_true]
+            }
         else
           have hdegree_in_eq : G.degree_in (s ∪ {v}) u = G.degree_in s u := by
             refine degree_in_union_eq ?_
@@ -403,7 +400,7 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
               f (_op_g G v x y z) (_op_t ABC v x y z) w
             + ∑ w ∈ {v, x, y, z}, f G ABC w := by
           simp only [add_left_inj]
-          simp only [← demote_toFinset_eq, sdiff_toFinset]
+          simp only [← demote_finset_toFinset_eq, sdiff_toFinset]
           refine sum_congr ?_ ?_
           · grind
           · exact fun _ _ ↦ f_eq_outside (by grind) hNv
@@ -419,13 +416,15 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
           simp only [add_left_inj, sub_left_inj]
           simp only [eval]
           refine sum_sdiff ?_
-          simp only [_op_t, ← demote_toFinset_eq, sdiff_toFinset]
+          simp only [_op_t, ← demote_finset_toFinset_eq, sdiff_toFinset]
           intro u hu
           simp only [mem_insert, mem_singleton] at hu
-          rcases hu with hx | hy | hz
-          · exact mem_sdiff.mpr ⟨by simp [← coe_mem_toFinset, hx, hBx], by simp [hx, hvx.ne']⟩
-          · exact mem_sdiff.mpr ⟨by simp [← coe_mem_toFinset, hy, hBy], by simp [hy, hvy.ne']⟩
-          · exact mem_sdiff.mpr ⟨by simp [← coe_mem_toFinset, hz, hzABC], by simp [hz, hvz.ne']⟩
+          refine mem_sdiff.mpr ⟨?_, ?_⟩
+          · rcases hu with hu | hu | hu
+            <;> simp only [hu, ← coe_mem_toFinset, mem_iff, hBx, hBy, hzABC, or_true,
+                  not_A_of_B, not_C_of_B, or_false]
+          · rcases hu with hu | hu | hu
+            <;> simp only [hu, hvx.ne', hvy.ne', hvz.ne', mem_singleton, not_false_eq_true]
         _ = eval (_op_g G v x y z) (_op_t ABC v x y z)
             - (f (_op_g G v x y z) (_op_t ABC v x y z) x
                + f (_op_g G v x y z) (_op_t ABC v x y z) y
@@ -461,12 +460,13 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         simp only [mem_insert, mem_singleton] at hu
         rcases hu with hu | hu <;> {
           simp only [fB3 hBx hdx, fB3 hBy hdy, hu]
-          suffices 2 / 15 ≤ f (_op_g G v x y z) (_op_t ABC v x y z) u by
-            grind
+          suffices 2 / 15 ≤ f (_op_g G v x y z) (_op_t ABC v x y z) u by grind
           let hC'u : (_op_t ABC v x y z).C u := by
-            refine ABC.C'_of_demote ?_ hxney hxnez hynez (by grind) ?_
-            · simp [hu, hvx.ne', hvy.ne']
-            · simp [hu, hBx, hBy]
+            refine demote_finset_from_B _ ?_ ?_
+            · refine ⟨?_, ?_⟩
+              · simp only [hu, hBx, hBy]
+              · simp only [mem_singleton, hu, hvx.ne', hvy.ne', not_false_eq_true]
+            · simp only [hu, mem_insert, mem_singleton, true_or, or_true]
           subst hu
           simp only [f, hC'u, not_A_of_C, not_B_of_C, ↓reduceDIte]
           rw [← _fC4]
@@ -477,13 +477,18 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
       have fdiffz : f G ABC z - f (_op_g G v x y z) (_op_t ABC v x y z) z ≤ 7 / 30 := by
         have hz : ABC.A z ∨ ABC.B z := by grind [mem_iff]
         rcases hz with hAz | hBz
-        · simp only [f, hAz, ↓reduceDIte, B'_of_demote ABC hvz.ne' hxney hxnez hynez (by simp) hAz,
-            not_A_of_B]
+        · have hz' : ((ABC \ {v}).demote_finset {x, y, z}).B z := by
+            refine demote_finset_from_A _ ?_ ?_
+            · refine ⟨hAz, by simp only [mem_singleton, hvz.ne', not_false_eq_true]⟩
+            · simp only [mem_insert, mem_singleton, or_true]
+          simp only [f, hAz, hz', not_A_of_B, ↓reduceDIte]
           exact diff_f_AB hdz <| _op_g_deg_xyz G hvx hvy hvz hxney hxnez hynez (by simp)
-        · simp only [f, hBz, ↓reduceDIte, C'_of_demote ABC hvz.ne' hxney hxnez hynez (by simp) hBz,
-            not_A_of_B, not_A_of_C, not_B_of_C]
-          have hdz' : 3 ≤ G.degree z := by grind
-          refine diff_f_BC hdz <| _op_g_deg_xyz G hvx hvy hvz hxney hxnez hynez (by simp)
+        · have hz' : ((ABC \ {v}).demote_finset {x, y, z}).C z := by
+            refine demote_finset_from_B _ ?_ ?_
+            · refine ⟨hBz, by simp only [mem_singleton, hvz.ne', not_false_eq_true]⟩
+            · simp only [mem_insert, mem_singleton, or_true]
+          simp only [f, hBz, hz', not_A_of_B, not_A_of_C, not_B_of_C, ↓reduceDIte]
+          exact diff_f_BC hdz <| _op_g_deg_xyz G hvx hvy hvz hxney hxnez hynez (by simp)
       calc eval (_op_g G v x y z) (_op_t ABC v x y z)
             + (f G ABC x - f (_op_g G v x y z) (_op_t ABC v x y z) x)
             + (f G ABC y - f (_op_g G v x y z) (_op_t ABC v x y z) y)

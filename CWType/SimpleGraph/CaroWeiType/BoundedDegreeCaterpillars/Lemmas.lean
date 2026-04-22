@@ -1239,7 +1239,7 @@ lemma f_mono {n : ℕ} {G₁ G₂ : SimpleGraph (Fin n)} [DecidableRel G₁.Adj]
     rw [← f_eq_zero_of_notMem G₁ hv, ← f_eq_zero_of_notMem G₂ hv]
 
 @[simp, grind! .]
-lemma γ_nonneg {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
+lemma γ_nonneg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     {v : Fin n} : 0 ≤ γ G ABC v := by
   have h : G.degree v - 1 ≤ G.degree v := Nat.sub_le ..
   simp only [γ, dite_eq_ite]
@@ -1425,6 +1425,20 @@ lemma deleteIncidencesOf_le {n : ℕ} {G : SimpleGraph (Fin n)} {s : Finset (Fin
 lemma deleteIncidencesOf_degree_le {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {s : Finset (Fin n)} {v : Fin n} : (G.deleteIncidencesOf s).degree v ≤ G.degree v := by
   exact degree_le_of_le deleteIncidencesOf_le
+
+lemma hsupp_mono {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+    (hG : G.support.toFinset ⊆ ABC.toFinset)
+    {W : Finset _} : (G.deleteIncidencesOf W).support.toFinset ⊆ (ABC \ W).toFinset := by
+  intro u hu
+  simp only [support, Set.mem_toFinset, SetRel.mem_dom, Set.mem_setOf_eq] at hu
+  obtain ⟨v, hv⟩ := hu
+  simp only [ABC.sdiff_toFinset]
+  simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, inf_adj, iInf_adj,
+    deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq] at hv
+  obtain ⟨huv, h, _⟩ := hv
+  refine mem_sdiff.mpr ⟨?_, ?_⟩
+  · exact hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, huv⟩
+  · exact fun hu ↦ false_of_ne <| h u |>.1 hu |>.2 huv |>.1
 
 end ABC
 end CaroWeiType

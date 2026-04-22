@@ -89,8 +89,8 @@ lemma Claim4_C {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
   refine le_trans H1 ?_
   grind
 
-lemma Claim4 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} {s : Finset _} (hv : v ∈ s)
+lemma Claim4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+    {G' : SimpleGraph (Fin n)} [DecidableRel G'.Adj] {v : Fin n} {s : Finset _} (hv : v ∈ s)
     (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote_finset s) v ≤ 1 / (6 : ℝ) := by
   if hA : ABC.A v then
@@ -110,11 +110,11 @@ lemma Claim4 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tri
     split_ifs
     any_goals grind
 
-lemma Claim4' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n}
+lemma Claim4' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+    {G' : SimpleGraph (Fin n)} [DecidableRel G'.Adj] {v : Fin n}
     (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote v) v ≤ 1 / (6 : ℝ) := by
-  exact Claim4 G ABC G' (mem_singleton.mpr rfl) h
+  exact Claim4 (mem_singleton.mpr rfl) h
 
 end Tripartition
 end ABC

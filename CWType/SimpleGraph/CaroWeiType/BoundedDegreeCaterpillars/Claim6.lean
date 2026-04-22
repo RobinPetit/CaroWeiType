@@ -14,7 +14,7 @@ open Finset
 lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ v, G.degree v = 2 ∧ ¬ABC.A v) → Objective G ABC := by
   intro h
   if hwdeg : ∃ w ∈ ABC, G.degree w ≤ 1 then
@@ -49,19 +49,18 @@ lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       have hw : 0 < G.degree w := by
         refine (degree_pos_iff_exists_adj G w).mpr ⟨v, Adj.symm ?_⟩
         refine G.mem_neighborFinset .. |>.mp (huw ▸ by simp)
-      refine Corollary1 (hABC hw) (G.neighborFinset_subset_support.trans hG)
-        hvw.symm ih (γB2 hB hdegv ▸ h₁)
+      exact Corollary1 (hABC hw) hG hvw.symm ih (γB2 hB hdegv ▸ h₁)
     else
       simp only [not_le] at h₁
       obtain ⟨hAw, hdegw⟩ := A2_of_f_lt_12_of_2_le_deg (hwdeg _ hw) hw h₁
       obtain ⟨hAu, hdegu⟩ := by
         refine A2_of_f_lt_12_of_2_le_deg (hwdeg _ hu) hu ?_
         exact lt_of_lt_of_le h₁ hle
-      refine Claim1 hv (subset_trans G.neighborFinset_subset_support hG) ih ?_
+      refine Claim1 hv hG ih ?_
       rw [fB2 hB hdegv, huw, sum_Nv_eq, γA2 hAu hdegu, γA2 hAw hdegw]
       grind
   · if hf₂ : f G ABC u + f G ABC w ≤ 5 / 6 then
-      refine Claim3 G ABC hv hG ih ?_
+      refine Claim3 hv hG ih ?_
       rw [huw, sum_Nv_eq, fC2 hC hdegv]
       exact le_trans hf₂ (by grind)
     else
@@ -72,7 +71,7 @@ lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
           _ ≥ f G ABC u + f G ABC w := by simp only [ge_iff_le, add_le_add_iff_left, hle]
           _ > 5 / 6 := not_le.mp hf₂
       have hvu : G.Adj v u := G.mem_neighborFinset .. |>.mp (by grind)
-      refine Corollary1 hv (G.neighborFinset_subset_support.trans hG) hvu ih ?_
+      refine Corollary1 hv hG hvu ih ?_
       rw [fC2 hC hdegv]
       obtain ⟨hAu, hdegu⟩ := (A2_or_A3_of_f_lt_25_of_2_le_deg (hwdeg _ hu) hu (by grind))
       rcases hdegu with hu | hu <;> simp only [γA2 hAu, γA3 hAu, hu, le_refl]

@@ -78,7 +78,7 @@ private lemma f_G_le_f_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) [Decidable
 lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     (hG : G.support.toFinset ⊆ ABC.toFinset) {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ w, G.Adj v w ∧ f G ABC w ≤ 1 / 6) → Objective G ABC := by
   intro ⟨w, hvw, hfw⟩
   obtain ⟨x, y, z, hNv, hzy, hyx⟩ := neighborFinset_eq_deg3' (f G ABC ·) hdv
@@ -91,8 +91,6 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
   have hneNv : x ≠ y ∧ x ≠ z ∧ y ≠ z := by
     rw [degree] at hdv
     exact pairwise_ne_of_triplet (hNv ▸ hdv)
-    -- Could have gone with: `<;> { intro h; subst h; grind [degree] }`
-    -- but this is way slower due to `grind [degree]`
   obtain ⟨H₁, H₂, H₃⟩ := hneNv
   if hℓ : ℓ G ABC x + ℓ G ABC y > 1 / 6 then
     exact Claim8 G ABC hG ih hBv hdv h₁'.symm h₂'.symm H₁ hyx hℓ
@@ -105,7 +103,32 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
       refine hG <| Set.mem_toFinset.mpr ?_
       refine G.mem_support.mpr ⟨v, Adj.symm <| (G.mem_neighborFinset ..).mp ?_⟩
       simp only [hNv, mem_insert, mem_singleton, or_true]
-    obtain ⟨s, hs, hsf, hsresp, hscard⟩ := ih (_op G x y z) (ABC \ {z} |>.promote v) hcard
+    obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
+      refine ih (_op G x y z) (ABC \ {z} |>.promote v) ?_ hcard
+      rw [← promote_toFinset_eq]
+      intro u hu
+      simp only [support, _op, deleteIncidencesOf, Set.union_singleton, mem_singleton,
+        deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff, Set.mem_insert_iff,
+        Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, iInf_iInf_eq_left,
+        sdiff_le_iff, le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj,
+        Sym2.eq, Sym2.rel_iff', Prod.swap_prod_mk, ne_eq, Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq,
+        not_and, Decidable.not_not, and_imp, Set.mem_toFinset, SetRel.mem_dom, Prod.mk.injEq,
+        mem_edgeSet, Sym2.mem_iff] at hu
+      simp only [Tripartition.sdiff_toFinset]
+      obtain ⟨u', hu', hu''⟩ := hu
+      have hx : x ∈ ABC.toFinset := hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, h₁'.symm⟩
+      have hy : y ∈ ABC.toFinset := hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, h₂'.symm⟩
+      refine mem_sdiff.mpr ⟨?_, ?_⟩
+      · rcases hu'.1 with ⟨hu | hu⟩ | hu
+        · exact hu.1 ▸ hx
+        · exact hu.1 ▸ hy
+        · exact hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨u', hu⟩
+      · simp only [mem_singleton]
+        intro heq
+        subst heq
+        simp only [Ne.symm H₂, false_and, Ne.symm H₃, or_self, false_or, true_or, forall_const,
+          _root_.not_imp_self] at hu' hu''
+        exact hu'.2 <| hu'' hu'.1
     have hznotins : z ∉ s := by
       simp only [← promote_toFinset_eq, sdiff_toFinset] at hs
       intro this
@@ -319,7 +342,7 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
 lemma Corollary9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     (hG : G.support.toFinset ⊆ ABC.toFinset) {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ w, G.Adj v w ∧ ABC.C w) → Objective G ABC := by
   intro ⟨w, hvw, hCw⟩
   if hdw : G.degree w ≤ 1 then

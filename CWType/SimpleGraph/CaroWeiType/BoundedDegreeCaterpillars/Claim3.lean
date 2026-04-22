@@ -9,13 +9,13 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-lemma Claim3 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
+lemma Claim3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     ∑ w ∈ G.neighborFinset v, f G ABC w ≤ 1 - f G ABC v → Objective G ABC := by
   intro h
-  refine Corollary2 G ABC {v} (singleton_nonempty v) hG (by simp [ABC.coe_mem_toFinset.mp hv])
+  refine Corollary2 (singleton_nonempty v) hG (by simp [ABC.coe_mem_toFinset.mp hv])
     respects_singleton ih InducesLinearForest_singleton ?_
   calc ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f G ABC w
     _ = ∑ w ∈ G.neighborFinset v ∪ {v}, f G ABC w := by
@@ -35,14 +35,14 @@ lemma Claim3 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       rw [← Nat.cast_one]
       refine Eq.symm <| Nat.cast_inj.mpr <| card_singleton _
 
-lemma Corollary3 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
+lemma Corollary3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∀ w ∈ G.neighborFinset v, f G ABC w ≤ (1 - f G ABC v) / (G.degree v : ℝ))
       → Objective G ABC := by
   intro h
-  refine Claim3 G ABC hv hG ih ?_
+  refine Claim3 hv hG ih ?_
   calc ∑ w ∈ G.neighborFinset v, f G ABC w
     _ ≤ ∑ w ∈ G.neighborFinset v, (1 - f G ABC v) / (G.degree v : ℝ) := by
       exact sum_le_sum h

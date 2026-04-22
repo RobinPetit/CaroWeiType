@@ -10,17 +10,22 @@ open SimpleGraph
 open Finset
 
 lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∈ ABC) (hNv : G.neighborFinset v ⊆ ABC.toFinset)
+    {ABC : Tripartition n} {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ ∑ w ∈ G.neighborFinset v, γ G ABC w → Objective G ABC := by
+  have hNv : G.neighborFinset v ⊆ ABC.toFinset := by
+    intro u hu
+    refine hG <| Set.mem_toFinset.mpr ?_
+    refine G.mem_support.mpr ⟨v, ?_⟩
+    exact G.mem_neighborFinset .. |>.mp <| mem_neighborFinset_symm hu
   intro h
   have hvABC : {v} ∩ ABC.toFinset ≠ ∅ := by
     suffices {v} ∩ ABC.toFinset = {v} by
       rw [this]
       exact singleton_ne_empty _
     simp only [toFinset, mem_iff, mem_filter, mem_univ, hv, and_self, singleton_inter_of_mem]
-  refine Claim0 hvABC ?_ ih
+  refine Claim0 hvABC hG ?_ ih
   calc eval G ABC
     _ = ∑ x ∈ (ABC \ {v}).toFinset, f G ABC x + f G ABC v := by
       have h : (ABC \ {v}).toFinset = ABC.toFinset \ {v} := by
@@ -111,18 +116,18 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       exact hobj
 
 lemma Corollary1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v w : Fin n} (hv : v ∈ ABC) (hNv : G.neighborFinset v ⊆ ABC.toFinset)
+    {ABC : Tripartition n} {v w : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
     (hw : G.Adj v w)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      ABC'.card < ABC.card → Objective G' ABC') :
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ γ G ABC w → Objective G ABC := by
   intro h
-  refine Claim1 hv hNv ih <| le_trans h ?_
+  refine Claim1 hv hG ih <| le_trans h ?_
   calc γ G ABC w
     _ = ∑ x ∈ {w}, γ G ABC x := Eq.symm <| sum_singleton ..
     _ = 0 + ∑ x ∈ {w}, γ G ABC x := by simp only [zero_add, sum_singleton]
     _ ≤ ∑ x ∈ G.neighborFinset v \ {w}, γ G ABC x + ∑ x ∈ {w}, γ G ABC x := by
-      exact add_le_add_left (sum_nonneg (fun _ _ ↦ γ_nonneg G ABC)) _
+      exact add_le_add_left (sum_nonneg (fun _ _ ↦ γ_nonneg)) _
     _ = ∑ x ∈ G.neighborFinset v, γ G ABC x := by
       exact sum_sdiff <| singleton_subset_iff.mpr <| G.mem_neighborFinset .. |>.mpr hw
 
