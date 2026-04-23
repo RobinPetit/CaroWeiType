@@ -66,7 +66,31 @@ lemma eq_of_subset_and_eq_card {α : Type*} {A B : Finset α} (h : A ⊆ B) (h' 
   have hB : B = B' ∪ {a} := by ext _; simp [B', h ha]
   grind
 
-private lemma sorted_pair {α : Type*} [DecidableEq α] (f : α → ℝ) (x y : α) :
+lemma pair_eq {α : Type*} [DecidableEq α] {a b x y : α} (hab : a ≠ b)
+    (h : ({a, b} : Finset _) = {x, y}) : a = x ∧ b = y ∨ a = y ∧ b = x := by
+  if hax : a = x then
+    refine Or.inl ⟨hax, ?_⟩
+    have hb : b ∈ ({a, b} : Finset _) := by simp only [mem_insert, mem_singleton, or_true]
+    rw [h] at hb
+    simp only [mem_insert, mem_singleton] at hb
+    rcases hb with hb | hb
+    · simp only [hb, ← hax, ne_eq, not_true_eq_false] at hab
+    · exact hb
+  else
+    simp_all only [ne_eq, false_and, false_or]
+    refine ⟨?_, ?_⟩
+    · have ha : a ∈ ({a, b} : Finset _) := by simp only [mem_insert, mem_singleton, true_or]
+      rw [h] at ha
+      simp only [mem_insert, hax, mem_singleton, false_or] at ha
+      exact ha
+    · have ha : a ∈ ({a, b} : Finset _) := by simp only [mem_insert, mem_singleton, true_or]
+      have hb : b ∈ ({a, b} : Finset _) := by simp only [mem_insert, mem_singleton, or_true]
+      rw [h] at ha hb
+      simp only [mem_insert, hax, mem_singleton, false_or] at ha
+      simp only [mem_insert, mem_singleton, Ne.symm <| ha ▸ hab, or_false] at hb
+      exact hb
+
+lemma sorted_pair {α : Type*} {β : Type*} [LinearOrder β] [DecidableEq α] (f : α → β) (x y : α) :
     ∃ a b, ({a, b} : Finset _) = {x, y} ∧ f a ≤ f b :=
   if h : f x ≤ f y then
     ⟨x, y, rfl, h⟩
