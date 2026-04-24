@@ -8,8 +8,8 @@ open Tripartition
 open Finset
 open SimpleGraph
 
-private lemma exists_argmin {α : Type*} {s : Finset α} (hs : s.Nonempty) {f : α → ℝ} :
-    ∃ x ∈ s, ∀ y ∈ s, f x ≤ f y := by
+private lemma exists_argmin {α β : Type*} [LinearOrder β] {s : Finset α} (hs : s.Nonempty)
+    (f : α → β) : ∃ x ∈ s, ∀ y ∈ s, f x ≤ f y := by
   classical
   induction s using Finset.induction_on_min_value f with
   | h0 => simp only [Finset.not_nonempty_empty] at hs
@@ -32,13 +32,13 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
   have ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC' :=
     fun G' _ ABC' hsupp' hcardABC' ↦ ih ABC'.card (hcard ▸ hcardABC') G' ABC' hsupp' rfl
-  let W := {v | v ∈ ABC.toFinset ∧ 0 < γ G ABC v}
+  let W := ({v | v ∈ ABC.toFinset ∧ 0 < γ G ABC v} : Finset _)
   if hW : W = ∅ then
     have H : ∀ v ∈ ABC.toFinset, γ G ABC v = 0 := by
       intro v hv
       rcases lt_or_eq_of_le <| @γ_nonneg _ G _ ABC v with hγ | hγ
-      · have hvW : v ∈ W := by simp only [Set.mem_setOf_eq, W, hv, hγ, true_and]
-        have : W.Nonempty := Set.nonempty_of_mem hvW
+      · have hvW : v ∈ W := by simp only [mem_filter, mem_univ, hv, hγ, and_self, W]
+        have : W.Nonempty := nonempty_def.mpr ⟨_, hvW⟩
         grind
       · exact hγ.symm
     have : ABC.toFinset.card = k := by
@@ -53,7 +53,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
       else
         simp only [not_le] at hdv
         have _ : γ G ABC v = 0 := H _ (ABC.coe_mem_toFinset.mp <| Or.inr <| Or.inr hv)
-        let hobj := γ_eq_0_iff (Or.inr <| Or.inr hv) hdv |>.mp
+        let hobj := γ_eq_0_iff (Or.inr <| Or.inr hv) (Nat.one_le_of_lt hdv) |>.mp
           <| H _ (ABC.coe_mem_toFinset.mp <| Or.inr <| Or.inr hv)
         simp only [hv, and_true, not_B_of_C, and_false, false_or] at hobj
         rcases hobj with hdv | hdv
@@ -68,7 +68,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
               refine ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr ?_
               exact (degree_pos_iff_mem_support G w).mp <| Adj.degree_pos_left hvw.symm
             have hγw : γ G ABC w = 0 := H _ <| ABC.coe_mem_toFinset.mp hw
-            let hobj := γ_eq_0_iff hw hdw |>.mp hγw
+            let hobj := γ_eq_0_iff hw (Nat.one_le_of_lt hdw) |>.mp hγw
             rcases hobj with ⟨hdw, hw⟩ | ⟨hdw, hw⟩ | ⟨hdw, hw⟩
             · exact Corollary9 hG hw hdw ih ⟨v, hvw.symm, hv⟩
             · exact Claim13 hG hvw hv hdv hw hdw ih
@@ -82,7 +82,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
           exact Or.inl <| Claim5 hG ih ⟨x, hx, hdx⟩
         else
           simp only [not_le] at hdx
-          let hobj := γ_eq_0_iff hx hdx |>.mp <| H _ <| ABC.coe_mem_toFinset.mp hx
+          let := γ_eq_0_iff hx (Nat.one_le_of_lt hdx) |>.mp <| H _ <| ABC.coe_mem_toFinset.mp hx
           grind
       rcases hW with hW | hW
       · exact hW
@@ -105,6 +105,22 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
           · refine G.mem_neighborFinset .. |>.mp
               <| by simp only [H, mem_insert, mem_singleton, true_or, or_true]
   else
+    have hW : W.Nonempty := nonempty_iff_ne_empty.mpr hW
+    obtain ⟨û, hû⟩ : ∃ û, IsVstar G ABC û := by
+      obtain ⟨û, hû⟩ := exists_argmin hW (key G ABC)
+      use û
+      simp only [IsVstar]
+      let hobj := hû.1
+      simp only [mem_filter, mem_univ, true_and, W] at hobj
+      refine ⟨by simp only [hobj, ne_eq, ne_of_lt, not_false_eq_true, Ne.symm, and_self], ?_⟩
+      refine fun v hv _ ↦ hû.2 _ ?_
+      simp only [mem_filter, mem_univ, true_and, W]
+      refine ⟨?_, lt_of_le_of_ne γ_nonneg (Ne.symm hv.2)⟩
+      refine hG <| Set.mem_toFinset.mpr ?_
+      refine G.degree_pos_iff_mem_support _ |>.mp ?_
+      refine Nat.zero_lt_of_ne_zero ?_
+      simp only [ne_eq] at hv
+      exact γ_eq_zero_of_deg_eq_zero.mt hv.2
     sorry
 
 end ABC

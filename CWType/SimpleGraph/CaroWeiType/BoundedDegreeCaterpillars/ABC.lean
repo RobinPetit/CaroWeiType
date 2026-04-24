@@ -131,5 +131,14 @@ def Objective {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
   ∃ s : Finset (Fin n),
     s ⊆ ABC.toFinset ∧ G.InducesForest s ∧ ABC.respects s G ∧ eval G ABC ≤ #s
 
+@[simp, reducible]
+noncomputable def key {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    (ABC : Tripartition n) : Fin n → ℝ ×ₗ ℤ :=
+  fun v ↦ ⟨γ G ABC v, -G.degree v⟩
+
+def IsVstar {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
+    (v : Fin n) : Prop :=
+  MinimalFor (fun u ↦ u ∈ ABC.toFinset ∧ γ G ABC u ≠ 0) (key G ABC) v
+
 end ABC
 end CaroWeiType

@@ -1,5 +1,5 @@
 import Mathlib.Analysis.RCLike.Basic
-import Mathlib.Data.Finset.Sort
+import Mathlib.Combinatorics.SimpleGraph.Connectivity.Connected
 
 import CWType.SimpleGraph.CaroWeiType.Basic
 
@@ -10,6 +10,8 @@ lemma add_congr {a b c d : ℝ} (h₁ : a = c) (h₂ : b = d) :
   let hobj1 := add_right_inj a |>.mpr h₂
   let hobj2 := add_left_inj d |>.mpr h₁
   exact hobj1.trans hobj2
+
+lemma cast_five : ((5 : ℕ) : ℝ) = (5 : ℝ) := rfl
 
 @[simp]
 lemma le_add_one {x : ℝ} : x ≤ x + 1 :=
@@ -65,6 +67,18 @@ lemma eq_of_subset_and_eq_card {α : Type*} {A B : Finset α} (h : A ⊆ B) (h' 
   have hA : A = A' ∪ {a} := by ext _; simp [A', ha]
   have hB : B = B' ∪ {a} := by ext _; simp [B', h ha]
   grind
+
+lemma one_lt_card_iff_exists_a_b {α : Type*} [DecidableEq α] {s : Finset α} :
+    1 < #s ↔ ∃ x y, {x, y} ⊆ s ∧ x ≠ y := by
+  constructor
+  · intro hs
+    have : s.Nonempty := nonempty_iff_ne_empty.mpr (by grind)
+    obtain ⟨x, hx⟩ := nonempty_def.mp this
+    have : (s \ {x}).Nonempty := sdiff_nonempty_of_card_lt_card hs
+    obtain ⟨y, hy⟩ := nonempty_def.mp this
+    refine ⟨x, y, ?_, ?_⟩ <;> grind
+  · intro ⟨x, y, hxy, hxney⟩
+    grind [card_le_card hxy]
 
 lemma pair_eq {α : Type*} [DecidableEq α] {a b x y : α} (hab : a ≠ b)
     (h : ({a, b} : Finset _) = {x, y}) : a = x ∧ b = y ∨ a = y ∧ b = x := by
@@ -872,5 +886,40 @@ lemma degree_in_neighbor {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj
     rcases hw with hw | ⟨hw, hws⟩
     · refine ⟨hw ▸ huv, Or.inl hw⟩
     · refine ⟨hw, Or.inr hws⟩
+
+lemma one_le_degree_of_adj {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {u v : Fin n}
+    (huv : G.Adj u v) : 1 ≤ G.degree u := by
+  rw [← card_singleton v]
+  refine card_le_card ?_
+  simp only [singleton_subset_iff, mem_neighborFinset, huv]
+
+lemma one_le_degree_of_adj' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {u v : Fin n}
+    (huv : G.Adj v u) : 1 ≤ G.degree u := by
+  exact one_le_degree_of_adj huv.symm
+
+lemma one_le_degree_of_walk_begin {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u v : Fin n} (hunev : u ≠ v) (w : G.Walk u v) : 1 ≤ G.degree u := by
+  match w with
+  | Walk.nil => grind only
+  | Walk.cons h _ => exact one_le_degree_of_adj h
+
+lemma one_le_degree_of_walk_end {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u v : Fin n} (hunev : u ≠ v) (w : G.Walk u v) : 1 ≤ G.degree v := by
+  exact one_le_degree_of_walk_begin hunev.symm w.reverse
+
+lemma card_connectedComponent_at_least_deg_plus_one {n : ℕ} {G : SimpleGraph (Fin n)}
+    [DecidableRel G.Adj] {v : Fin n} [Fintype (G.connectedComponentMk v)] :
+    G.degree v + 1 ≤ #(G.connectedComponentMk v).supp.toFinset := by
+  suffices G.neighborFinset v ∪ {v} ⊆ (G.connectedComponentMk v).supp.toFinset by
+    refine le_of_eq_of_le ?_ (card_le_card this)
+    rw [← card_singleton v, degree]
+    refine Eq.symm <| card_union_of_disjoint ?_
+    simp only [disjoint_singleton_right, mem_neighborFinset, SimpleGraph.irrefl, not_false_eq_true]
+  intro x hx
+  simp only [union_singleton, mem_insert, mem_neighborFinset] at hx
+  rcases hx with hx | hx
+  · simp only [hx, Set.mem_toFinset, ConnectedComponent.mem_supp_iff]
+  · simp only [Set.mem_toFinset, ConnectedComponent.mem_supp_iff, ConnectedComponent.eq]
+    exact hx.symm.reachable
 
 end SimpleGraph
