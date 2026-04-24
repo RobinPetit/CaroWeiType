@@ -897,6 +897,16 @@ lemma one_le_degree_of_adj' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.
     (huv : G.Adj v u) : 1 ≤ G.degree u := by
   exact one_le_degree_of_adj huv.symm
 
+lemma one_le_degree_of_mem_neighborFinset {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u v : Fin n} (huv : v ∈ G.neighborFinset u) : 1 ≤ G.degree u := by
+  rw [← card_singleton v]
+  refine card_le_card ?_
+  simp only [singleton_subset_iff, huv]
+
+lemma one_le_degree_of_mem_neighborFinset' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u v : Fin n} (huv : u ∈ G.neighborFinset v) : 1 ≤ G.degree u := by
+  exact one_le_degree_of_mem_neighborFinset <| mem_neighborFinset_symm huv
+
 lemma one_le_degree_of_walk_begin {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {u v : Fin n} (hunev : u ≠ v) (w : G.Walk u v) : 1 ≤ G.degree u := by
   match w with

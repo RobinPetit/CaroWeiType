@@ -49,7 +49,7 @@ lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       have hw : 0 < G.degree w := by
         refine (degree_pos_iff_exists_adj G w).mpr ⟨v, Adj.symm ?_⟩
         refine G.mem_neighborFinset .. |>.mp (huw ▸ by simp)
-      exact Corollary1 (hABC hw) hG hvw.symm ih (γB2 hB hdegv ▸ h₁)
+      exact Corollary1 hG hvw.symm ih (γB2 hB hdegv ▸ h₁)
     else
       simp only [not_le] at h₁
       obtain ⟨hAw, hdegw⟩ := A2_of_f_lt_12_of_2_le_deg (hwdeg _ hw) hw h₁
@@ -71,7 +71,7 @@ lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
           _ ≥ f G ABC u + f G ABC w := by simp only [ge_iff_le, add_le_add_iff_left, hle]
           _ > 5 / 6 := not_le.mp hf₂
       have hvu : G.Adj v u := G.mem_neighborFinset .. |>.mp (by grind)
-      refine Corollary1 hv hG hvu ih ?_
+      refine Corollary1 hG hvu ih ?_
       rw [fC2 hC hdegv]
       obtain ⟨hAu, hdegu⟩ := (A2_or_A3_of_f_lt_25_of_2_le_deg (hwdeg _ hu) hu (by grind))
       rcases hdegu with hu | hu <;> simp only [γA2 hAu, γA3 hAu, hu, le_refl]

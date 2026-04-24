@@ -116,11 +116,12 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       exact hobj
 
 lemma Corollary1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v w : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
+    {ABC : Tripartition n} {v w : Fin n} (hG : G.support.toFinset ⊆ ABC.toFinset)
     (hw : G.Adj v w)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ γ G ABC w → Objective G ABC := by
+  let hv := ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨w, hw⟩
   intro h
   refine Claim1 hv hG ih <| le_trans h ?_
   calc γ G ABC w

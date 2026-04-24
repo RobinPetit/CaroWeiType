@@ -203,7 +203,7 @@ lemma _eval_ok {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
   refine le_of_eq_of_le ?_ card_connectedComponent_at_least_deg_plus_one
   simp only [hdû, Nat.reduceAdd]
 
-lemma Claim14 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim14' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     (hG : G.support.toFinset ⊆ ABC.toFinset) {û : Fin n} (hû : IsVstar G ABC û)
     (hAû : ABC.A û) (hdû : G.degree û = 2)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
@@ -265,7 +265,7 @@ lemma Claim14 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         have hdv₁ : 1 ≤ G.degree v₁ := one_le_degree_of_adj hv₁v₂
         rcases γ_eq_0_iff hv₁ hdv₁ |>.mp hγv₁ with h | h | h
         · exact Claim7 hG ih ⟨v₁, v₂, h.1, h.2, this.2, this.1, hv₁v₂⟩
-        · exact Corollary1 hv₁ hG hv₁v₂ ih (by rw [fC3 h.2 h.1, γA2 this.1 this.2])
+        · exact Corollary1 hG hv₁v₂ ih (by rw [fC3 h.2 h.1, γA2 this.1 this.2])
         · exact Claim6 hG ih ⟨v₁, h.1, not_A_of_C h.2⟩
     else
       simp only [not_exists, not_and] at hv
@@ -369,12 +369,12 @@ lemma Claim14 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
       · exact respects_union_path hs hsresp hC
       · exact _eval_ok hG hdû hs hC hscard
 
-lemma Claim14' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim14 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     (hG : G.support.toFinset ⊆ ABC.toFinset) {û : Fin n} (hû : IsVstar G ABC û)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨
-      (¬(ABC.A û ∧ G.degree û = 2) ∧ f G ABC û = G.degree û * γ G ABC û ∧
+      (¬(ABC.A û ∧ G.degree û = 2) ∧ 3 ≤ G.degree û ∧ f G ABC û = G.degree û * γ G ABC û ∧
         ∃ w ∈ G.neighborFinset û, (G.degree w = 3 ∧ ¬ABC.A w)) := by
   have hûABC : û ∈ ABC :=
     ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr
@@ -382,7 +382,7 @@ lemma Claim14' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
   if hdû : G.degree û ≤ 2 then
     rcases Nat.eq_or_lt_of_le hdû with hdû | hdû
     · rcases hûABC with hA | hB | hC
-      · exact Or.inl <| Claim14 hG hû hA hdû ih
+      · exact Or.inl <| Claim14' hG hû hA hdû ih
       · exact Or.inl <| Claim6 hG ih ⟨û, hdû, not_A_of_B hB⟩
       · exact Or.inl <| Claim6 hG ih ⟨û, hdû, not_A_of_C hC⟩
     · exact Or.inl <| Claim5 hG ih ⟨û, hûABC, Nat.le_of_lt_succ hdû⟩
@@ -395,7 +395,8 @@ lemma Claim14' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
       · refine fB_eq_deg_mul_γ_of_four_le_deg hB (by grind)
       · refine fC_eq_deg_mul_γ_of_four_le_deg hC (by grind)
     if hNû : ∃ w ∈ G.neighborFinset û, (G.degree w = 3 ∧ ¬ABC.A w) then
-      exact Or.inr ⟨by simp only [Nat.ne_of_lt' hdû, and_false, not_false_eq_true], hfû, hNû⟩
+      refine Or.inr ⟨?_, Nat.succ_le_of_lt hdû, hfû, hNû⟩
+      simp only [Nat.ne_of_lt' hdû, and_false, not_false_eq_true]
     else
       simp only [not_exists, not_and, not_not] at hNû
       if hNû' : ∃ w ∈ G.neighborFinset û, γ G ABC w = 0 then
@@ -419,12 +420,7 @@ lemma Claim14' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
           refine hG <| Set.mem_toFinset.mpr ?_
           refine G.mem_support.mpr ⟨û, ?_⟩
           exact Adj.symm <| G.mem_neighborFinset .. |>.mp hw
-        have hkey : key G ABC û ≤ key G ABC w := by
-          by_contra
-          have := hû.2 ⟨hwABC, hNû' _ hw⟩ <| le_of_lt <| not_le.mp this
-          contradiction
-        simp only [key] at hkey
-        exact Prod.Lex.monotone_fst _ _ hkey
+        exact γ_vstar_le_γ hû (ABC.coe_mem_toFinset.mpr hwABC) (hNû' _ hw)
 
 end Tripartition
 end ABC

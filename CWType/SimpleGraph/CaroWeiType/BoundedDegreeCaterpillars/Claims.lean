@@ -13,3 +13,4 @@ import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim11
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim12
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim13
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim14
+import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim15

@@ -88,6 +88,12 @@ lemma mem_iff {n : ℕ} (ABC : Tripartition n) {x : Fin n} :
 
 end Tripartition
 
+lemma f_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hv : v ∉ ABC) : 0 = f G ABC v := by
+  simp only [Tripartition.mem_iff, not_or] at hv
+  obtain ⟨hvA, hvB, hvC⟩ := hv
+  simp only [f, hvA, ↓reduceDIte, hvB, hvC]
+
 lemma one_sixth_pos : (0 : ℝ) < 1 / 6 := by linarith
 
 lemma one_third_pos : (0 : ℝ) < 1 / 3 := by linarith
@@ -111,6 +117,38 @@ lemma two_thirds_le_five_sixths : (2 : ℝ) / 3 ≤ 5 / 6 := by linarith
 lemma two_thirds_le_one : (2 : ℝ) / 3 ≤ 1 := by linarith
 
 lemma four_thirds_le_two : (4 : ℝ) / 3 ≤ 2 := by linarith
+
+lemma fB_le_fA {d : ℕ} : fB d ≤ fA d := by
+  if hd : d = 0 then
+    simp only [fA, fB, hd, ↓reduceIte, le_refl]
+  else if hd : d = 1 then
+    simp only [fA, fB, hd, one_ne_zero, ↓reduceIte, le_refl]
+  else if hd : d = 2 then
+    simp only [fA, fB, hd, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, Nat.cast_ofNat]
+    linarith
+  else
+    simp only [fA, fB, ↓reduceIte, *]
+    ring_nf
+    simp only [inv_pos, one_add_pos, mul_le_mul_iff_right₀]
+    linarith
+
+lemma fC_le_fB {d : ℕ} : fC d ≤ fB d := by
+  if hd : d = 0 then
+    simp only [fB, fC, hd, ↓reduceIte, le_refl]
+  else if hd : d = 1 then
+    simp only [fC, hd, one_ne_zero, ↓reduceIte, OfNat.one_ne_ofNat, or_false, one_div, fB]
+    linarith
+  else if hd : d = 2 then
+    simp only [fC, hd, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, or_true, one_div, fB]
+    linarith
+  else
+    simp only [fC, ↓reduceIte, or_self, fB, *]
+    ring_nf
+    simp only [inv_pos, one_add_pos, mul_le_mul_iff_right₀]
+    linarith
+
+lemma fC_le_fA {d : ℕ} : fC d ≤ fA d :=
+  le_trans fC_le_fB fB_le_fA
 
 lemma zero_le_fA {d : ℕ} : 0 ≤ fA d := by
   rw [fA]
@@ -276,6 +314,16 @@ lemma fA6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripar
   simp only [f, hA, ↓reduceDIte, fA, hv, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one,
     Nat.cast_ofNat]
   linarith
+
+lemma f_le_fA {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+    {v : Fin n} : f G ABC v ≤ fA (G.degree v) := by
+  if hvABC : v ∈ ABC then
+    rcases hvABC with hA | hB | hC
+    · simp only [f, hA, ↓reduceDIte, le_refl]
+    · simp only [f, hB, not_A_of_B, ↓reduceDIte, fB_le_fA]
+    · simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte, fC_le_fA]
+  else
+    exact (f_eq_zero_of_notMem G hvABC) ▸ zero_le_fA
 
 lemma fA_eq_deg_mul_γ_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} {v : Fin n} (hAv : ABC.A v) (hdv : 3 ≤ G.degree v) :
@@ -1380,12 +1428,6 @@ lemma f_pos_of_mem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC
     simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_pos_iff_of_pos_right, inv_pos,
       one_add_pos]
 
-lemma f_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∉ ABC) : 0 = f G ABC v := by
-  simp only [Tripartition.mem_iff, not_or] at hv
-  obtain ⟨hvA, hvB, hvC⟩ := hv
-  simp only [f, hvA, ↓reduceDIte, hvB, hvC]
-
 lemma f_mono {n : ℕ} {G₁ G₂ : SimpleGraph (Fin n)} [DecidableRel G₁.Adj] [DecidableRel G₂.Adj]
     {ABC : Tripartition n} {v : Fin n} (hle : G₂ ≤ G₁) :
     f G₁ ABC v ≤ f G₂ ABC v := by
@@ -1610,6 +1652,35 @@ lemma one_le_deg_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Ad
   let hγv := hv.1.2
   have hdv' : G.degree v - 1 = G.degree v := Nat.sub_one_eq_self.mpr this
   simp only [γ, hdv', sub_self, dite_eq_ite, ite_self, ne_eq, not_true_eq_false] at hγv
+
+lemma mem_ABC_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hv : IsVstar G ABC v) : v ∈ ABC :=
+  ABC.coe_mem_toFinset.mpr hv.1.1
+
+lemma γ_ne_zero_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hv : IsVstar G ABC v) : γ G ABC v ≠ 0 :=
+  hv.1.2
+
+lemma γ_vstar_le_γ {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {u v : Fin n} (hv : IsVstar G ABC v) (hu : u ∈ ABC)
+    (hγu : γ G ABC u ≠ 0) : γ G ABC v ≤ γ G ABC u := by
+  if hkey : key G ABC v ≤ key G ABC u then
+    exact Prod.Lex.monotone_fst _ _ hkey
+  else
+    simp only [not_le] at hkey
+    exact Prod.Lex.monotone_fst _ _ <| hv.2 ⟨ABC.coe_mem_toFinset.mp hu, hγu⟩ (le_of_lt hkey)
+
+lemma ne_B3_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hv : IsVstar G ABC v) :
+    ¬(ABC.B v ∧ G.degree v = 3) :=
+  fun h ↦ γ_ne_zero_of_vstar hv
+    <| γ_eq_0_iff (mem_ABC_of_vstar hv) (one_le_deg_of_vstar hv) |>.mpr <| Or.inl h.symm
+
+lemma ne_C3_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hv : IsVstar G ABC v) :
+    ¬(ABC.C v ∧ G.degree v = 3) :=
+  fun h ↦ γ_ne_zero_of_vstar hv
+    <| γ_eq_0_iff (mem_ABC_of_vstar hv) (one_le_deg_of_vstar hv) |>.mpr <| Or.inr <| Or.inl h.symm
 
 end ABC
 end CaroWeiType

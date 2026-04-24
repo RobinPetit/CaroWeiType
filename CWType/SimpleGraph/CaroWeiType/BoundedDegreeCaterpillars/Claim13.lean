@@ -63,7 +63,7 @@ private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
       fun _ hu ↦ hG <| Set.mem_toFinset.mpr <|
         G.mem_support.mpr ⟨v, (G.mem_neighborFinset .. |>.mp hu).symm⟩
     if hγu₁ : 1 / 6 ≤ γ G ABC u₁ then
-      refine Or.inl <| Corollary1 (ABC.mem_iff.mpr <| Or.inr <| Or.inr hCv) hG hu₁v.symm ih ?_
+      refine Or.inl <| Corollary1 hG hu₁v.symm ih ?_
       refine le_of_eq_of_le ?_ hγu₁
       rw [fC3 hCv hdv]
     else

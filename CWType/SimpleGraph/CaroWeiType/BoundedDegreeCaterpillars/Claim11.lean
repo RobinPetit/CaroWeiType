@@ -383,9 +383,7 @@ lemma Claim11 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     refine ⟨?_, ?_, ?_⟩ <;> exact G.mem_neighborFinset .. |>.mp <| by simp [hNv]
   have hvABC : v ∈ ABC := by simp only [mem_iff, hAv, true_or]
   if hfz : f G ABC z ≤ 1 / 6 then
-    refine Corollary1 ?_ hG hvz.symm ih ?_
-    · exact ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr (G.mem_support.mpr ⟨v, hvz.symm⟩)
-    · exact le_of_le_of_eq hfz <| symm <| γA3 hAv hdv
+    exact Corollary1 hG hvz.symm ih <| le_of_le_of_eq hfz <| symm <| γA3 hAv hdv
   else if hCz : ABC.C z then
     have hdz : ¬1 ≤ G.degree z := fC_le_16_if_1_le_deg hCz |>.mt hfz
     have _ : 0 < G.degree z := G.degree_pos_iff_exists_adj _|>.mpr ⟨v, hvz.symm⟩
