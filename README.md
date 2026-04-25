@@ -111,7 +111,7 @@ Complete characterization of CW-type lower bounds for induced bounded-degree cat
   - [x] define `vstar`
   - [x] Claim 14
   - [x] Claim 15
-  - [ ] Claim 16
+  - [x] Claim 16
   - [ ] Claim 17
   - [ ] Claim 18
   - [ ] Claim 19
