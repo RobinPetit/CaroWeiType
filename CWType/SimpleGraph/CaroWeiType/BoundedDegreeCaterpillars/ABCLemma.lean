@@ -91,7 +91,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
         else
           obtain ⟨v, hv⟩ := nonempty_def.mp <| nonempty_iff_ne_empty.mpr this
           obtain ⟨hBv, hdv⟩ := hW v (ABC.coe_mem_toFinset.mpr hv)
-          obtain ⟨x, y, z, H, _⟩ := neighborFinset_eq_deg3' (G.degree ·) hdv
+          obtain ⟨x, y, z, H, _⟩ := neighborFinset_eq_deg3 (G.degree ·) hdv
           have : (ABC.B x ∧ G.degree x = 3) ∧ (ABC.B y ∧ G.degree y = 3) := by
             refine ⟨?_, ?_⟩ <;> {
               refine hW _ <| ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr ?_

@@ -406,6 +406,14 @@ lemma fC4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripar
     OfNat.ofNat_ne_one, Nat.cast_ofNat, false_or, Nat.reduceEqDiff, ↓reduceIte]
   linarith
 
+-- f(5)
+
+lemma fA5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree v = 5) : f G ABC v = 1 / 3 := by
+  simp only [f, hA, ↓reduceDIte, fA, hv, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one,
+    Nat.cast_ofNat]
+  linarith
+
 -- f(6)
 
 lemma fA6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
@@ -708,6 +716,16 @@ lemma γA6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripa
   rw [γA_eq_of_three_le_deg hA (by lia), hv]
   linarith
 
+lemma γA7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree v = 7) : γ G ABC v = 1 / 28 := by
+  rw [γA_eq_of_three_le_deg hA (by lia), hv]
+  linarith
+
+lemma γA8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    (hA : ABC.A v) (hv : G.degree v = 8) : γ G ABC v = 1 / 36 := by
+  rw [γA_eq_of_three_le_deg hA (by lia), hv]
+  linarith
+
 lemma γA_decreasing_of_three_le_degree {d d' : ℕ} (hdd' : d ≤ d') (hd : 3 ≤ d) :
     fA (d' - 1) - fA d' ≤ fA (d - 1) - fA d := by
   simp only [fA]
@@ -951,6 +969,12 @@ lemma γ_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.
   · exact γB_pos_of_four_le_deg hBv hdv
   · exact γC_pos_of_four_le_deg hCv hdv
 
+lemma γ_eq_0_of_degree_eq_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hdv : G.degree v = 0) : γ G ABC v = 0 := by
+  have hdv' : G.degree v - 1 = 0 := by grind only
+  simp only [γ, hdv']
+  simp only [hdv, sub_self, dite_eq_ite, ite_self]
+
 lemma γ_eq_0_iff {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     {v : Fin n} (hv : v ∈ ABC) (hdv : 1 ≤ G.degree v) :
     γ G ABC v = 0 ↔
@@ -1050,8 +1074,13 @@ lemma ℓC3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Trip
     OfNat.ofNat_ne_one, Nat.succ_ne_self, or_self, Nat.cast_ofNat, Nat.reduceAdd, Nat.reduceEqDiff]
   linarith
 
-lemma ΔfA_decreasing {d d' : ℕ} (hdd' : d ≤ d') :
+lemma γA_decreasing {d d' : ℕ} (hdd' : d ≤ d') :
   (fA d' - fA (d' + 1)) ≤ (fA d - fA (d + 1)) := by
+  if hd : 2 ≤ d then
+    have h' : 3 ≤ d + 1 := by lia
+    have hle : d + 1 ≤ d' + 1 := Nat.add_le_add_right hdd' _
+    exact γA_decreasing_of_three_le_degree hle h'
+  else
   simp only [fA, Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte, Nat.add_eq_right,
     Nat.cast_add, Nat.cast_one]
   have H {m : ℕ} (hm : 2 ≤ m) : 2 / ((m + 1 : ℝ) * (m + 1 + 1 : ℝ)) ≤ 1 / 6 := by
@@ -1068,17 +1097,13 @@ lemma ΔfA_decreasing {d d' : ℕ} (hdd' : d ≤ d') :
             refine Nat.cast_le.mpr (by simp only [Nat.reduceLeDiff, hm])
     linarith
   split_ifs
-  any_goals grind [!Δf_eq]
+  any_goals grind
   · rename_i hd' hd; rw [hd']
     linarith
-  · rename_i hd; rw [Δf_eq, hd]
+  · rw [Δf_eq]
     refine le_trans (H (by lia)) (by linarith)
-  · simp_rw [Δf_eq]
-    refine (div_le_div_iff₀ ?_ ?_).mpr ?_
-    · simp only [add_one_pos, mul_pos_iff_of_pos_left, add_one_add_one_pos]
-    · simp only [add_one_pos, mul_pos_iff_of_pos_left, add_one_add_one_pos]
-    · simp only [Nat.ofNat_pos, mul_le_mul_iff_right₀]
-      refine mul_le_mul ?_ ?_ ?_ ?_ <;> simp [hdd', le_of_lt]
+  · rename_i hd; simp_rw [Δf_eq, hd, Nat.cast_one]
+    refine le_trans (H (by lia)) (by linarith)
 
 lemma ℓ_le_1_over_10_of_3_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} {v : Fin n} (h : 3 ≤ G.degree v) :
@@ -1474,6 +1499,19 @@ lemma respects_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj
     SimpleGraph.irrefl, not_false_eq_true, inter_singleton_of_notMem, card_empty, zero_le,
     implies_true, and_self]
 
+lemma respects_pair_of_non_adj {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v w : Fin n} (hvw : ¬G.Adj v w) : respects {v, w} G ABC := by
+  intro u hu
+  suffices G.degree_in {v, w} u = 0 by grind
+  simp only [mem_insert, mem_singleton] at hu
+  rcases hu with hu | hu <;> {
+    subst hu
+    simp only [pair_comm, degree_in, mem_neighborFinset, SimpleGraph.irrefl, not_false_eq_true,
+      inter_insert_of_notMem, card_eq_zero]
+    refine inter_singleton_of_notMem ?_
+    simp only [mem_neighborFinset, G.adj_symm.mt, hvw, not_false_eq_true]
+  }
+
 lemma respects_union {n : ℕ} {s t : Finset (Fin n)} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) (hs : respects s G ABC) (ht : respects t G ABC)
     (hst' : ∀ y ∈ s, ∀ z ∈ t, ¬G.Adj y z) :
@@ -1557,6 +1595,92 @@ lemma f_le_56 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tr
         simp only [add_le_add_iff_right, Nat.ofNat_le_cast]
         lia
       _ ≤ 5 / 6 := by linarith
+
+lemma f_le_two_fifths_of_γ_lt_one_sixth {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hdv : 0 < G.degree v) (hγv : γ G ABC v < 1 / 6) :
+    f G ABC v ≤ 2 / 5 := by
+  if hvABC : v ∈ ABC then
+    rcases hvABC with hA | hB | hC
+    · simp only [f, hA, ↓reduceDIte]
+      have h : fA 4 = 2 / 5 := by lia
+      refine le_of_le_of_eq (fA_decreasing ?_) h
+      grind [γA1, γA2, γA3]
+    · simp only [f, hB, not_A_of_B, ↓reduceDIte]
+      have h : fB 2 ≤ 2 / 5 := by grind
+      refine le_trans (fB_decreasing ?_) h
+      grind [γB1]
+    · simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte]
+      refine le_trans (fC_decreasing (Nat.one_le_of_lt hdv)) ?_
+      grind
+  else
+    linarith [f_eq_zero_of_notMem G hvABC]
+
+lemma f_le_two_ninths_of_γ_lt_one_thirtieth {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v : Fin n} (hdv : 4 ≤ G.degree v) (hγv : γ G ABC v < 1 / 30) :
+    f G ABC v ≤ 2 / 9 := by
+  if hvABC : v ∈ ABC then
+    rcases hvABC with hA | hB | hC
+    · simp only [f, hA, ↓reduceDIte]
+      have hfA8 : fA 8 = 2 / 9 := by grind
+      rw [← hfA8]
+      refine fA_decreasing ?_
+      by_contra
+      have H : G.degree v = 4 ∨ G.degree v = 5 ∨ G.degree v = 6 ∨ G.degree v = 7 := by grind
+      rcases H with H | H | H | H
+      · linarith [γA4 hA H]
+      · linarith [γA5 hA H]
+      · linarith [γA6 hA H]
+      · linarith [γA7 hA H]
+    · simp only [f, hB, not_A_of_B, ↓reduceDIte]
+      have hfB : fB 5 ≤ 2 / 9 := by grind
+      refine le_trans ?_ hfB
+      refine fB_decreasing ?_
+      by_contra
+      have hdv : G.degree v = 4 := by linarith
+      rw [γB_eq_of_four_le_deg hB (by lia), hdv] at hγv
+      linarith
+    · simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte]
+      refine le_trans (fC_decreasing hdv) ?_
+      grind
+  else
+    linarith [f_eq_zero_of_notMem G hvABC]
+
+lemma f_le_two_sevenths_of_γ_lt_one_fifteenth_of_γ_ne_zero {n : ℕ} {G : SimpleGraph (Fin n)}
+    [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n} -- (hdv : 0 < G.degree v)
+    (hγv : γ G ABC v < 1 / 15) (hγv₀ : γ G ABC v ≠ 0) :
+    f G ABC v ≤ 2 / 7 := by
+  if hvABC : v ∈ ABC then
+    have hdv₀ : G.degree v ≠ 0 := γ_eq_0_of_degree_eq_0.mt hγv₀
+    rcases hvABC with hA | hB | hC
+    · simp only [f, hA, ↓reduceDIte]
+      have hγ5 : fA 4 - fA 5 = 1 / 15 := by grind
+      simp only [γ, hA, ↓reduceDIte, ← hγ5] at hγv
+      have hfA6 : fA 6 = 2 / 7 := by grind
+      rw [← hfA6]
+      if hdv : 6 ≤ G.degree v then
+        exact fA_decreasing hdv
+      else
+        have hdv : G.degree v - 1 ≤ 4 := by lia  -- Nat.le_of_lt_succ <| not_le.mp hdv
+        let hobj := γA_decreasing hdv
+        have H : G.degree v - 1 + 1 = G.degree v := Nat.succ_pred_eq_of_ne_zero hdv₀
+        rw [H] at hobj
+        linarith
+    · simp only [f, hB, not_A_of_B, ↓reduceDIte]
+      have hfB : fB 5 ≤ 2 / 7 := by grind
+      refine le_trans ?_ hfB
+      refine fB_decreasing ?_
+      by_contra
+      have hdv : G.degree v = 1 ∨ G.degree v = 2 ∨ G.degree v = 3 ∨ G.degree v = 4 := by grind
+      rcases hdv with h | h | h | h
+      · linarith [γB1 hB h]
+      · linarith [γB2 hB h]
+      · rw [γB3 hB h] at hγv₀
+        exact false_of_ne hγv₀
+      · linarith [γB4 hB h]
+    · simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte]
+      exact le_trans (fC_decreasing (Nat.one_le_iff_ne_zero.mpr hdv₀)) (by grind)
+  else
+    linarith [f_eq_zero_of_notMem G hvABC]
 
 lemma f_eq_in_sdiff {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     {s : Finset (Fin n)} {w : Fin n} (hw : w ∉ s) :

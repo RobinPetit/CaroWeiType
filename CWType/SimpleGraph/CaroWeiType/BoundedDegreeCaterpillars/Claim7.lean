@@ -185,7 +185,7 @@ lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       → Objective G ABC := by
   intro h
   obtain ⟨v, w, hdegv, hBv, hdegw, hAw, hvw⟩ := h
-  obtain ⟨x, y, z, hNv, hzy, hyx⟩ := neighborFinset_eq_deg3' (f G ABC ·) hdegv
+  obtain ⟨x, y, z, hNv, hzy, hyx⟩ := neighborFinset_eq_deg3 (f G ABC ·) hdegv
   have hinABC {v₁ v₂} (h' : G.Adj v₁ v₂) : v₁ ∈ ABC :=
     ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v₂, h'⟩
   have hv : v ∈ ABC := hinABC hvw

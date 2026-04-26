@@ -81,7 +81,7 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
       G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ w, G.Adj v w ∧ f G ABC w ≤ 1 / 6) → Objective G ABC := by
   intro ⟨w, hvw, hfw⟩
-  obtain ⟨x, y, z, hNv, hzy, hyx⟩ := neighborFinset_eq_deg3' (f G ABC ·) hdv
+  obtain ⟨x, y, z, hNv, hzy, hyx⟩ := neighborFinset_eq_deg3 (f G ABC ·) hdv
   have h₁' : G.Adj v x :=
     G.mem_neighborFinset .. |>.mp <| by simp only [hNv, mem_insert, mem_singleton, true_or]
   have h₂' : G.Adj v y :=

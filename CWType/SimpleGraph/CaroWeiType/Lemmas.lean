@@ -5,6 +5,9 @@ import CWType.SimpleGraph.CaroWeiType.Basic
 
 open Finset
 
+lemma pair_nonempty {α : Type*} [DecidableEq α] {x y : α} : ({x, y} : Finset _).Nonempty :=
+  insert_nonempty ..
+
 lemma add_congr {a b c d : ℝ} (h₁ : a = c) (h₂ : b = d) :
     a + b = c + d := by
   let hobj1 := add_right_inj a |>.mpr h₂
@@ -769,7 +772,7 @@ lemma neighborFinset_eq_deg2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel 
   rw [huw, ← heq]
   exact pair_comm ..
 
-lemma neighborFinset_eq_deg3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n}
+lemma neighborFinset_eq_deg3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n}
     (f : Fin n → ℝ) :
     G.degree v = 3 → ∃ x y z, G.neighborFinset v = {x, y, z} ∧ f z ≤ f y ∧ f y ≤ f x := by
   intro h
@@ -783,6 +786,30 @@ lemma neighborFinset_eq_deg3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel 
       grind
     · grind
   refine ⟨σ 2, σ 1, σ 0, hσ.symm.trans this, by grind⟩
+
+lemma neighborFinset_eq_deg3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n}
+    {x : Fin n} (hx : x ∈ G.neighborFinset v) (f : Fin n → ℝ) :
+    G.degree v = 3 → ∃ y z, G.neighborFinset v = {x, y, z} ∧ f z ≤ f y := by
+  intro h
+  obtain ⟨σ, hσ, hinc⟩ := sorted_finset 3 h f
+  have : Finset.image σ univ = {σ 2, σ 1, σ 0} := by
+    ext x
+    simp only [mem_image, mem_univ, true_and, Fin.isValue, mem_insert, mem_singleton]
+    constructor
+    · intro ⟨i, hi⟩
+      suffices i = 0 ∨ i = 1 ∨ i = 2 by grind
+      grind
+    · grind
+  simp only [← hσ, this, Fin.isValue, mem_insert, mem_singleton] at hx ⊢
+  rcases hx with hx | hx | hx
+  · refine ⟨σ 1, σ 0, ?_, hinc _ _ <| Fin.zero_le 1⟩
+    simp only [Fin.isValue, hx]
+  · refine ⟨σ 2, σ 0, ?_, hinc _ _ <| Fin.zero_le 2⟩
+    simp only [Fin.isValue, hx]
+    grind only [= mem_insert]
+  · refine ⟨σ 2, σ 1, ?_, hinc _ _ <| Fin.coe_sub_iff_le.mp rfl⟩
+    simp only [Fin.isValue, hx]
+    grind only [= mem_insert, = mem_singleton]
 
 lemma notMem_of_degree_in_eq_zero_of_adj {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {s : Finset (Fin n)} {v w : Fin n} (hdv : G.degree_in s v = 0) (hvw : G.Adj v w) :

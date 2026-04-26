@@ -21,7 +21,7 @@ lemma Claim16 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     Objective G ABC ∨
       (¬(ABC.A û ∧ G.degree û = 4) ∧
         ¬(ABC.A û ∧ G.degree û = 5) ∧ ¬(ABC.B û ∧ G.degree û = 4)) := by
-  obtain ⟨x, y, z, hxyz, hfzy, hfyx⟩ := neighborFinset_eq_deg3' (γ G ABC ·) hdv
+  obtain ⟨x, y, z, hxyz, hfzy, hfyx⟩ := neighborFinset_eq_deg3 (γ G ABC ·) hdv
   if hγz : γ G ABC z = 0 then
     have hzv : z ∈ G.neighborFinset v := by simp only [hxyz, mem_insert, mem_singleton, or_true]
     have hdz : 1 ≤ G.degree z := one_le_degree_of_mem_neighborFinset' hzv

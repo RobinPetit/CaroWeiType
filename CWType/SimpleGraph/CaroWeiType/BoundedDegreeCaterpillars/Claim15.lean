@@ -52,7 +52,7 @@ lemma Claim15 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         let hobj := hABC hw
         simp only [mem_iff, hAw, hNvC _ hw |>.mt <| not_not_intro hdw, or_false, false_or] at hobj
         exact hobj
-      obtain ⟨x, y, z, hxyz, hγzy, hγyx⟩ := neighborFinset_eq_deg3' (γ G ABC ·) hdw
+      obtain ⟨x, y, z, hxyz, hγzy, hγyx⟩ := neighborFinset_eq_deg3 (γ G ABC ·) hdw
       have hγ {u : Fin n} (hu : u ∈ G.neighborFinset w) (hγu : γ G ABC u = 0) :
           Objective G ABC ∨ ABC.B u ∧ G.degree u = 3 := by
         let hobj := γ_eq_0_iff (hABC hu) (one_le_degree_of_mem_neighborFinset' hu) |>.mp hγu

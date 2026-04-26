@@ -17,7 +17,7 @@ private lemma _neighborhood_3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel 
     {v w : Fin n} (hvw : G.Adj v w) (hdv : G.degree v = 3)
     (f : Fin n → ℝ) :
     ∃ u₁ u₂ : Fin n, G.neighborFinset v = {w, u₁, u₂} ∧ f u₁ ≤ f u₂ := by
-  obtain ⟨x, y, z, hNv, hfzy, hfyx⟩ := neighborFinset_eq_deg3' f hdv
+  obtain ⟨x, y, z, hNv, hfzy, hfyx⟩ := neighborFinset_eq_deg3 f hdv
   haveI := hNv ▸ G.mem_neighborFinset .. |>.mpr hvw
   simp only [mem_insert, mem_singleton] at this
   rcases this with hw | hw | hw
