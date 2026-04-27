@@ -15,19 +15,16 @@ structure Tripartition (n : ℕ) where
   C : Fin n → Prop
   sound : ∀ x, ¬(A x ∧ B x) ∧ ¬(A x ∧ C x) ∧ ¬(B x ∧ C x)
 
-def promote_B {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hv : ABC.B v) : Tripartition n where
-  A w := ABC.A w ∨ w = v
-  B w := ABC.B w ∧ w ≠ v
-  C w := ABC.C w
-  sound := by grind [ABC.sound]
-
-def promote_C {n : ℕ} {ABC : Tripartition n} {v : Fin n} (hv : ABC.C v) : Tripartition n where
-  A w := ABC.A w
-  B w := ABC.B w ∨ w = v
-  C w := ABC.C w ∧ w ≠ v
-  sound := by grind [ABC.sound]
-
 namespace Tripartition
+
+def promote_finset {n : ℕ} (ABC : Tripartition n) (s : Finset (Fin n)) : Tripartition n where
+  A w := ABC.A w ∨ ABC.B w ∧ w ∈ s
+  B w := ABC.B w ∧ w ∉ s ∨ ABC.C w ∧ w ∈ s
+  C w := ABC.C w ∧ w ∉ s
+  sound := by grind [ABC.sound]
+
+def promote {n : ℕ} (ABC : Tripartition n) (v : Fin n) : Tripartition n :=
+  ABC.promote_finset {v}
 
 def demote_finset {n : ℕ} (ABC : Tripartition n) (s : Finset (Fin n)) : Tripartition n where
   A w := ABC.A w ∧ w ∉ s
@@ -37,11 +34,6 @@ def demote_finset {n : ℕ} (ABC : Tripartition n) (s : Finset (Fin n)) : Tripar
 
 def demote {n : ℕ} (ABC : Tripartition n) (v : Fin n) : Tripartition n :=
   ABC.demote_finset {v}
-
-noncomputable def promote {n : ℕ} (ABC : Tripartition n) (v : Fin n) : Tripartition n := by
-  if      hB : ABC.B v then exact CaroWeiType.ABC.promote_B hB
-  else if hC : ABC.C v then exact CaroWeiType.ABC.promote_C hC
-  else                      exact ABC
 
 instance {n : ℕ} : Membership (Fin n) (Tripartition n) :=
   ⟨fun ABC x ↦ ABC.A x ∨ ABC.B x ∨ ABC.C x⟩

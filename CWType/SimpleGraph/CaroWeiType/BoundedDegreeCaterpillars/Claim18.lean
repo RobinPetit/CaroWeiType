@@ -12,7 +12,7 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-private lemma Corollary2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma Corollary2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} {x y v w : Fin n}
     (hG : G.support.toFinset ⊆ ABC.toFinset)
     (hBv : ABC.B v) (hBw : ABC.B w) (hv : G.Adj x v) (hw : G.Adj y w) (hvnew : v ≠ w)
@@ -54,21 +54,6 @@ private lemma Corollary2'' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
   rw [← Nat.cast_two, Nat.cast_inj]
   exact Eq.symm <| card_pair hvnew
 
-private lemma neighborFinset_of_adj_of_adj_of_ne {n : ℕ} {G : SimpleGraph (Fin n)}
-    [DecidableRel G.Adj] {v x y : Fin n} (hdv : G.degree v = 3) (hxy : x ≠ y)
-    (hvx : G.Adj v x) (hvy : G.Adj v y) :
-    ∃ z, G.neighborFinset v = {x, y, z} := by
-  have h : (G.neighborFinset v \ {x, y}).Nonempty := by
-    refine card_pos.mp ?_
-    refine lt_of_lt_of_le ?_ (le_card_sdiff ..)
-    rw [card_pair hxy, ← degree, hdv]
-    exact Nat.zero_lt_succ _
-  obtain ⟨z, hz⟩ := h
-  refine ⟨z, ?_⟩
-  refine Eq.symm <| eq_of_subset_and_eq_card ?_ ?_
-  · grind [mem_neighborFinset]
-  · grind [degree]
-
 private lemma three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
     {v x : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3) (hvx : G.Adj v x)
@@ -86,7 +71,7 @@ private lemma three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
   else
     exact Or.inr (by lia)
 
-private lemma hNvw {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {û v w x y : Fin n}
+lemma hNvw {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {û v w x y : Fin n}
     (hNv : G.neighborFinset v = {û, w, x}) (hNw : G.neighborFinset w = {û, v, y}) :
     G.closed_neighborFinset_of_Finset {v, w} = {v, w, û, x, y} := by
   ext u
@@ -94,9 +79,8 @@ private lemma hNvw {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {û 
     ↓existsAndEq, true_and, mem_filter, mem_univ, ← mem_neighborFinset]
   grind [mem_neighborFinset_symm]
 
-private lemma sum_hNvw {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {û v w x y : Fin n}
-    (hdû : G.degree û = 4) (hxy : x ≠ y)
-    (hdv : G.degree v = 3) (hdw : G.degree w = 3) (hvnew : v ≠ w)
+lemma sum_hNvw {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {û v w x y : Fin n}
+    (hxy : x ≠ y) (hdv : G.degree v = 3) (hdw : G.degree w = 3) (hvnew : v ≠ w)
     (hNv : G.neighborFinset v = {û, w, x}) (hNw : G.neighborFinset w = {û, v, y})
     {f : Fin n → ℝ} :
     ∑ u ∈ {v, w, û, x, y}, f u = f v + f w + f û + f x + f y := by
@@ -130,7 +114,7 @@ private lemma _A3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       _ ≥ f G ABC v + f G ABC w + f G ABC û + f G ABC x + f G ABC y := by
         rw [fB3 hBv hdv, fB3 hBw hdw, fA4 hAû hdû]
         linarith
-    exact le_of_eq <| (hNvw hNv hNw) ▸ sum_hNvw hdû hxy hdv hdw hvnew hNv hNw
+    exact le_of_eq <| (hNvw hNv hNw) ▸ sum_hNvw hxy hdv hdw hvnew hNv hNw
   else
     have hdx : G.degree x = 3 := by
       by_contra
@@ -197,7 +181,7 @@ private lemma γ_eq_zero_in_N2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
     simp only [not_forall] at hN2
     obtain ⟨z, hz, hγz⟩ := hN2
     refine Or.inl <| Corollary2'' hG hBv hBw hvx.symm hwy.symm hvnew ?_ ih
-    rw [hNvw hNv hNw, sum_hNvw hdû hxy hdv hdw hvnew hNv hNw]
+    rw [hNvw hNv hNw, sum_hNvw hxy hdv hdw hvnew hNv hNw]
     rw [fB3 hBv hdv, fB3 hBw hdw, fA4 hAû hdû, fA3 hAx hdx, fA3 hAy hdy]
     suffices ∑ z ∈ G.N2_of_Finset {v, w}, γ G ABC z ≥ 1 / 15 by
       linarith
@@ -211,8 +195,8 @@ private lemma γ_eq_zero_in_N2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
     refine sum_le_sum_of_subset_of_nonneg (by simp only [singleton_subset_iff, hz]) ?_
     exact fun _ _ _ ↦ γ_nonneg
 
-lemma _respects {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    {û v w x y : Fin n}
+private lemma _respects {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {û v w x y : Fin n}
     (hBw : ABC.B w) (hAx : ABC.A x) (hAy : ABC.A y) (hwx : ¬G.Adj w x) (hdv : G.degree v = 3)
     (hNv : G.neighborFinset v = {û, w, x}) (hNw : G.neighborFinset w = {û, v, y}) :
     respects {w, x, y} G ABC := by
@@ -511,7 +495,7 @@ lemma Claim18 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         · grind
       have hF : #{w, x, y} = 3 := by grind [degree]
       have hN' : ({û, v, w, x, y} : Finset _) = {v, w, û, x, y} := by grind
-      rw [hNwxy, hN', sum_hNvw hdû hxy hdv hdw hvnew hNv hNw, hF, Nat.cast_three]
+      rw [hNwxy, hN', sum_hNvw hxy hdv hdw hvnew hNv hNw, hF, Nat.cast_three]
       rw [fB3 hBv hdv, fB3 hBw hdw, fA4 hAû hdû, fA3 hAx hdx, fA3 hAy hdy]
       linarith
 

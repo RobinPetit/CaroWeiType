@@ -14,6 +14,15 @@ lemma add_congr {a b c d : ℝ} (h₁ : a = c) (h₂ : b = d) :
   let hobj2 := add_left_inj d |>.mpr h₁
   exact hobj1.trans hobj2
 
+lemma eq_sdiff_of_empty_inter {n : ℕ} {s t : Finset (Fin n)} (hcap : t ∩ s = ∅) : (s = s \ t) := by
+  ext
+  simp only [mem_sdiff, iff_self_and]
+  exact fun hus hut ↦ notMem_empty _ <| hcap ▸ mem_inter.mpr ⟨hut, hus⟩
+
+lemma notMem_of_empty_inter_of_mem {α : Type*} [DecidableEq α] {s t : Finset α} {x : α}
+    (h : s ∩ t = ∅) (hxt : x ∈ t) : x ∉ s :=
+  fun hxs ↦ notMem_empty x (h ▸ mem_inter.mpr ⟨hxs, hxt⟩)
+
 lemma cast_five : ((5 : ℕ) : ℝ) = (5 : ℝ) := rfl
 
 @[simp]
@@ -40,13 +49,14 @@ lemma one_add_pos {n : ℕ} : 0 < (1 : ℝ) + n := by
   rw [← Nat.cast_one, ← Nat.cast_add, Nat.cast_pos]
   exact Nat.pos_of_neZero (1 + n)
 
-@[simp]
 lemma p_and_p_implies {p q : Prop} : (p → (p ∧ q)) ↔ (p → q) :=
   ⟨fun h hp ↦ h hp |>.2, fun hpq hp ↦ ⟨hp, hpq hp⟩⟩
 
-@[simp]
 lemma p_imp_q_imp_p {p q : Prop} : p → q → p :=
   fun h _ ↦ h
+
+lemma not_p_of_p_imp_false {p : Prop} : (p → False) → ¬p :=
+  fun h hp ↦ h hp
 
 @[simp]
 lemma neq_of_notin {α : Type*} {s : Finset α} {x y : α} (hy : y ∈ s) (hx : x ∉ s) :
@@ -214,6 +224,24 @@ lemma eq_of_mem_of_notMem {α : Type*} [DecidableEq α] {u v x y z : α}
 
 open SimpleGraph
 open CaroWeiType
+
+lemma neighborFinset_of_adj_of_adj_of_ne {n : ℕ} {G : SimpleGraph (Fin n)}
+    [DecidableRel G.Adj] {v x y : Fin n} (hdv : G.degree v = 3) (hxy : x ≠ y)
+    (hvx : G.Adj v x) (hvy : G.Adj v y) :
+    ∃ z, G.neighborFinset v = {x, y, z} := by
+  have h : (G.neighborFinset v \ {x, y}).Nonempty := by
+    refine card_pos.mp ?_
+    refine lt_of_lt_of_le ?_ (le_card_sdiff ..)
+    rw [card_pair hxy, ← degree, hdv]
+    exact Nat.zero_lt_succ _
+  obtain ⟨z, hz⟩ := h
+  refine ⟨z, ?_⟩
+  refine Eq.symm <| eq_of_subset_and_eq_card ?_ ?_
+  · grind [mem_neighborFinset]
+  · grind [degree]
+
+lemma not_adj_symm {V : Type*} {G : SimpleGraph V} {u v : V} : ¬G.Adj u v → ¬G.Adj v u :=
+  fun hnotuv hvu ↦ hnotuv hvu.symm
 
 lemma mem_neighborFinset_symm {V : Type*} [Fintype V] {G : SimpleGraph V} [DecidableRel G.Adj]
     {u v : V} : u ∈ G.neighborFinset v → v ∈ G.neighborFinset u := by
