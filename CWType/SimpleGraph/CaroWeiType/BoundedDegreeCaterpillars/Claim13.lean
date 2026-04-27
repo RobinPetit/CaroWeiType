@@ -267,8 +267,7 @@ lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     rw [fA2 hAx' hdx', fA4 hAy' hdy']
     linarith
   else
-    refine Claim2' G ABC {w}
-      (singleton_nonempty _) hG
+    refine Claim2' (singleton_nonempty _) hG
       (singleton_subset_iff.mpr <| hG <| Set.mem_toFinset.mpr (G.mem_support.mpr ⟨v, hvw.symm⟩))
       respects_singleton ih InducesLinearForest_singleton ?_
     simp only [card_singleton, Nat.cast_one, ge_iff_le, tsub_le_iff_right]

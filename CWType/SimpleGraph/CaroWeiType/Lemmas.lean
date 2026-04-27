@@ -825,6 +825,23 @@ lemma degree_in_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Ad
     G.degree_in s u ≤ G.degree u := by
   refine card_le_card inter_subset_left
 
+lemma degree_in_le_card {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u : Fin n} {s : Finset (Fin n)} :
+    G.degree_in s u ≤ #s := by
+  rw [degree_in]
+  exact card_le_card inter_subset_right
+
+lemma degree_in_le_card_minus_one_of_mem {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u : Fin n} {s : Finset (Fin n)} (hu : u ∈ s) :
+    G.degree_in s u ≤ #s - 1 := by
+  have : #(s \ {u}) = #s - #{u} :=
+    card_sdiff_of_subset <| by simp only [singleton_subset_iff, hu]
+  rw [degree_in, ← card_singleton u, ← this]
+  refine card_le_card ?_
+  intro x hx
+  simp only [mem_inter, mem_neighborFinset] at hx
+  exact mem_sdiff.mpr ⟨hx.2, notMem_singleton.mpr hx.1.ne'⟩
+
 lemma degree_in_mono {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {u : Fin n} {s t : Finset (Fin n)} (h : s ⊆ t) :
     G.degree_in s u ≤ G.degree_in t u := by
@@ -838,12 +855,26 @@ lemma degree_in_union_self {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
   simp only [mem_inter, mem_neighborFinset, union_singleton, SimpleGraph.irrefl, not_false_eq_true,
     inter_insert_of_notMem]
 
+lemma degree_in_union_self' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u : Fin n} {s : Finset (Fin n)} :
+    G.degree_in s u = G.degree_in ({u} ∪ s) u := by
+  rw [degree_in_union_self]
+  exact congrArg (G.degree_in · u) <| union_comm ..
+
 lemma degree_in_union_le {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {u : Fin n} {s t : Finset (Fin n)} :
     G.degree_in (s ∪ t) u ≤ G.degree_in s u + #t := by
   simp_rw [degree_in]
   suffices G.neighborFinset u ∩ (s ∪ t) ⊆ (G.neighborFinset u ∩ s) ∪ t by
     exact le_trans (card_le_card this) <| card_union_le ..
+  grind
+
+lemma degree_in_subpair_le_one_of_mem {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {u : Fin n} {s : Finset (Fin n)} (hu : u ∈ s) (hs : #s ≤ 2) :
+    G.degree_in s u ≤ 1 := by
+  have hs' : s = ((s \ {u}) ∪ {u}) := by grind
+  rw [hs', ← degree_in_union_self, degree_in]
+  refine le_trans (card_le_card inter_subset_right) ?_
   grind
 
 lemma degree_in_union_eq {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
@@ -933,6 +964,12 @@ lemma one_le_degree_of_mem_neighborFinset {n : ℕ} {G : SimpleGraph (Fin n)} [D
 lemma one_le_degree_of_mem_neighborFinset' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {u v : Fin n} (huv : u ∈ G.neighborFinset v) : 1 ≤ G.degree u := by
   exact one_le_degree_of_mem_neighborFinset <| mem_neighborFinset_symm huv
+
+lemma one_le_degree_of_mem_N2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n}
+    {F : Finset (Fin n)} (hv : v ∈ G.N2_of_Finset F) : 1 ≤ G.degree v := by
+  simp only [N2_of_Finset, mem_filter, mem_univ, true_and] at hv
+  obtain ⟨x, hx, w, hw, h, _⟩ := hv.2.2
+  exact one_le_degree_of_adj h
 
 lemma one_le_degree_of_walk_begin {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {u v : Fin n} (hunev : u ≠ v) (w : G.Walk u v) : 1 ≤ G.degree u := by

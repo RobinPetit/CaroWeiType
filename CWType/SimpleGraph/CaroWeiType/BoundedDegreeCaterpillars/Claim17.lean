@@ -342,7 +342,7 @@ private lemma _step9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
   rw [fC3 hCv hdv, fC3 hCw hdw]
   linarith
 
-lemma _A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     (hG : G.support.toFinset ⊆ ABC.toFinset) {u : Fin n} (hdu : 2 ≤ G.degree u)
     (hfu : 1 / 3 < f G ABC u) (hγu : γ G ABC u < 1 / 6) :
     ABC.A u ∧ G.degree u = 4 := by

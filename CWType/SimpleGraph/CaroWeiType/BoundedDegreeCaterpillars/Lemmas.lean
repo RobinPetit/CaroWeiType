@@ -432,6 +432,17 @@ lemma f_le_fA {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
   else
     exact (f_eq_zero_of_notMem G hvABC) ▸ zero_le_fA
 
+lemma f_le_fB_of_not_A {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+    {v : Fin n} (hAv : ¬ABC.A v) :
+    f G ABC v ≤ fB (G.degree v) := by
+  if hv : v ∈ ABC then
+    simp only [Tripartition.mem_iff, hAv, false_or] at hv
+    rcases hv with hB | hC
+    · simp only [f, hB, not_A_of_B, ↓reduceDIte, le_refl]
+    · simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte, fC_le_fB]
+  else
+    exact (f_eq_zero_of_notMem G hv) ▸ zero_le_fB
+
 lemma fA_eq_deg_mul_γ_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} {v : Fin n} (hAv : ABC.A v) (hdv : 3 ≤ G.degree v) :
     f G ABC v = G.degree v * γ G ABC v := by
@@ -1510,6 +1521,22 @@ lemma respects_pair_of_non_adj {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
       inter_insert_of_notMem, card_eq_zero]
     refine inter_singleton_of_notMem ?_
     simp only [mem_neighborFinset, G.adj_symm.mt, hvw, not_false_eq_true]
+  }
+
+lemma respects_pair_of_Bs {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v w : Fin n} (hBv : ABC.B v) (hBw : ABC.B w) :
+    respects {v, w} G ABC := by
+  intro u hu
+  suffices G.degree_in {v, w} u ≤ 1 by grind [not_A_of_B, not_C_of_B]
+  have : #(G.neighborFinset u ∩ {w}) ≤ #{w} := by
+    refine card_le_card inter_subset_right
+  simp only [mem_insert, mem_singleton] at hu
+  rcases hu with hu | hu <;> {
+    subst hu
+    simp only [pair_comm, degree_in, mem_neighborFinset, SimpleGraph.irrefl, not_false_eq_true,
+      inter_insert_of_notMem]
+    refine le_trans (card_le_card inter_subset_right) ?_
+    simp only [card_singleton, le_refl]
   }
 
 lemma respects_union {n : ℕ} {s t : Finset (Fin n)} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]

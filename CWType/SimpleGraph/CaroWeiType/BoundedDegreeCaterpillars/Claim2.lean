@@ -175,7 +175,7 @@ private lemma _ok_C {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartiti
   · exact div_le_div_of_nonneg_left zero_le_two_thirds add_one_pos <| cast_add_one <| hdeg hw
 
 private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) (F : Finset (Fin n)) :
+    {ABC : Tripartition n} (F : Finset (Fin n)) :
     ∑ w ∈ G.N2_of_Finset F, γ G ABC w ≤ ∑ w ∈ G.N2_of_Finset F,
         (f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
           (ABC \ G.closed_neighborFinset_of_Finset F) w - f G ABC w) := by
@@ -195,8 +195,8 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
   else
     simp [hA, hB, hC]
 
-lemma Claim2' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) (F : Finset (Fin n)) (hFne : F.Nonempty)
+lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {F : Finset (Fin n)} (hFne : F.Nonempty)
     (hG : G.support.toFinset ⊆ ABC.toFinset)
     (hF : F ⊆ ABC.toFinset)
     (hF' : respects F G ABC)
@@ -256,7 +256,7 @@ lemma Claim2' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     _ ≤ ∑ w ∈ G.N2_of_Finset F,
         (f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
           (ABC \ G.closed_neighborFinset_of_Finset F) w - f G ABC w) := by
-      exact _γ_on_N2 G ABC F
+      exact _γ_on_N2 G F
     _ = 0 + ∑ w ∈ G.N2_of_Finset F,
         (f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
           (ABC \ G.closed_neighborFinset_of_Finset F) w - f G ABC w) := by
@@ -332,7 +332,7 @@ lemma Corollary2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       #F ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset F, f G ABC v →
         Objective G ABC := by
   intro h h'
-  refine Claim2' G ABC F hFne hG hF hF' ih h ?_
+  refine Claim2' hFne hG hF hF' ih h ?_
   simp only [ge_iff_le, tsub_le_iff_right] at h' ⊢
   refine le_trans h' ?_
   simp only [le_add_iff_nonneg_right]
