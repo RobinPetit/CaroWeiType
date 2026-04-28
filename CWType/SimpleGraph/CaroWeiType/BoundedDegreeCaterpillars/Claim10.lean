@@ -32,20 +32,27 @@ private lemma deg3_neighborhood {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
 private def _op_g {n : ℕ} (G : SimpleGraph (Fin n)) (v x y z : Fin n) : SimpleGraph (Fin n) :=
   (fromEdgeSet <| G.edgeSet ∪ {s(x, y), s(x, z), s(y, z)}).deleteIncidencesOf {v}
 
-private lemma _op_g_adj_xy {n : ℕ} (G : SimpleGraph (Fin n)) (v x y z : Fin n)
-    (hxy : x ≠ y) (hvx : v ≠ x) (hvy : v ≠ y) :
-    (_op_g G v x y z).Adj x y := by
-  simp [hxy, hvx, hvy, deleteIncidencesOf, deleteIncidenceSet, incidenceSet]
+private lemma _op_g_adj_of_notMem_vxyz {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {v x y z u w : Fin n} (hNv : G.neighborFinset v = {x, y, z})
+    (hu : u ∈ ({x, y, z} : Finset _)) (hv : w ∉ ({v, x, y, z} : Finset _))
+    (huv : (_op_g G v x y z).Adj u w) : G.Adj u w := by
+  have Hu : u ∉ ({v} : Finset _) := by
+    refine notMem_singleton.mpr ?_
+    exact fun heq ↦ G.notMem_neighborFinset_self _ (hNv ▸ heq ▸ hu)
+  obtain ⟨h, hvnew⟩ :=
+    fromEdgeSet_adj _ |>.mp <| deleteIncidencesOf_adj_iff_of_notMem Hu (by grind) |>.mpr huv
+  simp only [Set.union_insert, Set.union_singleton, Set.mem_insert_iff, Sym2.eq, Sym2.rel_iff',
+    Prod.mk.injEq, Prod.swap_prod_mk, mem_edgeSet] at h
+  grind
 
-private lemma _op_g_adj_xz {n : ℕ} (G : SimpleGraph (Fin n)) (v x y z : Fin n)
-    (hxz : x ≠ z) (hvx : v ≠ x) (hvz : v ≠ z) :
-    (_op_g G v x y z).Adj x z := by
-  simp [hxz, hvx, hvz, deleteIncidencesOf, deleteIncidenceSet, incidenceSet]
-
-private lemma _op_g_adj_yz {n : ℕ} (G : SimpleGraph (Fin n)) (v x y z : Fin n)
-    (hyz : y ≠ z) (hvy : v ≠ y) (hvz : v ≠ z) :
-    (_op_g G v x y z).Adj y z := by
-  simp [hyz, hvy, hvz, deleteIncidencesOf, deleteIncidenceSet, incidenceSet]
+private lemma _op_g_adj_xyz {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v x y z : Fin n}
+    (hNv : G.neighborFinset v = {x, y, z}) (hdv : G.degree v = 3) :
+    (_op_g G v x y z).Adj x y ∧ (_op_g G v x y z).Adj x z ∧ (_op_g G v x y z).Adj y z := by
+  have : v ∉ ({x, y, z} : Finset _) := hNv ▸ (notMem_neighborFinset_self _ _)
+  refine ⟨?_, ?_, ?_⟩ <;> {
+    refine deleteIncidencesOf_adj_iff_of_notMem (by grind) (by grind) |>.mp ?_
+    exact fromEdgeSet_adj _ |>.mpr <| by grind [degree]
+  }
 
 private lemma _op_g_deg_xyz {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     {u v x y z : Fin n} (hx : G.Adj v x) (hy : G.Adj v y) (hz : G.Adj v z)
@@ -226,6 +233,28 @@ private lemma diff_f_BC {d d' : ℕ} (hd : 3 ≤ d) (hdd' : d' ≤ d + 1) :
         · exact five_le_d_plus_two
   linarith
 
+private lemma _support_ok {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} {v x y z : Fin n}
+    (hNv : G.neighborFinset v = {x, y, z})
+    (hG : G.support.toFinset ⊆ ABC.toFinset) :
+    (_op_g G v x y z).support.toFinset ⊆ (ABC._op_t v x y z).toFinset := by
+  intro u hu
+  simp only [Set.mem_toFinset, mem_support, ← mem_neighborFinset] at hu
+  obtain ⟨u', hu'⟩ := hu
+  simp only [_op_g] at hu'
+  have hobj := mem_fromEdgeSet_union_neighborFinset_iff |>.mp
+    <| mem_neighborFinset_of_deleteIncidencesOf_mem_neighborFinset hu'
+  simp only [_op_t, ← demote_finset_toFinset_eq, sdiff_toFinset]
+  refine mem_sdiff.mpr ?_
+  rcases hobj with h | h
+  · exact ⟨hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨u', mem_neighborFinset  .. |>.mp h⟩,
+     notMem_of_mem_neighborFinset_deleteIncidencesOf' hu'⟩
+  · have : u ∈ ({x, y, z} : Finset _) := by grind
+    refine ⟨?_, ?_⟩
+    · refine hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, ?_⟩
+      exact Adj.symm <| G.mem_neighborFinset .. |>.mp (hNv ▸ this)
+    · exact fun hin ↦ G.notMem_neighborFinset_self v (hNv ▸ (mem_singleton.mp hin) ▸ this)
+
 lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     (hG : G.support.toFinset ⊆ ABC.toFinset) {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
@@ -253,30 +282,12 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
   else
     have hdz : 3 ≤ G.degree z := by grind
     obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
-      refine ih (_op_g G v x y z) (_op_t ABC v x y z) ?_ ?_
-      · intro u hu
-        simp only [support, _op_g, deleteIncidencesOf, Set.union_insert, Set.union_singleton,
-          mem_singleton, deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff,
-          Set.mem_insert_iff, Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff,
-          iInf_iInf_eq_left, sdiff_le_iff, le_sup_right, inf_of_le_right, sdiff_adj,
-          fromEdgeSet_adj, Prod.mk.eta, Sym2.eq, Sym2.rel_iff', Prod.swap_prod_mk, ne_eq,
-          Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq, not_and, Decidable.not_not, and_imp,
-          Set.mem_toFinset, SetRel.mem_dom, Prod.mk.injEq, mem_edgeSet, Sym2.mem_iff] at hu
-        simp only [_op_t, ← demote_finset_toFinset_eq, sdiff_toFinset]
-        obtain ⟨w, hu', hu''⟩ := hu
-        simp only [hu'.2, not_false_eq_true, and_true, imp_false, not_or, forall_const] at hu' hu''
-        refine mem_sdiff.mpr ⟨?_, ?_⟩
-        · have H {u'} : u' ∈ G.neighborFinset v → u' ∈ ABC.toFinset :=
-            fun hu' ↦ hG <| Set.mem_toFinset.mpr <|
-              G.mem_support.mpr ⟨v, Adj.symm <| G.mem_neighborFinset .. |>.mp hu'⟩
-          rcases hu' with ⟨hu' | hu'⟩ | ⟨⟨hu' | hu'⟩ | ⟨⟨hu' | hu'⟩ | hu'⟩⟩
-          any_goals simp only [hu'.1, hNv, mem_insert, mem_singleton, true_or, or_true, H]
-          exact hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨w, hu'⟩
-        · grind only [= mem_singleton]
-      · simp only [_op_t, ← card_demote_finset_eq_card]
-        refine sdiff_card _ <| nonempty_iff_ne_empty.mp <| nonempty_def.mpr ⟨v, ?_⟩
-        simp only [← ABC.coe_mem_toFinset, mem_iff, hBv, or_true, not_A_of_B, not_C_of_B,
-          or_false, singleton_inter_of_mem, mem_singleton]
+      refine ih (_op_g G v x y z) (_op_t ABC v x y z) (_support_ok hNv hG) ?_
+      simp only [_op_t, ← card_demote_finset_eq_card]
+      refine sdiff_card _ <| nonempty_iff_ne_empty.mp <| nonempty_def.mpr ⟨v, ?_⟩
+      simp only [← ABC.coe_mem_toFinset, mem_iff, hBv, or_true, not_A_of_B, not_C_of_B,
+        or_false, singleton_inter_of_mem, mem_singleton]
+    obtain ⟨_op_g_adj_xy, _op_g_adj_xz, _op_g_adj_yz⟩:= _op_g_adj_xyz hNv hdv
     have _ : x ∈ s → y ∉ s ∧ z ∉ s := by
       intro hx
       have hd'x : (_op_g G v x y z).degree_in s x = 0 := by
@@ -286,23 +297,19 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
           simp only [mem_singleton, Adj.ne' hvx, not_false_eq_true]
         · simp only [mem_insert, mem_singleton, true_or]
       constructor
-      · refine notMem_of_degree_in_eq_zero_of_adj hd'x  ?_
-        refine _op_g_adj_xy _ _ _ _ _ hxney hvx.ne hvy.ne
-      · refine notMem_of_degree_in_eq_zero_of_adj hd'x  ?_
-        refine _op_g_adj_xz _ _ _ _ _ hxnez hvx.ne hvz.ne
+      · exact notMem_of_degree_in_eq_zero_of_adj hd'x _op_g_adj_xy
+      · exact notMem_of_degree_in_eq_zero_of_adj hd'x _op_g_adj_xz
     have _ : y ∈ s → z ∉ s ∧ x ∉ s := by
       intro hy
       have hd'y : (_op_g G v x y z).degree_in s y = 0 := by
-        refine hsresp y hy |>.2.2 <| ?_  -- C'_of_demote _ hvy.ne' hne hxnez hynez (by simp) hBy
+        refine hsresp y hy |>.2.2 <| ?_
         refine demote_finset_from_B _ ?_ ?_
         · refine ⟨hBy, ?_⟩
           simp only [mem_singleton, Adj.ne' hvy, not_false_eq_true]
         · simp only [mem_insert, mem_singleton, true_or, or_true]
       constructor
-      · refine notMem_of_degree_in_eq_zero_of_adj hd'y  ?_
-        refine _op_g_adj_yz _ _ _ _ _ hynez hvy.ne hvz.ne
-      · refine notMem_of_degree_in_eq_zero_of_adj hd'y (Adj.symm ?_)
-        refine _op_g_adj_xy _ _ _ _ _ hxney hvx.ne hvy.ne
+      · exact notMem_of_degree_in_eq_zero_of_adj hd'y _op_g_adj_yz
+      · exact notMem_of_degree_in_eq_zero_of_adj hd'y _op_g_adj_xy.symm
     have hdegsv : G.degree_in s v ≤ 1 := by grind
     have hvnotins : v ∉ s :=  by
       simp only [_op_t, ← demote_finset_toFinset_eq, sdiff_toFinset] at hs
@@ -319,11 +326,7 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     · refine G.InducesForest_union_leaf s ?_ hdegsv
       refine @InducesForest_mono' _ _ _ _ {v} (by simp [hvnotins]) ?_
       refine InducesForest_mono ?_ hsf
-      refine deleteIncidencesOf_le_mono ?_
-      intro u u' huu'
-      simp only [Set.union_insert, Set.union_singleton, fromEdgeSet_adj, Set.mem_insert_iff,
-        Sym2.eq, Sym2.rel_iff', Prod.mk.injEq, Prod.swap_prod_mk, mem_edgeSet, huu', or_true,
-        ne_eq, huu'.ne, not_false_eq_true, and_self]
+      refine deleteIncidencesOf_le_mono G.le_fromEdgeSet_union
     · intro u hu
       simp only [union_singleton, mem_insert] at hu
       rcases hu with hu | hu
@@ -333,12 +336,19 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
           have H_degree_in : G.degree_in s u = (_op_g G v x y z).degree_in s u := by
             refine congrArg Finset.card ?_
             ext w
-            simp only [mem_inter, mem_neighborFinset, deleteIncidencesOf, deleteIncidenceSet,
-              incidenceSet, Set.union_insert, Set.union_singleton, mem_singleton, sdiff_le_iff,
-              Set.mem_insert_iff, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, iInf_iInf_eq_left,
-              le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj, Sym2.eq, Sym2.rel_iff',
-              mem_edgeSet, Set.mem_setOf_eq]
-            grind [Adj.ne]
+            simp only [mem_inter]
+            constructor
+            · refine fun ⟨hw, hws⟩ ↦ ⟨?_, hws⟩
+              refine deleteIncidencesOf_mem_neighborFinset_iff_of_notMem ?_ ?_ |>.mp
+                <| G.le_fromEdgeSet_union' hw <;> grind
+            · refine fun ⟨hw, hws⟩ ↦ ⟨?_, hws⟩
+              have hobj := by
+                refine mem_fromEdgeSet_union_neighborFinset_iff.mp
+                  <| deleteIncidencesOf_mem_neighborFinset_iff_of_notMem ?_ ?_ |>.mpr hw
+                <;> grind
+              rcases hobj with hobj | hobj
+              · exact hobj
+              · grind
           if huz : u = z then
             subst huz
             simp only [hCz, card_eq_zero, IsEmpty.forall_iff, and_true]
@@ -364,7 +374,7 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
               subst heq
               simp only [hBx, hBy, not_A_of_B, not_C_of_B, degree_in, IsEmpty.forall_iff,
                 true_and, and_true, true_and, forall_const, IsEmpty.forall_iff]
-              refine le_trans (@degree_in_union_le _ G _ _ _ _) ?_
+              refine le_trans degree_in_union_le ?_
               simp only [card_singleton, add_le_iff_nonpos_left]
               refine le_of_eq ?_
               refine Eq.trans H_degree_in <| hsresp u hu |>.2.2 ?_

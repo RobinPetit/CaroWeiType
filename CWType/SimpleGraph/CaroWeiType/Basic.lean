@@ -6,8 +6,8 @@ import Mathlib.Data.Real.Basic
 namespace SimpleGraph
 
 @[simp, reducible]
-def degree_in {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (s : Finset (Fin n)) (x : Fin n) : ℕ :=
+def degree_in {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj]
+    (s : Finset V) (x : V) : ℕ :=
   (G.neighborFinset x ∩ s).card
 
 def closed_neighborFinset_of_Finset {V : Type*} [Fintype V] [DecidableEq V]
@@ -22,12 +22,12 @@ def N2_of_Finset {V : Type*} [Fintype V] [DecidableEq V]
     (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) : Finset V :=
   {u : V | u ∉ s ∧ (∀ x ∈ s, ¬G.Adj u x) ∧ ∃ x ∈ s, ∃ w ∉ s, G.Adj u w ∧ G.Adj w x}
 
-def deleteIncidencesOf {n : ℕ} (G : SimpleGraph (Fin n)) (s : Finset (Fin n)) :
-    SimpleGraph (Fin n) :=
+def deleteIncidencesOf {V : Type*} (G : SimpleGraph V) (s : Finset V) :
+    SimpleGraph V :=
   G ⊓ ⨅ x ∈ s, G.deleteIncidenceSet x
 
-instance instDecidableRel_deleteIncidencesOf {n : ℕ} {W : Finset (Fin n)}
-    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] : DecidableRel (G.deleteIncidencesOf W).Adj := by
+noncomputable instance instDecidableRel_deleteIncidencesOf {V : Type*} {W : Finset V}
+    {G : SimpleGraph V} [DecidableRel G.Adj] : DecidableRel (G.deleteIncidencesOf W).Adj := by
   intro u v
   simp only [deleteIncidencesOf, inf_adj, iInf_adj, ne_eq]
   if huv : G.Adj u v then
@@ -35,13 +35,11 @@ instance instDecidableRel_deleteIncidencesOf {n : ℕ} {W : Finset (Fin n)}
       mem_edgeSet, Sym2.mem_iff, true_and, not_or]
     if hu : u ∈ W then
       refine .isFalse ?_
-      simp_all only [huv.ne, not_false_eq_true, and_true, not_forall, not_and,
-        Decidable.not_not]
+      simp_all only [huv.ne, not_false_eq_true, and_true, not_forall, not_and]
       refine ⟨u, hu, by simp⟩
     else if hv : v ∈ W then
       refine .isFalse ?_
-      simp_all only [huv.ne, not_false_eq_true, and_true, not_forall, not_and,
-        Decidable.not_not]
+      simp_all only [huv.ne, not_false_eq_true, and_true, not_forall, not_and]
       exact ⟨v, hv, by simp⟩
     else
       refine .isTrue ?_

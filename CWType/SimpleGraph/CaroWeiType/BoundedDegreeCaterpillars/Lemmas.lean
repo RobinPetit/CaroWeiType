@@ -2021,18 +2021,6 @@ lemma f_deleteIncidencesOf_isolated {n : ℕ} (ABC : Tripartition n)
   else
     simp only [f, Tripartition.sdiff, mem_singleton, hA, false_and, ↓reduceDIte, hB, hC]
 
-lemma deleteIncidencesOf_le {n : ℕ} {G : SimpleGraph (Fin n)} {s : Finset (Fin n)} :
-    (G.deleteIncidencesOf s) ≤ G := by
-  intro v w
-  simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, inf_adj, iInf_adj,
-    deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq, and_imp]
-  intro hvw
-  simp [hvw, hvw.ne]
-
-lemma deleteIncidencesOf_degree_le {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {s : Finset (Fin n)} {v : Fin n} : (G.deleteIncidencesOf s).degree v ≤ G.degree v := by
-  exact degree_le_of_le deleteIncidencesOf_le
-
 lemma hsupp_mono {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     (hG : G.support.toFinset ⊆ ABC.toFinset)
     {W : Finset _} : (G.deleteIncidencesOf W).support.toFinset ⊆ (ABC \ W).toFinset := by

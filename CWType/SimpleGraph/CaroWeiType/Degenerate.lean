@@ -145,7 +145,7 @@ lemma IsDegenerateSet_union_singleton {n : ℕ} (G : SimpleGraph (Fin n)) [Decid
   if hvt : v ∈ t then
     refine ⟨v, hvt, ?_⟩
     refine le_trans ?_ hv
-    rw [@degree_in_union_self _ _ _ _ s]
+    rw [degree_in_union_self _ s]
     exact degree_in_mono ht
   else
     refine hs t ?_ htne

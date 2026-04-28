@@ -104,13 +104,13 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
       have hB'z : ((ABC \ {x}).demote z).B z := by
         refine demote_from_A (ABC \ {x}) ?_
         simp [Tripartition.sdiff, hAz, hxu.ne']
-      exact le_trans (degree_in_deleteIncidenceSet' G s hxnotins hxu)
+      exact le_trans (degree_in_deleteIncidenceSet' s hxnotins hxu)
         <| add_le_add_left (hsresp z hz |>.2.1 hB'z) 1
     · intro hBz
       have hC'z : ((ABC \ {x}).demote z).C z := by
         refine demote_from_B (ABC \ {x}) ?_
         simp [Tripartition.sdiff, hBz, hxu.ne']
-      exact le_trans (degree_in_deleteIncidenceSet' G s hxnotins hxu)
+      exact le_trans (degree_in_deleteIncidenceSet' s hxnotins hxu)
         <| add_le_add_left (le_of_eq <| hsresp z hz |>.2.2 hC'z) 1
     else
       have h1 : G.degree_in (s ∪ {x}) z = G.degree_in s z := by

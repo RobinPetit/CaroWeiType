@@ -133,103 +133,73 @@ private def _op_g {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (û x
     SimpleGraph (Fin n) :=
   (fromEdgeSet <| G.edgeSet ∪ {s(x, y), s(s, t)}).deleteIncidencesOf {û}
 
+private lemma _op_g_adj_of_G_adj {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    (û x y s t : Fin n) {u u' : Fin n} (hu : u ≠ û) (hu' : u' ≠ û) (huu' : G.Adj u u') :
+    (_op_g G û x y s t).Adj u u' := by
+  have huû : u ∉ ({û} : Finset _) := not_iff_not.mpr mem_singleton |>.mpr hu
+  have hu'û : u' ∉ ({û} : Finset _) := not_iff_not.mpr mem_singleton |>.mpr hu'
+  refine deleteIncidencesOf_adj_iff_of_notMem huû hu'û |>.mp ?_
+  refine (fromEdgeSet_adj _).mpr ?_
+  exact ⟨Set.mem_union_left _ huu', huu'.ne⟩
+
 private lemma adj_vx {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {û v x y s t : Fin n} (hdv : G.degree v = 3) (hNv : G.neighborFinset v = {û, x, y}) :
     (_op_g G û x y s t).Adj v x := by
-  have hvx : G.Adj v x := G.mem_neighborFinset .. |>.mp <| by simp [hNv]
-  have hvnex : v ≠ x := hvx.ne
-  simp only [_op_g, deleteIncidencesOf, Set.union_insert, Set.union_singleton, mem_singleton,
-    deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff, Set.mem_insert_iff,
-    Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, iInf_iInf_eq_left, sdiff_le_iff,
-    le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj, Sym2.eq, Sym2.rel_iff',
-    Prod.mk.injEq, hvnex, false_and, Prod.swap_prod_mk, and_true, false_or, mem_edgeSet, hvx,
-    or_true, ne_eq, not_false_eq_true, and_self, Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq,
-    Sym2.mem_iff, true_and, not_or]
-  refine ⟨?_, ?_⟩
-  · refine Adj.ne' <| G.mem_neighborFinset .. |>.mp <| by simp [hNv]
-  · grind [degree]
+  have hvû : v ≠ û := Adj.ne <| G.mem_neighborFinset .. |>.mp <| by simp [hNv]
+  have hxû : x ≠ û := by grind [degree]
+  exact _op_g_adj_of_G_adj û x y s t hvû hxû <| G.mem_neighborFinset .. |>.mp <| by simp [hNv]
 
 private lemma adj_vy {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {û v x y s t : Fin n} (hdv : G.degree v = 3) (hNv : G.neighborFinset v = {û, x, y}) :
     (_op_g G û x y s t).Adj v y := by
-  have hvy : G.Adj v y := G.mem_neighborFinset .. |>.mp <| by simp [hNv]
-  have hvney : v ≠ y := hvy.ne
-  simp only [_op_g, deleteIncidencesOf, Set.union_insert, Set.union_singleton, mem_singleton,
-    deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff, Set.mem_insert_iff,
-    Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, iInf_iInf_eq_left, sdiff_le_iff,
-    le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj, Sym2.eq, Sym2.rel_iff',
-    Prod.mk.injEq, hvney, false_and, Prod.swap_prod_mk, and_true, mem_edgeSet, hvy,
-    or_true, ne_eq, not_false_eq_true, and_self, Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq,
-    Sym2.mem_iff, true_and, not_or]
-  refine ⟨?_, ?_⟩
-  · refine Adj.ne' <| G.mem_neighborFinset .. |>.mp <| by simp [hNv]
-  · grind [degree]
+  have hvû : v ≠ û := Adj.ne <| G.mem_neighborFinset .. |>.mp <| by simp [hNv]
+  have hyû : y ≠ û := by grind [degree]
+  exact _op_g_adj_of_G_adj û x y s t hvû hyû <| G.mem_neighborFinset .. |>.mp <| by simp [hNv]
 
 private lemma adj_xy {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {û v x y s t : Fin n} (hdv : G.degree v = 3) (hNv : G.neighborFinset v = {û, x, y}) :
     (_op_g G û x y s t).Adj x y := by
-  simp only [_op_g, deleteIncidencesOf, Set.union_insert, Set.union_singleton, mem_singleton,
-    deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff, Set.mem_insert_iff,
-    Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, iInf_iInf_eq_left, sdiff_le_iff,
-    le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj, Sym2.eq, Sym2.rel_iff',
-    Prod.mk.injEq, Prod.swap_prod_mk, mem_edgeSet, true_or, ne_eq, true_and, Set.mem_setOf_eq,
-    Sym2.isDiag_iff_proj_eq, Sym2.mem_iff, not_and, Decidable.not_not, and_imp]
-  grind [degree]
+  have hxû : x ∉ ({û} : Finset _) := by grind [degree]
+  have hyû : y ∉ ({û} : Finset _) := by grind [degree]
+  refine deleteIncidencesOf_adj_iff_of_notMem hxû hyû |>.mp ?_
+  exact (fromEdgeSet_adj _).mpr ⟨Set.mem_union_right _ (Set.mem_insert ..), by grind [degree]⟩
 
 private lemma adj_ws {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {û w x y s t : Fin n} (hdw : G.degree w = 3) (hNw : G.neighborFinset w = {û, s, t}) :
     (_op_g G û x y s t).Adj w s := by
-  have hws : G.Adj w s := G.mem_neighborFinset .. |>.mp <| by simp [hNw]
-  have hwnes : w ≠ s := hws.ne
-  simp only [_op_g, deleteIncidencesOf, Set.union_insert, Set.union_singleton, mem_singleton,
-    deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff, Set.mem_insert_iff,
-    Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, iInf_iInf_eq_left, sdiff_le_iff,
-    le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj, Sym2.eq, Sym2.rel_iff',
-    Prod.mk.injEq, hwnes, false_and, Prod.swap_prod_mk, and_true, false_or, mem_edgeSet, hws,
-    or_true, ne_eq, not_false_eq_true, and_self, Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq,
-    Sym2.mem_iff, true_and, not_or]
-  refine ⟨?_, ?_⟩
-  · refine Adj.ne' <| G.mem_neighborFinset .. |>.mp <| by simp [hNw]
-  · grind [degree]
+  have hwû : w ≠ û := Adj.ne <| G.mem_neighborFinset .. |>.mp <| by simp [hNw]
+  have hsû : s ≠ û := by grind [degree]
+  exact _op_g_adj_of_G_adj û x y s t hwû hsû <| G.mem_neighborFinset .. |>.mp <| by simp [hNw]
 
 private lemma adj_wt {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {û w x y s t : Fin n} (hdw : G.degree w = 3) (hNw : G.neighborFinset w = {û, s, t}) :
     (_op_g G û x y s t).Adj w t := by
-  have hwt : G.Adj w t := G.mem_neighborFinset .. |>.mp <| by simp [hNw]
-  have hwnet : w ≠ t := hwt.ne
-  simp only [_op_g, deleteIncidencesOf, Set.union_insert, Set.union_singleton, mem_singleton,
-    deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff, Set.mem_insert_iff,
-    Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, iInf_iInf_eq_left, sdiff_le_iff,
-    le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj, Sym2.eq, Sym2.rel_iff',
-    Prod.mk.injEq, hwnet, false_and, Prod.swap_prod_mk, and_true, mem_edgeSet, hwt,
-    or_true, ne_eq, not_false_eq_true, and_self, Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq,
-    Sym2.mem_iff, true_and, not_or]
-  refine ⟨?_, ?_⟩
-  · refine Adj.ne' <| G.mem_neighborFinset .. |>.mp <| by simp [hNw]
-  · grind [degree]
+  have hwû : w ≠ û := Adj.ne <| G.mem_neighborFinset .. |>.mp <| by simp [hNw]
+  have htû : t ≠ û := by grind [degree]
+  exact _op_g_adj_of_G_adj û x y s t hwû htû <| G.mem_neighborFinset .. |>.mp <| by simp [hNw]
 
 private lemma adj_st {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {û w x y s t : Fin n} (hdw : G.degree w = 3) (hNw : G.neighborFinset w = {û, s, t}) :
     (_op_g G û x y s t).Adj s t := by
-  simp only [_op_g, deleteIncidencesOf, Set.union_insert, Set.union_singleton, mem_singleton,
-    deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff, Set.mem_insert_iff,
-    Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, iInf_iInf_eq_left, sdiff_le_iff,
-    le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj, Sym2.eq, Sym2.rel_iff',
-    Prod.mk.injEq, Prod.swap_prod_mk, mem_edgeSet, true_or, or_true, ne_eq, true_and,
-    Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq, Sym2.mem_iff, not_and, Decidable.not_not, and_imp]
-  grind [degree]
+  have hsû : s ∉ ({û} : Finset _) := by grind [degree]
+  have htû : t ∉ ({û} : Finset _) := by grind [degree]
+  refine deleteIncidencesOf_adj_iff_of_notMem hsû htû |>.mp ?_
+  refine (fromEdgeSet_adj _).mpr ⟨Set.mem_union_right _ ?_, by grind [degree]⟩
+  exact Set.mem_insert_of_mem _ rfl
 
 private lemma neighborFinset_subset {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {F : Finset (Fin n)} {û u x y s t : Fin n} (hû : û ∉ F) (huneû : u ≠ û) :
     G.neighborFinset u ∩ F ⊆ (_op_g G û x y s t).neighborFinset u ∩ F := by
   intro u'
-  simp only [mem_inter, mem_neighborFinset, deleteIncidencesOf, deleteIncidenceSet, incidenceSet,
-    Set.union_insert, Set.union_singleton, mem_singleton, edgeSet_fromEdgeSet, Set.mem_diff,
-    Set.mem_insert_iff, Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff,
-    iInf_iInf_eq_left, sdiff_le_iff, le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj,
-    Sym2.eq, Sym2.rel_iff', Prod.mk.injEq, Prod.swap_prod_mk, mem_edgeSet, ne_eq, Set.mem_setOf_eq,
-    Sym2.isDiag_iff_proj_eq, Sym2.mem_iff, not_and, Decidable.not_not, and_imp]
-  grind [Adj.ne]
+  simp only [mem_inter]
+  intro ⟨hu', hu'F⟩
+  simp only [mem_neighborFinset] at hu'
+  refine ⟨?_, hu'F⟩
+  have huû : u ∉ ({û} : Finset _) := notMem_singleton.mpr huneû
+  have hu'û : u' ∉ ({û} : Finset _) := notMem_singleton.mpr <| ne_of_mem_of_not_mem hu'F hû
+  refine mem_neighborFinset .. |>.mpr ?_
+  refine deleteIncidencesOf_adj_iff_of_notMem huû hu'û |>.mp ?_
+  exact fromEdgeSet_adj _ |>.mpr ⟨Set.mem_union_left _ (G.mem_edgeSet.mpr hu'), hu'.ne⟩
 
 @[reducible]
 private def _op_t {n : ℕ} (ABC : Tripartition n) (û v w : Fin n) : Tripartition n := by
@@ -359,6 +329,9 @@ private lemma A2_vw {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {AB
     (hNv : G.neighborFinset v = {û, x, y}) (hNw : G.neighborFinset w = {û, s, t})
     (hNxy : ({v, w} : Finset _) ∩ {x, y, s, t} = ∅) :
     (_op_t ABC û v w).A u ∧ (_op_g G û x y s t).degree u = 2 := by
+  have hûu : û ∉ (_op_g G û x y s t).neighborFinset u := by
+    refine not_iff_not.mpr (mem_neighborFinset ..) |>.mpr <| not_adj_symm ?_
+    exact deleteIncidencesOf_notadj _ (mem_singleton_self _)
   refine ⟨?_, ?_⟩
   · refine Or.inr ⟨⟨by grind, ?_⟩, hu⟩
     simp only [mem_singleton]
@@ -374,18 +347,9 @@ private lemma A2_vw {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {AB
           refine Eq.symm <| card_sdiff_of_subset (by grind)
         _ = #((_op_g G û x y s t).neighborFinset u \ {û}) := by
           rw [congrArg Finset.card this]
-          refine congrArg _ ?_
-          refine eq_sdiff_of_empty_inter ?_
-          grind
-      suffices û ∉ (_op_g G û x y s t).neighborFinset u by
-        grind [degree]
-      simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, mem_neighborFinset,
-        Set.union_insert, Set.union_singleton, mem_singleton, edgeSet_fromEdgeSet, Set.mem_diff,
-        Set.mem_insert_iff, Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff,
-        iInf_iInf_eq_left, sdiff_le_iff, le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj,
-        Sym2.eq, Sym2.rel_iff', Prod.mk.injEq, Prod.swap_prod_mk, mem_edgeSet, ne_eq,
-        Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq, Sym2.mem_iff, or_true, and_true, and_self_right,
-        not_and, Decidable.not_not, Classical.not_imp, imp_self]
+          exact congrArg _ <| eq_sdiff_of_empty_inter <| singleton_inter_of_notMem hûu
+      rw [card_sdiff, card_eq_zero.mpr <| singleton_inter_of_notMem hûu]
+      exact Nat.sub_zero _
     ext z
     simp only [mem_sdiff, mem_neighborFinset, mem_singleton, deleteIncidencesOf, deleteIncidenceSet,
       incidenceSet, Set.union_insert, Set.union_singleton, edgeSet_fromEdgeSet, Set.mem_diff,
@@ -536,7 +500,7 @@ private lemma eval_ok_not_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
       ext u
       simp only [mem_union, mem_sdiff]
       refine ⟨?_, by grind only [= mem_insert, = mem_singleton]⟩
-      have : {û, v, w, x, y, s, t} ⊆ ABC.toFinset := by exact hin_toFinset hG hv hw hNv hNw
+      have : {û, v, w, x, y, s, t} ⊆ ABC.toFinset := hin_toFinset hG hv hw hNv hNw
       intro h
       rcases h with h | h
       · exact ⟨h.1, by grind only [= mem_insert, = mem_singleton]⟩
