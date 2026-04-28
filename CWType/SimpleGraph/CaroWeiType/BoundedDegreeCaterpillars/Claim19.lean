@@ -452,17 +452,15 @@ private lemma Δf_le_ℓ {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj
     simp only [← f_eq_zero_of_notMem G huABC, ← f_eq_zero_of_notMem (_op_g G û x y s t) hu'ABC,
       ← ℓ_eq_zero_of_notMem G huABC, sub_self, le_refl]
 
-private lemma eval_ok_not_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+private lemma eval_ok_of_hsumℓ {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} {F : Finset (Fin n)} {û v w x y s t : Fin n}
-    (hG : G.support.toFinset ⊆ ABC.toFinset) (hdû : 4 ≤ G.degree û)
-    (hA4û : ¬(ABC.A û ∧ G.degree û = 4))
+    (hG : G.support.toFinset ⊆ ABC.toFinset)
     (hvw : ¬G.Adj v w) (hxy : x ≠ y) (hvnew : v ≠ w) (hv : G.Adj û v) (hw : G.Adj û w)
     (hBv : ABC.B v) (hdv : G.degree v = 3) (hBw : ABC.B w) (hdw : G.degree w = 3)
     (hNv : G.neighborFinset v = {û, x, y}) (hNw : G.neighborFinset w = {û, s, t})
     (hNvw : ({x, y} : Finset _) ∩ {s, t} = ∅)
     (hFcard : eval (_op_g G û x y s t) (ABC._op_t û v w) ≤ #F)
-    (hℓxy : ℓ G ABC x + ℓ G ABC y ≤ 1 / 6)
-    (hℓ : ℓ G ABC s + ℓ G ABC t ≤ ℓ G ABC x + ℓ G ABC y) :
+    (hsumℓ : ℓ G ABC x + ℓ G ABC y + ℓ G ABC s + ℓ G ABC t ≤ 2 / 3 - f G ABC û) :
     eval G ABC ≤ ↑(#F) := by
   calc eval G ABC
     _ = ∑ u ∈ ABC.toFinset, f G ABC u := by rfl
@@ -545,45 +543,35 @@ private lemma eval_ok_not_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
   obtain ⟨hA'w, hdw'⟩ : (_op_t ABC û v w).A w ∧ (_op_g G û x y s t).degree w = 2 :=
     A2_vw (by simp only [mem_insert, mem_singleton, or_true]) hBv hBw hdv hdw hNv hNw Hcap
   rw [fB3 hBv hdv, fB3 hBw hdw, fA2 hA'v hdv', fA2 hA'w hdw']
-  suffices ∑ u ∈ {x, y, s, t}, (f G ABC u - f (_op_g G û x y s t) (ABC._op_t û v w) u) ≤ 1 / 3 by
-    have : f G ABC û ≤ 1 / 3 := f_le_1_over_3_of_4_le_deg_of_notA4 hdû hA4û
+  suffices ∑ u ∈ {x, y, s, t}, (f G ABC u - f (_op_g G û x y s t) (ABC._op_t û v w) u)
+      ≤ 2 / 3 - f G ABC û by
     linarith
-  suffices ∑ u ∈ {x, y, s, t}, ℓ G ABC u ≤ 1 / 3 by
+  suffices ∑ u ∈ {x, y, s, t}, ℓ G ABC u ≤ 2 / 3 - f G ABC û by
     refine le_trans ?_ this
     refine sum_le_sum ?_
     intro u hu
     exact Δf_le_ℓ hdv hdw hNv hNw hu hNvw Hcap
+  refine le_of_eq_of_le ?_ hsumℓ
   grind [degree]
 
-private lemma _ok_not_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n}
-    (hG : G.support.toFinset ⊆ ABC.toFinset) {û v w x y s t : Fin n}
-    (hA4û : ¬(ABC.A û ∧ G.degree û = 4)) (hdû : 4 ≤ G.degree û)
+lemma ok_of_hsumℓ {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset) {û v w x y s t : Fin n}
     (hvw : ¬G.Adj v w) (hBv : ABC.B v) (hdv : G.degree v = 3) (hBw : ABC.B w) (hdw : G.degree w = 3)
     (hNv : G.neighborFinset v = {û, x, y})
     (hNw : G.neighborFinset w = {û, s, t})
     (hxy : x ≠ y) (hvnew : v ≠ w) (hv : G.Adj û v) (hw : G.Adj û w)
-    (hdx : 3 ≤ G.degree x) (hdy : 3 ≤ G.degree y)
     (hNvw : ({x, y} : Finset _) ∩ {s, t} = ∅)
-    (hℓxy : ℓ G ABC x + ℓ G ABC y ≤ 1 / 6)
-    (hℓ : ℓ G ABC s + ℓ G ABC t ≤ ℓ G ABC x + ℓ G ABC y)
+    (hsumℓ : ℓ G ABC x + ℓ G ABC y + ℓ G ABC s + ℓ G ABC t ≤ 2 / 3 - f G ABC û)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
-  match _losses hG hBv hdv hxy hdx hdy (by simp [hNv]) (by simp [hNv]) ih with
-  | Or.inl h => exact h
-  | Or.inr h => ?_
-  have H : (_op_t ABC û v w).card < ABC.card := by
-    simp only [_op_t, ← card_promote_finset_eq_card]
-    refine ABC.sdiff_card <| nonempty_iff_ne_empty.mp ⟨û, ?_⟩
-    simp only [mem_inter, mem_singleton, true_and]
-    exact hG <| Set.mem_toFinset.mpr <| (G.degree_pos_iff_mem_support û).mp <| by linarith
   obtain ⟨F, hF, hFf, hFresp, hFcard⟩ := by
     refine ih (_op_g G û x y s t) (_op_t ABC û v w) (_hGop hG hNv hNw) ?_
     simp only [_op_t, ← card_promote_finset_eq_card]
     refine sdiff_card ABC <| nonempty_iff_ne_empty.mp ⟨û, ?_⟩
     simp only [mem_inter, mem_singleton, true_and]
-    exact hG <| Set.mem_toFinset.mpr <| (G.degree_pos_iff_mem_support û).mp (by linarith)
+    refine hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, ?_⟩
+    refine Adj.symm <| G.mem_neighborFinset .. |>.mp <| by simp [hNv]
   refine ⟨F, ?_, ?_, ?_, ?_⟩
   · refine subset_trans hF ?_
     simp only [_op_t, ← promote_finset_toFinset_eq]
@@ -605,7 +593,7 @@ private lemma _ok_not_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj
     simp only [_op_t, ← promote_finset_toFinset_eq, toFinset_eq, mem_sdiff, mem_singleton] at hobj
     grind
   · exact _respects hdv hdw hBv hBw hNv hNw hF hFf hFresp
-  · exact eval_ok_not_A4 hG hdû hA4û hvw hxy hvnew hv hw hBv hdv hBw hdw hNv hNw hNvw hFcard hℓxy hℓ
+  · exact eval_ok_of_hsumℓ hG hvw hxy hvnew hv hw hBv hdv hBw hdw hNv hNw hNvw hFcard hsumℓ
 
 lemma ok_of_one_sixth_lt_ℓxy {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
@@ -699,15 +687,17 @@ lemma Claim19 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     simp only [not_exists, not_and, not_le] at hxyst_deg_gt_2
     have hxyst_3_le_deg : ∀ u ∈ ({x, y, s, t} : Finset _), 3 ≤ G.degree u :=
       fun _ hu ↦ hxyst_deg_gt_2 _ hu
-    if hℓxy : 1 / 6 < ℓ G ABC x + ℓ G ABC y then
-      refine ok_of_one_sixth_lt_ℓxy hG hBv hdv ?_ ?_ hNv hℓxy ih <;> grind
+    if hsumℓ : ℓ G ABC x + ℓ G ABC y + ℓ G ABC s + ℓ G ABC t ≤ 2 / 3 - f G ABC û then
+      refine ok_of_hsumℓ hG hvw hBv hdv hBw hdw hNv hNw ?_ hvnew hv hw ?_ hsumℓ ih
+      <;> grind [degree]
     else if hA4û : ABC.A û ∧ G.degree û = 4 then
       sorry
     else
-      simp only [not_lt] at hℓxy
-      simp only [ne_eq, Decidable.not_not] at hNvw
-      refine _ok_not_A4 hG hA4û hdû hvw hBv hdv hBw hdw hNv hNw ?_ hvnew hv hw ?_ ?_ hNvw hℓxy hℓ ih
-      <;> grind [degree]
+      simp only [not_le] at hsumℓ
+      have hℓxy : 1 / 6 < ℓ G ABC x + ℓ G ABC y := by
+        suffices f G ABC û ≤ 1 / 3 by linarith
+        exact f_le_1_over_3_of_4_le_deg_of_not_A4 hdû hA4û
+      refine ok_of_one_sixth_lt_ℓxy hG hBv hdv ?_ ?_ hNv hℓxy ih <;> grind
 
 end Tripartition
 end ABC
