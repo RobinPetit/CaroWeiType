@@ -10,8 +10,8 @@ lemma pair_nonempty {α : Type*} [DecidableEq α] {x y : α} : ({x, y} : Finset 
 
 lemma add_congr {a b c d : ℝ} (h₁ : a = c) (h₂ : b = d) :
     a + b = c + d := by
-  let hobj1 := add_right_inj a |>.mpr h₂
-  let hobj2 := add_left_inj d |>.mpr h₁
+  have hobj1 := add_right_inj a |>.mpr h₂
+  have hobj2 := add_left_inj d |>.mpr h₁
   exact hobj1.trans hobj2
 
 lemma eq_sdiff_of_empty_inter {α : Type*} [DecidableEq α] {s t : Finset α} (hcap : t ∩ s = ∅) :
@@ -27,6 +27,12 @@ lemma notMem_of_empty_inter_of_mem {α : Type*} [DecidableEq α] {s t : Finset �
 lemma subset_eq_inter {α : Type*} [DecidableEq α] {s₁ s₂ t : Finset α} (h : t ⊆ (s₁ \ s₂)) :
     t ⊆ s₁ :=
   fun _ hx ↦ mem_sdiff.mp (h hx) |>.1
+
+lemma mem_of_inter_singleton_ne_emty {α : Type*} [DecidableEq α] {s : Finset α} {x : α}
+    (h : {x} ∩ s ≠ ∅) : x ∈ s := by
+  obtain ⟨y, hy⟩ := nonempty_iff_ne_empty.mpr h
+  simp only [mem_inter, mem_singleton] at hy
+  exact hy.1 ▸ hy.2
 
 lemma cast_five : ((5 : ℕ) : ℝ) = (5 : ℝ) := rfl
 
@@ -254,11 +260,16 @@ lemma not_adj_symm {V : Type*} {G : SimpleGraph V} {u v : V} :
   fun hnotuv hvu ↦ hnotuv hvu.symm
 
 lemma mem_neighborFinset_symm {V : Type*} {G : SimpleGraph V}
-    {u v : V} [Fintype (G.neighborSet u)] [Fintype (G.neighborSet v)]
-    : u ∈ G.neighborFinset v → v ∈ G.neighborFinset u := by
+    {u v : V} [Fintype (G.neighborSet u)] [Fintype (G.neighborSet v)] :
+    u ∈ G.neighborFinset v → v ∈ G.neighborFinset u := by
   intro hu
   simp only [mem_neighborFinset] at hu ⊢
   exact hu.symm
+
+lemma not_mem_neighborFinset_symm {V : Type*} {G : SimpleGraph V}
+    {u v : V} [Fintype (G.neighborSet u)] [Fintype (G.neighborSet v)] :
+    u ∉ G.neighborFinset v → v ∉ G.neighborFinset u :=
+  mem_neighborFinset_symm.mt
 
 lemma ne_of_mem_neighborFinset {V : Type*} [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj]
     {u v : V} : u ∈ G.neighborFinset v → u ≠ v := by
