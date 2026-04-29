@@ -5,6 +5,16 @@ import CWType.SimpleGraph.CaroWeiType.Basic
 
 open Finset
 
+lemma eq_or_eq_of_eq_Sym2 {α : Type*} {a b x y : α} (h : s(a, b) = s(x, y)) :
+    a = x ∨ a = y := by grind
+
+lemma eq_or_eq_of_eq_Sym2' {α : Type*} {a b x y : α} (h : s(a, b) = s(x, y)) :
+    b = x ∨ b = y :=
+  eq_or_eq_of_eq_Sym2 (Sym2.eq_swap ▸ h)
+
+lemma ne_of_ne_congr {α β : Type*} (f : α → β) {x y : α} (h : f x ≠ f y) : x ≠ y :=
+  fun heq ↦ h (congrArg f heq)
+
 lemma pair_nonempty {α : Type*} [DecidableEq α] {x y : α} : ({x, y} : Finset _).Nonempty :=
   insert_nonempty ..
 
@@ -444,16 +454,18 @@ lemma le_fromEdgeSet_union' {V : Type*} (G : SimpleGraph V) {s : Set (Sym2 V)}
     <| G.le_fromEdgeSet_union (G.mem_neighborFinset .. |>.mp huv)
 end SimpleGraph
 
+lemma adj_fromEdgeSet_union_iff {V : Type*} {G : SimpleGraph V} {v w : V} {s : Set (Sym2 V)} :
+    (fromEdgeSet <| G.edgeSet ∪ s).Adj w v ↔ (G.Adj w v ∨ (s(w, v) ∈ s ∧ w ≠ v)) := by
+  simp only [fromEdgeSet_union, fromEdgeSet_edgeSet, sup_adj, fromEdgeSet_adj, ne_eq]
+
 lemma mem_fromEdgeSet_union_neighborFinset_iff {V : Type*} {G : SimpleGraph V} {v w : V}
     {s : Set (Sym2 V)}
     [Fintype (G.neighborSet w)] [Fintype ((fromEdgeSet <| G.edgeSet ∪ s).neighborSet w)] :
     v ∈ (fromEdgeSet <| G.edgeSet ∪ s).neighborFinset w
       ↔ (v ∈ G.neighborFinset w ∨ (s(w, v) ∈ s ∧ w ≠ v)) := by
-  simp only [mem_neighborFinset, fromEdgeSet_adj, Set.mem_union, mem_edgeSet]
-  exact ⟨
-    fun ⟨h, hne⟩ ↦ Or.elim h (fun h ↦ Or.inl h) (fun hs ↦ Or.inr ⟨hs, hne⟩),
-    fun h ↦ Or.elim h (fun h ↦ ⟨Or.inl h, h.ne⟩) (fun ⟨h, hne⟩ ↦ ⟨Or.inr h, hne⟩)
-  ⟩
+  refine (mem_neighborFinset ..).trans ?_
+  refine adj_fromEdgeSet_union_iff.trans ?_
+  exact or_congr_left <| (mem_neighborFinset ..).symm
 
 theorem deleteIncidenceSet_notAdj {V : Type*} {G : SimpleGraph V} {v w : V} :
     ¬(G.deleteIncidenceSet v).Adj v w := by
@@ -664,6 +676,11 @@ lemma notMem_of_mem_neighborFinset_deleteIncidencesOf' {V : Type*} {G : SimpleGr
     [Fintype ((G.deleteIncidencesOf s).neighborSet w)]
     (h : v ∈ (G.deleteIncidencesOf s).neighborFinset w) : w ∉ s :=
   notMem_of_adj_deleteIncidencesOf <| mem_neighborFinset .. |>.mp h
+
+lemma notMem_of_mem_support_deleteIncidencesOf {V : Type*} {G : SimpleGraph V} {s : Finset V}
+    {v : V} (h : v ∈ (G.deleteIncidencesOf s).support) : v ∉ s := by
+  obtain ⟨_, hw⟩ := mem_support _ |>.mp h
+  exact notMem_of_adj_deleteIncidencesOf hw
 
 lemma deleteIncidencesOf_le_mono {V : Type*} {G₁ G₂ : SimpleGraph V} {s : Finset V}
     (hle : G₁ ≤ G₂) : G₁.deleteIncidencesOf s ≤ G₂.deleteIncidencesOf s := by
