@@ -28,11 +28,45 @@ lemma subset_eq_inter {α : Type*} [DecidableEq α] {s₁ s₂ t : Finset α} (h
     t ⊆ s₁ :=
   fun _ hx ↦ mem_sdiff.mp (h hx) |>.1
 
-lemma mem_of_inter_singleton_ne_emty {α : Type*} [DecidableEq α] {s : Finset α} {x : α}
+lemma eq_empty_of_subset_empty {α : Type*} {s : Finset α} (h : s ⊆ ∅) :
+    s = ∅ :=
+  subset_antisymm h (empty_subset _)
+
+lemma sdiff_subset_of_subset {α : Type*} [DecidableEq α] {s₁ s₂ t : Finset α} (h : s₁ ⊆ t) :
+    (s₁ \ s₂) ⊆ t :=
+  fun _ hx ↦ h <| mem_sdiff.mp hx |>.1
+
+lemma mem_of_singleton_inter_ne_emty {α : Type*} [DecidableEq α] {s : Finset α} {x : α}
     (h : {x} ∩ s ≠ ∅) : x ∈ s := by
   obtain ⟨y, hy⟩ := nonempty_iff_ne_empty.mpr h
   simp only [mem_inter, mem_singleton] at hy
   exact hy.1 ▸ hy.2
+
+lemma triplet_subset_of_mem_of_mem_of_mem {α : Type*} [DecidableEq α] {x y z : α} {s : Finset α}
+    (hx : x ∈ s) (hy : y ∈ s) (hz : z ∈ s) : {x, y, z} ⊆ s := by
+  intro u hu
+  simp only [mem_insert, mem_singleton] at hu
+  rcases hu with hu | hu | hu
+  · exact hu ▸ hx
+  · exact hu ▸ hy
+  · exact hu ▸ hz
+
+lemma pair_subset_of_mem_of_mem {α : Type*} [DecidableEq α] {x y : α} {s : Finset α}
+    (hx : x ∈ s) (hy : y ∈ s) : {x, y} ⊆ s := by
+  refine subset_of_eq_of_subset ?_ <| triplet_subset_of_mem_of_mem_of_mem hx hx hy
+  simp only [mem_insert, mem_singleton, true_or, insert_eq_of_mem]
+
+lemma card_triplet {α : Type*} [DecidableEq α] {x y z : α}
+    (hxy : x ≠ y) (hz : z ∉ ({x, y} : Finset _)) :
+    #{x, y, z} = 3 := by
+  have : ({z, x, y} : Finset _) = {x, y, z} := by grind
+  rw [← this]
+  rw [card_insert_of_notMem hz, card_insert_of_notMem (notMem_singleton.mpr hxy), card_singleton]
+
+lemma card_triplet' {α : Type*} [DecidableEq α] {x y z : α}
+    (hxy : x ≠ y) (hxz : x ≠ z) (hyz : y ≠ z) :
+    #{x, y, z} = 3 :=
+  card_triplet hxy (by grind)
 
 lemma cast_five : ((5 : ℕ) : ℝ) = (5 : ℝ) := rfl
 
@@ -74,35 +108,24 @@ lemma neq_of_notin {α : Type*} {s : Finset α} {x y : α} (hy : y ∈ s) (hx : 
     x ≠ y := by
   exact fun heq ↦ hx <| heq ▸ hy
 
-@[simp]
 lemma eq_of_subset_and_eq_card {α : Type*} {A B : Finset α} (h : A ⊆ B) (h' : #A = #B) :
     A = B := by
   classical
-  induction hA : #A generalizing A B with
-  | zero =>
-      have : A = ∅ := card_eq_zero.mp hA
-      have : B = ∅ := card_eq_zero.mp (h'.symm.trans hA)
-      simp_all
-  | succ n ih => ?_
-  obtain ⟨a, ha⟩ := nonempty_def.mp <| card_pos.mp <| Nat.lt_of_sub_eq_succ hA
-  let A' := A \ {a}
-  let B' := B \ {a}
-  have hsubset : A' ⊆ B' := by grind
-  have hA : A = A' ∪ {a} := by ext _; simp [A', ha]
-  have hB : B = B' ∪ {a} := by ext _; simp [B', h ha]
-  grind
+  refine subset_antisymm h <| sdiff_eq_empty_iff_subset.mp <| card_eq_zero.mp ?_
+  rw [card_sdiff, inter_eq_left.mpr h]
+  exact (Nat.eq_sub_of_add_eq' h').symm
 
 lemma one_lt_card_iff_exists_a_b {α : Type*} [DecidableEq α] {s : Finset α} :
     1 < #s ↔ ∃ x y, {x, y} ⊆ s ∧ x ≠ y := by
   constructor
   · intro hs
-    have : s.Nonempty := nonempty_iff_ne_empty.mpr (by grind)
-    obtain ⟨x, hx⟩ := nonempty_def.mp this
-    have : (s \ {x}).Nonempty := sdiff_nonempty_of_card_lt_card hs
-    obtain ⟨y, hy⟩ := nonempty_def.mp this
-    refine ⟨x, y, ?_, ?_⟩ <;> grind
+    obtain ⟨x, hx⟩ := nonempty_def.mp <| card_pos.mp <| Nat.zero_lt_of_lt hs
+    obtain ⟨y, hy⟩ := nonempty_def.mp <| sdiff_nonempty_of_card_lt_card ((card_singleton x) ▸ hs)
+    refine ⟨x, y, ?_, ?_⟩
+    · exact pair_subset_of_mem_of_mem hx (mem_sdiff.mp hy |>.1)
+    · exact Ne.symm <| notMem_singleton |>.mp <| mem_sdiff.mp hy |>.2
   · intro ⟨x, y, hxy, hxney⟩
-    grind [card_le_card hxy]
+    exact lt_of_lt_of_le Nat.one_lt_two ((card_pair hxney) ▸ card_le_card hxy)
 
 lemma pair_eq {α : Type*} [DecidableEq α] {a b x y : α} (hab : a ≠ b)
     (h : ({a, b} : Finset _) = {x, y}) : a = x ∧ b = y ∨ a = y ∧ b = x := by
@@ -193,37 +216,32 @@ private lemma sorted_finset {α : Type*} [DecidableEq α] {s : Finset α} (k : �
 
 lemma pairwise_ne_of_triplet {α : Type*} [DecidableEq α] {x y z : α}
     (h : #({x, y, z} : Finset _) = 3) : x ≠ y ∧ x ≠ z ∧ y ≠ z := by
-  refine ⟨?_, ?_, ?_⟩ <;> {
-    intro heq; subst heq
-    suffices 3 ≤ 2 by grind
-    simp [← h, card_le_two]
-  }
+  grind only [= insert_eq_of_mem, = card_insert_of_notMem, = mem_insert, = mem_singleton,
+    = card_singleton]
 
-lemma triplet_of_2 {α : Type*} [DecidableEq α] {x y : α} {s : Finset α}
+lemma triplet_of_mem_of_mem_of_ne {α : Type*} [DecidableEq α] {x y : α} {s : Finset α}
     (hs : #s = 3) (hx : x ∈ s) (hy : y ∈ s) (hxy : x ≠ y) :
     ∃ z, s = {x, y, z} := by
-  have _ : #(s \ {x, y}) = #s - 2 := by
+  have hscard : #(s \ {x, y}) = #s - 2 := by
     rw [← card_pair hxy]
     refine card_sdiff_of_subset ?_
-    intro z hz
-    simp only [mem_insert, mem_singleton] at hz
-    rcases hz with hz | hz
-    · exact hz ▸ hx
-    · exact hz ▸ hy
-  have _ : ∃ z, (s \ {x, y}) = {z} := card_eq_one.mp <| by lia
-  grind only [= card_sdiff_of_subset, = card_sdiff, usr card_sdiff_add_card_inter,
-    = insert_eq_of_mem, = subset_iff, usr card_union_add_card_inter, = inter_insert,
-    = mem_singleton, = singleton_inter, = union_insert, = union_singleton, = mem_insert,
-    = mem_sdiff, = mem_inter]
+    exact pair_subset_of_mem_of_mem hx hy
+  have H : ∃ z, (s \ {x, y}) = {z} := card_eq_one.mp <| (hscard ▸ hs ▸ rfl)
+  obtain ⟨z, hz⟩ := H
+  refine ⟨z, ?_⟩
+  refine Eq.symm <| eq_of_subset_and_eq_card ?_ ?_
+  · exact triplet_subset_of_mem_of_mem_of_mem hx hy (mem_sdiff.mp (hz ▸ mem_singleton.mpr rfl) |>.1)
+  · exact hs ▸ card_triplet hxy (mem_sdiff.mp (hz ▸ (@mem_singleton _ z _).mpr rfl) |>.2)
 
 @[simp]
 lemma ne_of_mem_finset_empty_inter {α : Type*} [DecidableEq α]
     {x y : α} (s t : Finset α)
     (h : s ∩ t = ∅) (hx : x ∈ s) (hy : y ∈ t) :
     x ≠ y := by
-  intro this
-  haveI := mem_inter.mpr ⟨hx, this ▸ hy⟩
-  grind
+  intro heq
+  suffices x ∈ (∅ : Finset _) by
+    exact (List.mem_nil_iff x).mp this
+  exact h ▸ mem_inter.mpr ⟨hx, heq ▸ hy⟩
 
 lemma eq_of_mem_of_notMem {α : Type*} [DecidableEq α] {u v x y z : α}
     (hu : u ∈ ({v, x, y} : Finset _)) (hu' : u ∉ ({x, y, z} : Finset _)) : u = v := by
@@ -236,20 +254,37 @@ lemma eq_of_mem_of_notMem {α : Type*} [DecidableEq α] {u v x y z : α}
 open SimpleGraph
 open CaroWeiType
 
+lemma mem_of_subset_of_degree_pos {V : Type*} {G : SimpleGraph V} {s : Finset V} {v : V}
+    [Fintype G.support] [Fintype (G.neighborSet v)]
+    (h : G.support.toFinset ⊆ s) (hv : 0 < G.degree v) :
+    v ∈ s :=
+  h <| Set.mem_toFinset.mpr <| G.degree_pos_iff_mem_support _ |>.mp hv
+
+lemma mem_of_subset_of_adj {V : Type*} {G : SimpleGraph V} {s : Finset V} {v w : V}
+    [Fintype G.support] (h : G.support.toFinset ⊆ s) (hv : G.Adj w v) :
+    v ∈ s :=
+  h <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨w, hv.symm⟩
+
+lemma mem_of_subset_of_mem_neighborFinset {V : Type*} {G : SimpleGraph V} {s : Finset V} {v w : V}
+    [Fintype G.support] [Fintype (G.neighborSet w)]
+    (h : G.support.toFinset ⊆ s) (hv : v ∈ G.neighborFinset w) :
+    v ∈ s :=
+  mem_of_subset_of_adj h (G.mem_neighborFinset .. |>.mp hv)
+
+lemma neighborFinset_subset_support {V : Type*} {G : SimpleGraph V}
+    {v : V} [Fintype (G.neighborSet v)] [Fintype G.support] :
+    G.neighborFinset v ⊆ G.support.toFinset := by
+  intro u hu
+  refine Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, ?_⟩
+  refine Adj.symm <| G.mem_neighborFinset .. |>.mp hu
+
 lemma neighborFinset_of_adj_of_adj_of_ne {V : Type*} [Fintype V] [DecidableEq V]
     {G : SimpleGraph V} [DecidableRel G.Adj] {v x y : V} (hdv : G.degree v = 3) (hxy : x ≠ y)
     (hvx : G.Adj v x) (hvy : G.Adj v y) :
     ∃ z, G.neighborFinset v = {x, y, z} := by
-  have h : (G.neighborFinset v \ {x, y}).Nonempty := by
-    refine card_pos.mp ?_
-    refine lt_of_lt_of_le ?_ (le_card_sdiff ..)
-    rw [card_pair hxy, ← degree, hdv]
-    exact Nat.zero_lt_succ _
-  obtain ⟨z, hz⟩ := h
-  refine ⟨z, ?_⟩
-  refine Eq.symm <| eq_of_subset_and_eq_card ?_ ?_
-  · grind [mem_neighborFinset]
-  · grind [degree]
+  refine triplet_of_mem_of_mem_of_ne hdv ?_ ?_ hxy
+  · exact G.mem_neighborFinset .. |>.mpr hvx
+  · exact G.mem_neighborFinset .. |>.mpr hvy
 
 lemma adj_symm {V : Type*} {G : SimpleGraph V} {u v : V} :
     G.Adj u v ↔ G.Adj v u :=
@@ -288,11 +323,15 @@ lemma Nonempty_if_card_pos' {α : Type*} {s : Finset α} (h : 0 < s.card) :
   exact Nonempty.intro (Classical.choice <| Nonempty_if_card_pos h).1
 
 lemma card_setminus_singleton {α : Type*} [DecidableEq α] {s : Finset α} {x : α}
-    (h : x ∈ s) : (s \ {x}).card = s.card - 1 := by grind
+    (h : x ∈ s) : #(s \ {x}) = #s - 1 := by
+  suffices {x} ∩ s = {x} by
+    rw [card_sdiff, this, card_singleton]
+  exact singleton_inter_of_mem h
 
 lemma card_setminus_singleton' {n : ℕ} {α : Type*} [DecidableEq α] {s : Finset α} {x : α}
-    (hx : x ∈ s) (hcard : s.card = n + 1) : (s \ {x}).card = n := by
-  grind
+    (hx : x ∈ s) (hcard : s.card = n + 1) : #(s \ {x}) = n := by
+  rw [card_setminus_singleton hx, hcard]
+  exact Nat.add_sub_self_right ..
 
 theorem Finset_unique_elems {α : Type*} [inst : Nonempty α] (s : Finset α) :
     ∃ f : ℕ → α,
@@ -337,6 +376,10 @@ theorem Finset_get_two {α : Type*} (s : Finset α) (h : 2 ≤ s.card) :
   · exact hf₁ _ (Nat.lt_of_succ_le h)
   · refine hf₂ 0 1 (Nat.zero_lt_of_lt h) (Nat.lt_of_succ_le h) (by simp)
 
+private lemma inv_mul_prod_eq {x y : ℝ} (hx : x ≠ 0) : x⁻¹ * (y * x) = y := by
+  ring_nf
+  exact (mul_inv_cancel₀ <| hx) ▸ one_mul y
+
 lemma discrete_derivative_inv_eq (d : ℕ) (hd_pos : 0 < d) :
     ((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹ = ((d * (d + 1)) : ℝ)⁻¹ := by
   refine eq_inv_of_mul_eq_one_left ?_
@@ -350,9 +393,13 @@ lemma discrete_derivative_inv_eq (d : ℕ) (hd_pos : 0 < d) :
       simp only [sub_left_inj]
       exact Eq.symm <| mul_assoc ..
     _ = (d + 1 : ℝ) - (d + 1 : ℝ)⁻¹ * ((d : ℝ) * (d + 1 : ℝ)) := by
-      have h' : (d : ℝ)⁻¹ * (d : ℝ) = 1 := by grind
+      have h' : (d : ℝ)⁻¹ * (d : ℝ) = 1 := inv_mul_cancel₀ hdR_pos
       simp only [h', one_mul]
-    _ = 1 := by grind
+    _ = 1 := by
+      suffices (d + 1 : ℝ)⁻¹ * (d * (d + 1)) = d by
+        rw [this, ← add_comm]
+        exact add_sub_cancel_right ..
+      refine inv_mul_prod_eq <| Nat.cast_add_one_ne_zero d
 
 lemma avg_gain (d : ℕ) (hd_pos : 0 < d) :
     d * (((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹) = (d + 1 : ℝ)⁻¹ := by
@@ -627,95 +674,94 @@ theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
     {δ : ℕ}
     (hΔ : G.maxDegree > δ)
     (X : Finset (Fin n))
-    (hX : G.support ⊆ X)
+    (hX : G.support.toFinset ⊆ X)
     (hγ : ∀ d₁ d₂, δ < d₁ → d₁ ≤ d₂ → f (d₂ - 1) - f d₂ ≤ f (d₁ - 1) - f d₁)
     (hNv : ∀ x ∈ G.neighborFinset v, G.degree x > δ)
     (hγ' : ∀ d, δ < d → d * (f (d - 1) - f d) ≥ f d) :
     ∑ x ∈ X, f (G.degree x) ≤ ∑ x ∈ (X \ {v}), f ((G.deleteIncidenceSet v).degree x) := by
-  have Nv_subs_X : G.neighborFinset v ⊆ X := by
-    intro x hx
-    refine hX ?_
-    simp only [support, SetRel.mem_dom, Set.mem_setOf_eq]
-    refine ⟨v, ?_⟩
-    simp_all [Adj.symm]
+  have Nv_subs_X : G.neighborFinset v ⊆ X := subset_trans neighborFinset_subset_support hX
   suffices f (G.degree v)
       ≤ ∑ x ∈ G.neighborFinset v, (f ((G.deleteIncidenceSet v).degree x) - f (G.degree x)) by
     calc ∑ x ∈ X, f (G.degree x)
       _ = ∑ x ∈ (X \ G.neighborFinset v), f (G.degree x)
-        + ∑ x ∈ G.neighborFinset v, f (G.degree x) := Eq.symm (sum_sdiff Nv_subs_X)
+          + ∑ x ∈ G.neighborFinset v, f (G.degree x) :=
+        (sum_sdiff <| Nv_subs_X).symm
       _ = ∑ x ∈ ((X \ G.neighborFinset v) \ {v}), f (G.degree x) + f (G.degree v)
-        + ∑ x ∈ G.neighborFinset v, f (G.degree x) := by
-          simp only [add_left_inj]
-          rw [← sum_singleton (fun x ↦ f (G.degree x)) v]
-          refine Eq.symm <| sum_sdiff ?_
-          simp only [singleton_subset_iff, mem_sdiff, mem_neighborFinset,
-            SimpleGraph.irrefl, not_false_eq_true, and_true]
-          refine hX <| G.degree_pos_iff_mem_support v |>.mp (hv ▸ Nat.zero_lt_of_lt hΔ)
+          + ∑ x ∈ G.neighborFinset v, f (G.degree x) := by
+        simp only [add_left_inj]
+        rw [← sum_singleton (fun x ↦ f (G.degree x)) v]
+        refine Eq.symm <| sum_sdiff ?_
+        simp only [singleton_subset_iff, mem_sdiff, notMem_neighborFinset_self, not_false_eq_true,
+          and_true]
+        exact mem_of_subset_of_degree_pos hX <| hv ▸ Nat.zero_lt_of_lt hΔ
       _ = ∑ x ∈ ((X \ G.neighborFinset v) \ {v}), f ((G.deleteIncidenceSet v).degree x)
-        + f (G.degree v)
-        + ∑ x ∈ G.neighborFinset v, f (G.degree x) := by
-          simp only [add_left_inj]
-          refine sum_congr rfl ?_
-          intro x hx
-          refine congrArg (f ∘ card) ?_
-          ext w
-          constructor
-          · intro hw
-            simp_all only [gt_iff_lt, ge_iff_le, tsub_le_iff_right, deleteIncidenceSet,
-              incidenceSet, mem_sdiff, mem_neighborFinset,
-              mem_singleton, deleteEdges_adj, Set.mem_setOf_eq,
-              mem_edgeSet, Sym2.mem_iff, ne_eq, not_false_eq_true, Ne.symm, false_or,
-              true_and]
-            exact fun heq ↦ hx.1.2 (heq ▸ hw.symm)
-          · intro hw
-            simp_all [deleteIncidenceSet, mem_sdiff]
+          + f (G.degree v)
+          + ∑ x ∈ G.neighborFinset v, f (G.degree x) := by
+        simp only [add_left_inj]
+        refine sum_congr rfl ?_
+        intro x hx
+        refine congrArg (f ∘ card) ?_
+        ext w
+        constructor
+        · intro hw
+          simp_all only [gt_iff_lt, ge_iff_le, tsub_le_iff_right, deleteIncidenceSet,
+            incidenceSet, mem_sdiff, mem_neighborFinset,
+            mem_singleton, deleteEdges_adj, Set.mem_setOf_eq,
+            mem_edgeSet, Sym2.mem_iff, ne_eq, not_false_eq_true, Ne.symm, false_or,
+            true_and]
+          exact fun heq ↦ hx.1.2 (heq ▸ hw.symm)
+        · intro hw
+          simp_all [deleteIncidenceSet, mem_sdiff]
       _ = ∑ x ∈ ((X \ G.neighborFinset v) \ {v}), f ((G.deleteIncidenceSet v).degree x)
-        + f (G.degree v)
-        + ∑ x ∈ G.neighborFinset v, f ((G.deleteIncidenceSet v).degree x)
-        + ∑ x ∈ G.neighborFinset v, (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x)) := by
-          simp only [sum_sub_distrib, add_add_sub_cancel]
+          + f (G.degree v)
+          + ∑ x ∈ G.neighborFinset v, f ((G.deleteIncidenceSet v).degree x)
+          + ∑ x ∈ G.neighborFinset v, (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x)) := by
+        simp only [sum_sub_distrib, add_add_sub_cancel]
       _ = (∑ x ∈ ((X \ G.neighborFinset v) \ {v}), f ((G.deleteIncidenceSet v).degree x)
-        + f (G.degree v)
-        + ∑ x ∈ G.neighborFinset v, f ((G.deleteIncidenceSet v).degree x))
-        + (∑ x ∈ G.neighborFinset v, (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x))) := by
-          simp only [sum_sub_distrib, add_add_sub_cancel]
+          + f (G.degree v)
+          + ∑ x ∈ G.neighborFinset v, f ((G.deleteIncidenceSet v).degree x))
+          + ∑ x ∈ G.neighborFinset v, (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x)) := by
+        simp only [sum_sub_distrib, add_add_sub_cancel]
       _ = ∑ x ∈ (X \ G.neighborFinset v) \ {v}, f ((G.deleteIncidenceSet v).degree x)
-        + ∑ x ∈ G.neighborFinset v, f ((G.deleteIncidenceSet v).degree x)
-        + f (G.degree v)
-        + ∑ x ∈ G.neighborFinset v, (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x)) := by
-          grind only
+          + ∑ x ∈ G.neighborFinset v, f ((G.deleteIncidenceSet v).degree x)
+          + f (G.degree v)
+          + ∑ x ∈ G.neighborFinset v, (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x)) := by
+        linarith
       _ = ∑ x ∈ X \ {v}, f ((G.deleteIncidenceSet v).degree x)
-        + f (G.degree v)
-        + ∑ x ∈ G.neighborFinset v, (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x)) := by
-          simp only [add_left_inj]
-          apply Eq.symm
-          have cup : ((X \ G.neighborFinset v) \ {v}) ∪ G.neighborFinset v = X \ {v} := by
-            ext x
-            simp only [mem_union, mem_sdiff, mem_neighborFinset,
-              mem_singleton]
-            refine ⟨?_, by grind⟩
-            intro h
-            match h with
-            | Or.inl h => exact ⟨h.1.1, h.2⟩
-            | Or.inr h =>
-                exact ⟨hX (G.degree_pos_iff_mem_support x |>.mp h.symm.degree_pos_left), h.ne'⟩
-          have cap : ((X \ G.neighborFinset v) \ {v}) ∩ G.neighborFinset v = ∅ := by grind
-          let hobj := cup ▸ cap ▸
-            @sum_union_inter _ ℝ ((X \ G.neighborFinset v) \ {v}) (G.neighborFinset v)
-            _ (fun w ↦ f ((G.deleteIncidenceSet v).degree w)) _
-          simp only [sum_empty, add_zero] at hobj
-          exact hobj
+          + f (G.degree v)
+          + ∑ x ∈ G.neighborFinset v, (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x)) := by
+        simp only [add_left_inj]
+        apply Eq.symm
+        have cup : ((X \ G.neighborFinset v) \ {v}) ∪ G.neighborFinset v = X \ {v} := by
+          ext x
+          simp only [mem_union, mem_sdiff, mem_neighborFinset,
+            mem_singleton]
+          refine ⟨?_, by grind⟩
+          intro h
+          match h with
+          | Or.inl h => exact ⟨h.1.1, h.2⟩
+          | Or.inr h => exact ⟨mem_of_subset_of_adj hX h, h.ne'⟩
+        have cap : ((X \ G.neighborFinset v) \ {v}) ∩ G.neighborFinset v = ∅ := by
+          rw [sdiff_inter_right_comm]
+          refine eq_empty_of_subset_empty <| sdiff_subset_of_subset
+            <| subset_of_eq <| sdiff_inter_self ..
+        let hobj := cup ▸ cap ▸
+          @sum_union_inter _ ℝ ((X \ G.neighborFinset v) \ {v}) (G.neighborFinset v)
+          _ (fun w ↦ f ((G.deleteIncidenceSet v).degree w)) _
+        simp only [sum_empty, add_zero] at hobj
+        exact hobj
       _ = (∑ x ∈ X \ {v}, f ((G.deleteIncidenceSet v).degree x))
-        + (f (G.degree v)
-        + ∑ x ∈ G.neighborFinset v, (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x))) := by
-          grind
+          + (f (G.degree v)
+          + ∑ x ∈ G.neighborFinset v,
+            (f (G.degree x) - f ((G.deleteIncidenceSet v).degree x))) := by
+        linarith
     refine (add_le_iff_nonpos_right
       <| ∑ x ∈ X \ {v}, f ((G.deleteIncidenceSet v).degree x)).mpr ?_
-    refine (@le_neg_iff_add_nonpos_right ℝ _ _ _ (f (G.degree v)) _).mp ?_
-    exact le_trans this (by simp)
+    exact le_neg_iff_add_nonpos_right.mp
+      <| le_trans this (by simp only [sum_sub_distrib, neg_sub, le_refl])
   calc ∑ x ∈ G.neighborFinset v, (f ((G.deleteIncidenceSet v).degree x) - f (G.degree x))
     _ = ∑ x ∈ G.neighborFinset v, (f (G.degree x - 1) - f (G.degree x)) := by
-      refine @sum_congr _ ℝ _ _ _ _ _ rfl ?_
+      refine sum_congr rfl ?_
       intro x hx
       simp only [sub_left_inj]
       exact congrArg _ <| deleteIncidenceSet_degree G v x hx
@@ -750,13 +796,16 @@ theorem bound_of_completeGraph (f : ℕ → ℝ) {n : ℕ}
     ∑ v, f ((completeGraph (Fin (n + 1))).degree v) = (n + 1) * f n := by
   calc ∑ v, f ((completeGraph (Fin (n + 1))).degree v)
     _ = ∑ _ : Fin (n + 1), f n := by
-        refine sum_congr rfl (fun x _ ↦ congrArg _ ?_)
-        simp only [completeGraph_eq_top, degree, neighborFinset, neighborSet, top_adj]
-        suffices {w | x ≠ w} = Set.univ \ {x} by simp [this, card_sdiff]
-        ext w
-        constructor <;> exact fun hw ↦ by grind
-    _ = (n + 1) * f n := by simp only [sum_const, card_univ, Fintype.card_fin,
-      nsmul_eq_mul, Nat.cast_add, Nat.cast_one]
+      refine sum_congr rfl (fun x _ ↦ congrArg _ ?_)
+      simp only [completeGraph_eq_top, degree, neighborFinset, neighborSet, top_adj]
+      suffices {w | x ≠ w}.toFinset = univ \ {x} by
+        simp [this, card_sdiff, inter_univ, card_singleton, card_univ, Fintype.card_fin,
+          add_tsub_cancel_right]
+      ext w
+      simp only [ne_eq, Set.toFinset_setOf, mem_filter, mem_univ, true_and, mem_sdiff,
+        mem_singleton, ne_comm]
+    _ = (n + 1) * f n := by
+      simp only [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul, Nat.cast_add, Nat.cast_one]
 
 theorem CaroWeiTypeLB_le_1 (f : ℕ → ℝ)
     {π : {n : ℕ} → FiniteSimpleGraph n → Finset (Fin n) → Prop} :
@@ -922,10 +971,10 @@ lemma neighborFinset_eq_deg3 [DecidableEq V] {v : V} (f : V → ℝ) :
     simp only [mem_image, mem_univ, true_and, Fin.isValue, mem_insert, mem_singleton]
     constructor
     · intro ⟨i, hi⟩
-      suffices i = 0 ∨ i = 1 ∨ i = 2 by grind
-      grind
-    · grind
-  refine ⟨σ 2, σ 1, σ 0, hσ.symm.trans this, by grind⟩
+      suffices i = 0 ∨ i = 1 ∨ i = 2 by grind only
+      grind only
+    · grind only
+  refine ⟨σ 2, σ 1, σ 0, hσ.symm.trans this, by grind only⟩
 
 lemma neighborFinset_eq_deg3' [DecidableEq V] {v x : V} (hx : x ∈ G.neighborFinset v) (f : V → ℝ) :
     G.degree v = 3 → ∃ y z, G.neighborFinset v = {x, y, z} ∧ f z ≤ f y := by
@@ -936,9 +985,9 @@ lemma neighborFinset_eq_deg3' [DecidableEq V] {v x : V} (hx : x ∈ G.neighborFi
     simp only [mem_image, mem_univ, true_and, Fin.isValue, mem_insert, mem_singleton]
     constructor
     · intro ⟨i, hi⟩
-      suffices i = 0 ∨ i = 1 ∨ i = 2 by grind
-      grind
-    · grind
+      suffices i = 0 ∨ i = 1 ∨ i = 2 by grind only
+      grind only
+    · grind only
   simp only [← hσ, this, Fin.isValue, mem_insert, mem_singleton] at hx ⊢
   rcases hx with hx | hx | hx
   · refine ⟨σ 1, σ 0, ?_, hinc _ _ <| Fin.zero_le 1⟩
@@ -950,11 +999,16 @@ lemma neighborFinset_eq_deg3' [DecidableEq V] {v x : V} (hx : x ∈ G.neighborFi
     simp only [Fin.isValue, hx]
     grind only [= mem_insert, = mem_singleton]
 
+lemma neighborFinset_eq_deg3'' [DecidableEq V] {v x y : V}
+    (hx : x ∈ G.neighborFinset v) (hy : y ∈ G.neighborFinset v) (hxy : x ≠ y) :
+    G.degree v = 3 → ∃ z, G.neighborFinset v = {x, y, z} :=
+  fun hdv ↦ triplet_of_mem_of_mem_of_ne hdv hx hy hxy
+
 lemma notMem_of_degree_in_eq_zero_of_adj [DecidableEq V] {s : Finset V} {v w : V}
     (hdv : G.degree_in s v = 0) (hvw : G.Adj v w) :
     w ∉ s := by
   intro hw
-  suffices 1 ≤ 0 by grind
+  suffices 1 ≤ 0 by exact Nat.not_succ_le_zero 0 this
   rw [← hdv, ← card_singleton w]
   refine card_le_card ?_
   simp [hvw, hw]
@@ -999,15 +1053,20 @@ lemma degree_in_union_le [DecidableEq V] {u : V} {s t : Finset V} :
   simp_rw [degree_in]
   suffices G.neighborFinset u ∩ (s ∪ t) ⊆ (G.neighborFinset u ∩ s) ∪ t by
     exact le_trans (card_le_card this) <| card_union_le ..
-  grind
+  rw [inter_union_distrib_right]
+  exact inter_subset_inter subset_union_left (subset_refl _)
 
 lemma degree_in_subpair_le_one_of_mem [DecidableEq V] {u : V} {s : Finset V}
     (hu : u ∈ s) (hs : #s ≤ 2) :
     G.degree_in s u ≤ 1 := by
-  have hs' : s = ((s \ {u}) ∪ {u}) := by grind
-  rw [hs', ← degree_in_union_self, degree_in]
-  refine le_trans (card_le_card inter_subset_right) ?_
-  grind
+  suffices G.neighborFinset u ∩ s ⊆ s \ {u} by
+    refine le_trans (card_le_card this) ?_
+    rw [card_sdiff, singleton_inter_of_mem hu, card_singleton]
+    exact Nat.sub_le_of_le_add hs
+  intro w hw
+  refine mem_sdiff.mpr ⟨?_, ?_⟩
+  · exact mem_inter.mp hw |>.2
+  · exact notMem_singleton.mpr <| Adj.ne' <| G.mem_neighborFinset .. |>.mp (mem_inter.mp hw |>.1)
 
 lemma degree_in_union_eq [DecidableEq V] {u : V} {s t : Finset V}
     (ht : t ∩ G.neighborFinset u = ∅) :
@@ -1062,8 +1121,14 @@ lemma degree_in_neighbor [DecidableEq V] {u v : V} (s : Finset V) (huv : G.Adj u
     G.degree_in (s ∪ {v}) u = G.degree_in s u + 1 := by
   simp only [degree_in]
   suffices G.neighborFinset u ∩ (s ∪ {v}) = (G.neighborFinset u ∩ s) ∪ {v} by
-    rw [this]
-    grind
+    rw [this, card_union, card_singleton]
+    suffices (G.neighborFinset u ∩ s ∩ {v}) = ∅ by
+      rw [this]
+      exact (Nat.add_succ _ 0).symm
+    ext w
+    simp only [inter_assoc, mem_inter, mem_neighborFinset, mem_singleton, notMem_empty, iff_false,
+      not_and]
+    exact fun  _ h ↦ ne_of_mem_of_not_mem h hv
   ext w
   simp only [union_singleton, mem_inter, mem_neighborFinset, mem_insert]
   constructor
