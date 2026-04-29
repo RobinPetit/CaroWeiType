@@ -23,7 +23,7 @@ lemma _notA23 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
   · refine Claim7 hG ih ⟨v, x, hdv, hBv, hdx, hAx, ?_⟩
     exact G.mem_neighborFinset .. |>.mp <| mem_inter.mp hx |>.2
   · obtain ⟨z, hNx⟩ := by
-      refine triplet_of_2 hdx ?_ ?_ huv
+      refine triplet_of_mem_of_mem_of_ne hdx ?_ ?_ huv
       · exact mem_neighborFinset_symm <| (mem_inter.mp hx).1
       · exact mem_neighborFinset_symm <| (mem_inter.mp hx).2
     exact Claim11 hG hAx hdx hNx hBu hBv hdu hdv ih

@@ -42,6 +42,13 @@ lemma mem_of_singleton_inter_ne_emty {α : Type*} [DecidableEq α] {s : Finset �
   simp only [mem_inter, mem_singleton] at hy
   exact hy.1 ▸ hy.2
 
+lemma notMem_of_mem_of_empty_inter {α : Type*} [DecidableEq α] {s t : Finset α} {x : α}
+    (hxs : x ∈ s) (hst : s ∩ t = ∅) :
+    x ∉ t := by
+  intro hxt
+  suffices x ∈ (∅ : Finset _) by exact (List.mem_nil_iff x).mp this
+  exact hst ▸ mem_inter.mpr ⟨hxs, hxt⟩
+
 lemma triplet_subset_of_mem_of_mem_of_mem {α : Type*} [DecidableEq α] {x y z : α} {s : Finset α}
     (hx : x ∈ s) (hy : y ∈ s) (hz : z ∈ s) : {x, y, z} ⊆ s := by
   intro u hu

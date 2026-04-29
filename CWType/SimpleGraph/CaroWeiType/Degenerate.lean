@@ -44,7 +44,7 @@ theorem aks_bound_decreasing (k : ℕ) (d : ℕ) :
       _ ≤ (k + 1 : ℝ) * (d + 1 : ℝ)⁻¹ := by
         simp only [Nat.cast_add, Nat.cast_one]
         simp only [k.cast_add_one_pos, mul_le_mul_iff_right₀]
-        refine (inv_le_inv₀ (by grind) d.cast_add_one_pos).mpr ?_
+        refine (inv_le_inv₀ add_one_add_one_pos add_one_pos).mpr ?_
         simp only [le_add_iff_nonneg_right, zero_le_one]
 
 theorem aks_bound_decreasing' (k : ℕ) :
@@ -60,14 +60,14 @@ theorem aks_bound_decreasing' (k : ℕ) :
       have h' : d + 1 ≤ d' := by
         simp only [Order.add_one_le_iff]
         exact Nat.lt_of_sub_eq_succ h
-      exact ih (d + 1) h' (by grind)
+      exact ih (d + 1) h' (by grind only)
 
 theorem aks_gain_decreasing (k : ℕ) (d : ℕ) (hd : k < d) :
     aks_bound k d - aks_bound k (d + 1) ≤ aks_bound k (d - 1) - aks_bound k d := by
   have _ : k ≤ d-1 := Nat.le_sub_one_of_lt hd
   simp only [aks_bound_eq' k (d - 1) (Nat.le_sub_one_of_lt hd)]
   simp only [aks_bound_eq' k d (le_of_lt hd)]
-  simp only [aks_bound_eq' k (d + 1) (by grind)]
+  simp only [aks_bound_eq' k (d + 1) (by linarith)]
   suffices (d + 1 : ℝ)⁻¹ - ((d + 1 : ℕ) + 1 : ℝ)⁻¹ ≤ ((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹ by
     calc (k + 1 : ℝ) * (d + 1 : ℝ)⁻¹ - (k + 1 : ℝ) * ((d + 1 : ℕ) + 1 : ℝ)⁻¹
       _ = (k + 1 : ℝ) * ((d + 1 : ℝ)⁻¹ - ((d + 1 : ℕ) + 1 : ℝ)⁻¹) :=
@@ -83,7 +83,7 @@ theorem aks_gain_decreasing (k : ℕ) (d : ℕ) (hd : k < d) :
   calc (d + 1 + 1 : ℝ)⁻¹ * (d + 1 : ℝ)⁻¹
     _ ≤ (d + 1 + 1 : ℝ)⁻¹ * (d : ℝ)⁻¹ := by
       refine (mul_le_mul_iff_of_pos_left ?_).mpr ?_
-      · refine Right.inv_pos.mpr (by grind)
+      · refine Right.inv_pos.mpr add_one_add_one_pos
       · refine inv_anti₀ ?_ ?_
         · simp only [Nat.cast_pos]
           exact Nat.zero_lt_of_lt hd
@@ -108,7 +108,7 @@ theorem aks_gain_decreasing' (k : ℕ) (d d' : ℕ) (hd : k < d) (hd' : d ≤ d'
       have h' : d + 1 ≤ d' := by
         simp only [Order.add_one_le_iff]
         exact Nat.lt_of_sub_eq_succ h
-      exact ih (d + 1) (Nat.lt_add_right 1 hd) h' (by grind)
+      exact ih (d + 1) (Nat.lt_add_right 1 hd) h' (by grind only)
 
 open Finset
 
@@ -183,9 +183,9 @@ lemma IsDegenerateSet_mono' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.
   intro hy hxy
   refine ⟨fun w ↦ ⟨fun hw ↦ ⟨hxy, ?_⟩, hxy.ne⟩, hxy.ne⟩
   intro _
-  constructor <;> {
-    intro this; suffices w ∈ s₁ ∩ s₂ by simp_all;
-    grind; }
+  constructor
+  · exact ne_of_mem_of_not_mem hw <| notMem_of_mem_of_empty_inter (ht hx) hs
+  · exact ne_of_mem_of_not_mem hw <| notMem_of_mem_of_empty_inter (ht hy) hs
 
 lemma IsDegenerate_iff_induce {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (k : ℕ) (s : Finset (Fin n)) :
@@ -300,7 +300,8 @@ theorem kDegenerateSetClique_iff_le_k_plus_one (k : ℕ) {n : ℕ} (s : Finset (
     else
     obtain ⟨x, ⟨hx, hcard⟩⟩ := h s (subset_refl s) hs
     simp only [degree_in] at hcard
-    suffices (completeGraph (Fin n)).neighborFinset x ∩ s = s \ {x} by grind
+    suffices (completeGraph (Fin n)).neighborFinset x ∩ s = s \ {x} by
+      grind
     ext v
     simp only [completeGraph_eq_top, mem_inter, mem_neighborFinset, top_adj, ne_eq, mem_sdiff,
       mem_singleton, ne_comm, and_comm]
@@ -331,7 +332,10 @@ theorem DegenerateSet_union_singleton {n : ℕ} (G : SimpleGraph (Fin n)) [Decid
     refine card_le_card ?_
     intro w
     simp only [mem_inter, mem_neighborFinset, and_imp]
-    grind [Adj.ne]
+    refine fun hvw hwt ↦ ⟨hvw, ?_⟩
+    rcases mem_union.mp <| ht hwt with hw | hw
+    · exact hw
+    · simp only [mem_singleton, hvw.ne'] at hw
   else
     have hts' : t ⊆ s := by
       intro x hx
@@ -413,7 +417,7 @@ theorem AlonKahnSeymour {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       refine lt_of_le_of_lt' ?_ hδ
       rw [G.degree_eq _ hX]
       exact hdegv' _ hvX
-    refine cw_bound_mono (aks_bound k) G hvΔ hΔk X hX ?_ ?_ ?_
+    refine cw_bound_mono (aks_bound k) G hvΔ hΔk X (Set.toFinset_subset.mpr hX) ?_ ?_ ?_
     · intro d₁ d₂ hd₁ hd₂
       exact aks_gain_decreasing' k d₁ d₂ hd₁ hd₂
     · intro x hx
@@ -434,7 +438,7 @@ theorem AlonKahnSeymour {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           _ ≤ (k + 1 : ℝ) * ((d : ℝ) * (((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹)) := by
             simp only [Nat.cast_add_one_pos k, mul_le_mul_iff_right₀, this]
           _ ≤ (d : ℝ) * ((k + 1 : ℝ) * ((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (k + 1 : ℝ) * (d + 1 : ℝ)⁻¹) := by
-            grind
+            linarith
       refine le_of_eq ?_
       exact Eq.symm <| avg_gain d (by exact Nat.zero_lt_of_lt hd)
 
@@ -464,15 +468,14 @@ theorem kDegenerateSet_LowerBound_iff (f : ℕ → ℝ) :
         _ = 1 * f d := by simp only [one_mul]
         _ = (d + 1 : ℝ)⁻¹ * (d + 1 : ℝ) * f d := by
           have _ : 0 ≠ (d + 1 : ℝ) := Ne.symm (Nat.cast_add_one_ne_zero d)
-          have hfd : 0 ≠ f d := by grind
           refine mul_left_inj' (Ne.symm hfd) |>.mpr ?_
           exact Eq.symm <| inv_mul_cancel₀ <| Nat.cast_add_one_ne_zero d
-        _ = (d + 1 : ℝ)⁻¹ * ((d + 1 : ℝ) * f d) := by grind
+        _ = (d + 1 : ℝ)⁻¹ * ((d + 1 : ℝ) * f d) := by rw [mul_assoc]
         _ ≤ (d + 1 : ℝ)⁻¹ * (k + 1) := by
           have h' : 0 < (d + 1 : ℝ)⁻¹ := Nat.inv_pos_of_nat
           simp only [h', mul_le_mul_iff_right₀, ge_iff_le]
           exact this
-        _≤ (k + 1) * (d + 1 : ℝ)⁻¹ := by grind
+        _= (k + 1) * (d + 1 : ℝ)⁻¹ := by rw [mul_comm]
     let K' := FiniteCompleteGraph (d + 1)
     let _ := K'.decAdj
     obtain ⟨s, ⟨hdeg, hcard⟩⟩ := hf K'
@@ -483,7 +486,7 @@ theorem kDegenerateSet_LowerBound_iff (f : ℕ → ℝ) :
       _ ≤ (((k + 1) : ℕ) : ℝ) := by
         refine Nat.cast_le.mpr ?_
         exact kDegenerateSetClique_iff_le_k_plus_one k s |>.mp hdeg
-      _ ≤ (k + 1 : ℝ) := by grind
+      _ = (k + 1 : ℝ) := by rw [Nat.cast_add, Nat.cast_one]
 
 end CaroWeiType
 end SimpleGraph
