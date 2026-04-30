@@ -38,7 +38,7 @@ private lemma _op_g_Nxy {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       · refine mem_union_right _ ?_
         simp only [Set.mem_singleton_iff, ne_eq, mem_insert, mem_singleton] at hu ⊢
         exact eq_or_eq_of_eq_Sym2' hu.1
-    · simp only [mem_insert, mem_singleton, not_or, ne_of_mem_neighborFinset _ hu,
+    · simp only [mem_insert, mem_singleton, not_or, ne_of_mem_neighborFinset hu,
         not_false_eq_true, and_true, hunev]
   · intro hu
     have Huv : u ≠ v := by grind only [= mem_sdiff, = mem_insert]
@@ -48,7 +48,7 @@ private lemma _op_g_Nxy {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     refine mem_neighborFinset_deleteIncidencesOf_of_notMem_of_notMem_of_mem_neighborFinset
       (notMem_singleton.mpr Huv) (notMem_singleton.mpr Hwv) ?_
     rcases mem_union.mp <| mem_sdiff.mp hu |>.1 with hu | hu
-    · exact le_fromEdgeSet_union' G hu
+    · exact le_fromEdgeSet_union' hu
     · refine mem_fromEdgeSet_union_neighborFinset_iff.mpr <| Or.inr <| by grind
 
 private lemma _op_g_Nx {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {v x y z : Fin n}
@@ -163,7 +163,7 @@ private lemma _degG_eq_degG'_out_Nv {n : ℕ} {G : SimpleGraph (Fin n)} [Decidab
     refine (deleteIncidencesOf_mem_neighborFinset_iff_of_notMem ?_ ?_).mp ?_
     · exact notMem_singleton.mpr this
     · grind only [= mem_sdiff, = mem_singleton, = mem_insert]
-    · exact le_fromEdgeSet_union' G hwu
+    · exact le_fromEdgeSet_union' hwu
   · intro hwu
     have := mem_neighborFinset_of_deleteIncidencesOf_mem_neighborFinset hwu
     rcases mem_fromEdgeSet_union_neighborFinset_iff.mp this with hw | hw
@@ -193,7 +193,7 @@ private lemma _degGz_eq_degG'z_plusone {n : ℕ} {G : SimpleGraph (Fin n)} [Deci
         simp only [mem_insert, mem_singleton, or_true]
       exact mem_neighborFinset_deleteIncidencesOf_of_notMem_of_notMem_of_mem_neighborFinset
         (notMem_singleton.mpr hueqv) (notMem_singleton.mpr hvnez.symm)
-        (le_fromEdgeSet_union' G huz)
+        (le_fromEdgeSet_union' huz)
   · intro hu'
     rcases mem_union.mp hu' with huz | huv
     · have := mem_neighborFinset_of_deleteIncidencesOf_mem_neighborFinset huz
@@ -424,7 +424,7 @@ lemma _forest {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     refine deleteIncidencesOf_adj_of_notMem_of_notMem_of_adj ?_ ?_ ?_
     · exact notMem_singleton.mpr <| ne_of_mem_of_not_mem hu hvt
     · exact notMem_singleton.mpr <| ne_of_mem_of_not_mem hw.2 hvt
-    · exact le_fromEdgeSet_union _ hw.1
+    · exact le_fromEdgeSet_union hw.1
 
 private lemma _respects {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} {s : Finset (Fin n)} {v x y z : Fin n} (hAv : ABC.A v)
@@ -476,7 +476,7 @@ private lemma _respects {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
               exact mem_neighborFinset_deleteIncidencesOf_of_notMem_of_notMem_of_mem_neighborFinset
                 (notMem_singleton.mpr huv)
                 (notMem_singleton.mpr <| ne_of_mem_of_not_mem hvw (G.notMem_neighborFinset_self _))
-                (le_fromEdgeSet_union' G hu)
+                (le_fromEdgeSet_union' hu)
             · simp only [mem_singleton, huv] at hu'
         rw [← card_singleton v]
         refine le_trans (card_le_card H) (le_of_eq ?_)
@@ -507,7 +507,7 @@ private lemma _respects {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
         refine fun ⟨hu, hu'⟩ ↦ ⟨?_, hu'⟩
         exact mem_neighborFinset_deleteIncidencesOf_of_notMem_of_notMem_of_mem_neighborFinset
           (notMem_singleton.mpr <| ne_of_mem_of_not_mem hu' hvnotins) Hw
-          (le_fromEdgeSet_union' G hu)
+          (le_fromEdgeSet_union' hu)
       rcases ABC.mem_iff.mp <| ABC.coe_mem_toFinset.mpr hwABC with h | h | h
       · simp only [h, forall_const, not_B_of_A, IsEmpty.forall_iff,
           not_C_of_A, card_eq_zero, and_self, and_true, ge_iff_le]

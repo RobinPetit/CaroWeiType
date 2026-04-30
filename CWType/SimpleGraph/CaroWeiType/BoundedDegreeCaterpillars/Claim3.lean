@@ -21,7 +21,7 @@ lemma Claim3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     _ = ∑ w ∈ G.neighborFinset v ∪ {v}, f G ABC w := by
       rw [closed_neighborFinset_of_singleton_eq]
     _ = ∑ w ∈ G.neighborFinset v, f G ABC w + f G ABC v := by
-      have _ : f G ABC v = ∑ w ∈ {v}, f G ABC w := Eq.symm (sum_singleton (f G ABC) v)
+      have _ : f G ABC v = ∑ w ∈ {v}, f G ABC w := Eq.symm <| sum_singleton (f G ABC ·) v
       rw [← sum_singleton (f G ABC ·) v]
       rw [← sum_union_inter]
       suffices G.neighborFinset v ∩ {v} = ∅ by

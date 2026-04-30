@@ -23,7 +23,8 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     rw [sdiff_toFinset]
     intro w hw
     refine mem_sdiff.mpr ⟨hNv hw, ?_⟩
-    simp only [mem_singleton, ne_of_mem_neighborFinset _ hw, not_false_eq_true]
+    simp only [mem_singleton, ne_of_mem_neighborFinset hw,
+      not_false_eq_true]
   intro h
   have hvABC : {v} ∩ ABC.toFinset ≠ ∅ := by
     refine nonempty_iff_ne_empty.mp ⟨v, ?_⟩
@@ -39,8 +40,8 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       refine Eq.symm <| sum_sdiff ?_
       intro x hx
       have hxnev : x ≠ v := G.mem_neighborFinset .. |>.mp hx |>.ne'
-      refine Tripartition.coe_mem_toFinset .. |>.mp ?_
-      refine (ABC.mem_sdiff_iff _).mpr ⟨ABC.coe_mem_toFinset.mpr <| hNv hx, ?_⟩
+      refine Tripartition.coe_mem_toFinset .. |>.mp
+        <| (ABC.mem_sdiff_iff _).mpr ⟨ABC.coe_mem_toFinset.mpr <| hNv hx, ?_⟩
       simp only [mem_singleton, hxnev, not_false_eq_true]
     _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
         + (∑ x ∈ G.neighborFinset v, f G ABC x + f G ABC v) := by
@@ -64,8 +65,9 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       simp only [add_left_inj]
       refine sum_congr rfl ?_
       intro x hx
-      refine Eq.symm <| f_eq_in_sdiff G ABC ?_
-      exact mem_sdiff.mp (ABC.sdiff_toFinset ▸ mem_sdiff.mp hx |>.1) |>.2
+      refine Eq.symm <|  f_eq_in_sdiff G ABC ?_
+      simp only [sdiff_toFinset, mem_sdiff, mem_neighborFinset] at hx
+      exact hx.1.2
     _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v,
           f (G.deleteIncidencesOf {v}) (ABC \ {v}) x
         + ∑ x ∈ G.neighborFinset v, f (G.deleteIncidencesOf {v}) (ABC \ {v}) x := by
@@ -73,17 +75,18 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       refine sum_congr rfl ?_
       intro x hx
       suffices (G.deleteIncidencesOf {v}).degree x = G.degree x by
-        simp only [f, Tripartition.sdiff_eq, inter_assoc, inter_self, fA, fB, one_div, fC,
-          dite_eq_ite, this]
+        simp only [f, sdiff, fA, fB, one_div, fC, sdiff.eq_1, dite_eq_ite, this]
       refine congrArg Finset.card ?_
       ext w
       simp only [mem_sdiff, sdiff_toFinset] at hx
-      if hwv : w ∈ ({v} : Finset _) then
-        simp only [mem_singleton] at hwv
+      if hwv : w ∈ ({v} : Set _) then
+        simp only [Set.mem_singleton_iff] at hwv
         simp only [mem_neighborFinset, not_mem_neighborFinset_symm <| hwv ▸ hx.2, iff_false]
         exact not_adj_symm <| deleteIncidencesOf_notadj _ (mem_singleton.mpr hwv)
       else
-        exact (deleteIncidencesOf_mem_neighborFinset_iff_of_notMem hwv hx.1.2).symm
+        refine (deleteIncidencesOf_mem_neighborFinset_iff_of_notMem ?_  hx.1.2).symm
+        simp only [mem_singleton] at hwv ⊢
+        exact hwv
     _ = ∑ x ∈ (ABC \ {v}).toFinset, f (G.deleteIncidencesOf {v}) (ABC \ {v}) x := by
       rw [add_comm]
       have hobj := sum_inter_add_sum_diff (ABC \ {v}).toFinset (G.neighborFinset v)
@@ -93,7 +96,8 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
         intro w hw
         simp only [sdiff_toFinset]
         refine mem_sdiff.mpr ⟨hNv hw, ?_⟩
-        simp only [mem_singleton, ne_of_mem_neighborFinset _ hw, not_false_eq_true]
+        simp only [mem_singleton, ne_of_mem_neighborFinset hw,
+          not_false_eq_true]
       rw [this] at hobj
       exact hobj
 

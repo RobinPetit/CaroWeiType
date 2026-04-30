@@ -34,7 +34,7 @@ lemma Claim5_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
     intro hy
     exact (not_iff_not.mpr mem_singleton).mp
       <| mem_sdiff.mp (ABC.sdiff_toFinset ▸ (hs'1 hy)) |>.2
-  · refine respects_union G ABC (respects_mono G ABC hs'1 hs'3) respects_singleton ?_
+  · refine respects_union (respects_mono G ABC hs'1 hs'3) respects_singleton ?_
     simp only [mem_singleton, forall_eq]
     exact fun _ _ h ↦ (Ne.symm <| ne_of_lt h.symm.degree_pos_left) hdegx0
   · calc eval G ABC

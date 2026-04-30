@@ -2,6 +2,7 @@ import CWType.SimpleGraph.CaroWeiType.Forests.Lemmas
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Lemmas
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim1
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim5
+import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim6
 
 namespace CaroWeiType
 namespace ABC
@@ -95,9 +96,8 @@ private lemma Claim7_calc {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Ad
     _ ≤ 5 / (6 : ℝ) := by linarith
   suffices (G.deleteIncidencesOf {v, y, z}).degree x ≤ 1 by
     rcases Nat.le_one_iff_eq_zero_or_eq_one.mp this with h0 | h1
-    · rw [@fA0 _ (G.deleteIncidencesOf {v, y, z}) _ (ABC \ {v, y, z}) _ ⟨hAx, by grind⟩ h0]
-      grind
-    · rw [@fA1 _ (G.deleteIncidencesOf {v, y, z}) _ (ABC \ {v, y, z}) _ ⟨hAx, by grind⟩ h1]
+    · linarith [@fA0 _ (G.deleteIncidencesOf {v, y, z}) (ABC \ {v, y, z}) _ _ ⟨hAx, by grind⟩ h0]
+    · rw [@fA1 _ (G.deleteIncidencesOf {v, y, z}) (ABC \ {v, y, z}) _ _ ⟨hAx, by grind⟩ h1]
   suffices (G.deleteIncidencesOf {v, y, z}).neighborFinset x ⊆ G.neighborFinset x \ {v} by
     rw [degree]
     refine le_trans (card_le_card this) ?_
@@ -286,6 +286,29 @@ lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
           refine Eq.symm (card_union_of_disjoint <| disjoint_singleton_right.mpr <| fun h ↦ ?_)
           let hobj := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs h) |>.2
           simp at hobj
+
+lemma Corollary7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
+    {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
+      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    Objective G ABC ∨ ∀ w ∈ G.neighborFinset v, 3 ≤ G.degree w := by
+  if h : ∀ w ∈ G.neighborFinset v, 3 ≤ G.degree w then
+    exact Or.inr h
+  else
+    simp only [mem_neighborFinset, not_forall, not_le] at h
+    obtain ⟨w, hw, hdw⟩ := h
+    have : 1 ≤ G.degree w := one_le_degree_of_adj hw.symm
+    have hwABC : w ∈ ABC :=
+      ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr
+        <| G.degree_pos_iff_mem_support _ |>.mp this
+    have hdw : G.degree w ≤ 1 ∨ G.degree w = 2 := by lia
+    rcases hdw with hdw | hdw
+    · exact Or.inl <| Claim5 hG ih ⟨_, hwABC, hdw⟩
+    · if hAw : ABC.A w then
+        exact Or.inl <| Claim7 hG ih ⟨v, w, hdv, hBv, hdw, hAw, hw⟩
+      else
+        exact Or.inl <| Claim6 hG ih ⟨w, hdw, hAw⟩
 
 end Tripartition
 end ABC

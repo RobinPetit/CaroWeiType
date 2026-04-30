@@ -469,8 +469,10 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
           f G ABC u - f (_op_g G v x y z) (_op_t ABC v x y z) u ≤ 1 / 5 := by
         simp only [mem_insert, mem_singleton] at hu
         rcases hu with hu | hu <;> {
-          simp only [fB3 hBx hdx, fB3 hBy hdy, hu]
-          suffices 2 / 15 ≤ f (_op_g G v x y z) (_op_t ABC v x y z) u by grind
+          suffices 2 / 15 ≤ f (_op_g G v x y z) (_op_t ABC v x y z) u by
+            subst hu
+            simp only [fB3 hBx hdx, fB3 hBy hdy]
+            grind
           let hC'u : (_op_t ABC v x y z).C u := by
             refine demote_finset_from_B _ ?_ ?_
             · refine ⟨?_, ?_⟩

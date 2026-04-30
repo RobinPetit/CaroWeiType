@@ -269,7 +269,7 @@ lemma Claim18 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     (hG : G.support.toFinset ⊆ ABC.toFinset) {û v w : Fin n} (hû : IsVstar G ABC û)
     (hAû : ABC.A û) (hdû : G.degree û = 4)
     (hBv : ABC.B v) (hdv : G.degree v = 3) (hBw : ABC.B w) (hdw : G.degree w = 3)
-    (hvnew : v ≠ w) (hv : G.Adj û v) (hw : G.Adj û w) (hvw : G.Adj v w)
+    (hv : G.Adj û v) (hw : G.Adj û w) (hvw : G.Adj v w)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
       G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
@@ -279,11 +279,11 @@ lemma Claim18 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     have hne : û ≠ x := by grind [degree]
     exact Claim12 hG hvw.ne hBv hdv hBw hdw hne (by grind) ih
   else
-    match _A3 hG hAû hdû hxy hBv hdv hBw hdw hvnew hNv hNw ih with
+    match _A3 hG hAû hdû hxy hBv hdv hBw hdw hvw.ne hNv hNw ih with
     | Or.inl h => exact h
     | Or.inr h => ?_
     obtain ⟨hAx, hdx, hAy, hdy⟩ := h
-    match γ_eq_zero_in_N2 hG hû hAû hdû hxy hBv hdv hBw hdw hvnew hNv hNw hAx hdx hAy hdy ih with
+    match γ_eq_zero_in_N2 hG hû hAû hdû hxy hBv hdv hBw hdw hvw.ne hNv hNw hAx hdx hAy hdy ih with
     | Or.inl h => exact h
     | Or.inr hγN2 => ?_
     let F := ({x, y, w} : Finset _)
@@ -345,7 +345,7 @@ lemma Claim18 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         · simp only [hu, hBw, not_A_of_B, degree_in, IsEmpty.forall_iff, forall_const, not_C_of_B,
             card_eq_zero, and_true, hu ▸ hdeginFw1]
       refine Corollary2 hF hG hF' hresp ih ?_ ?_
-      · refine linear_forest_of_forest_respects F G ABC hF' ?_ hresp
+      · refine linear_forest_of_forest_respects hF' ?_ hresp
         intro t ht htne
         if hcardF : #t ≤ 2 then
           obtain ⟨x, hx⟩ := nonempty_iff_ne_empty.mpr htne
@@ -478,7 +478,7 @@ lemma Claim18 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         · exact ⟨w, Adj.symm <| G.mem_neighborFinset .. |>.mp <| by simp [hNw, hu]⟩
       have hresp : respects {w, x, y} G ABC := _respects hBw hAx hAy hwx hdv hNv hNw
       refine Corollary2 hF hG hF' hresp ih
-        (linear_forest_of_forest_respects _ _ _ hF' (_induces_forest hwx hNv hNw) hresp) ?_
+        (linear_forest_of_forest_respects hF' (_induces_forest hwx hNv hNw) hresp) ?_
       have hNwxy : G.closed_neighborFinset_of_Finset {w, x, y} = {û, v, w, x, y} := by
         ext u
         simp only [closed_neighborFinset_of_Finset, mem_insert, mem_singleton, exists_eq_or_imp,
@@ -495,7 +495,7 @@ lemma Claim18 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         · grind
       have hF : #{w, x, y} = 3 := by grind [degree]
       have hN' : ({û, v, w, x, y} : Finset _) = {v, w, û, x, y} := by grind
-      rw [hNwxy, hN', sum_hNvw hxy hdv hdw hvnew hNv hNw, hF, Nat.cast_three]
+      rw [hNwxy, hN', sum_hNvw hxy hdv hdw hvw.ne hNv hNw, hF, Nat.cast_three]
       rw [fB3 hBv hdv, fB3 hBw hdw, fA4 hAû hdû, fA3 hAx hdx, fA3 hAy hdy]
       linarith
 

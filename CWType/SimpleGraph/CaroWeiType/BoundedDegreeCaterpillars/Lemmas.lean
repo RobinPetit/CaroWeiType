@@ -181,20 +181,23 @@ lemma mem_iff {n : ℕ} (ABC : Tripartition n) {x : Fin n} :
 
 end Tripartition
 
-lemma f_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∉ ABC) : 0 = f G ABC v := by
+lemma f_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n))
+    {ABC : Tripartition n} {v : Fin n} [Fintype (G.neighborSet v)] (hv : v ∉ ABC) :
+    0 = f G ABC v := by
   simp only [Tripartition.mem_iff, not_or] at hv
   obtain ⟨hvA, hvB, hvC⟩ := hv
   simp only [f, hvA, ↓reduceDIte, hvB, hvC]
 
-lemma γ_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∉ ABC) : 0 = γ G ABC v := by
+lemma γ_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n))
+    {ABC : Tripartition n} {v : Fin n} [Fintype (G.neighborSet v)] (hv : v ∉ ABC) :
+    0 = γ G ABC v := by
   simp only [Tripartition.mem_iff, not_or] at hv
   obtain ⟨hvA, hvB, hvC⟩ := hv
   simp only [γ, hvA, ↓reduceDIte, hvB, hvC]
 
-lemma ℓ_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∉ ABC) : 0 = ℓ G ABC v := by
+lemma ℓ_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n))
+    {ABC : Tripartition n} {v : Fin n} [Fintype (G.neighborSet v)] (hv : v ∉ ABC) :
+    0 = ℓ G ABC v := by
   simp only [Tripartition.mem_iff, not_or] at hv
   obtain ⟨hvA, hvB, hvC⟩ := hv
   simp only [ℓ, hvA, ↓reduceDIte, hvB, hvC]
@@ -309,8 +312,9 @@ lemma fC_le_one {d : ℕ} : fC d ≤ 1 := by
     rw [← Nat.cast_one]
     exact Nat.cast_le.mpr <| by lia
 
-lemma f_le_one {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    {v : Fin n} : f G ABC v ≤ 1 := by
+lemma f_le_one {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] :
+    f G ABC v ≤ 1 := by
   rw [f]
   split_ifs
   · exact fA_le_one
@@ -320,20 +324,24 @@ lemma f_le_one {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
 
 -- f(0)
 
-lemma fA0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 0) : f G ABC v = 1 := by
+lemma fA0 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 0) :
+    f G ABC v = 1 := by
   simp only [f, hA, ↓reduceDIte, fA, hv, ↓reduceIte]
 
-lemma fB0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 0) : f G ABC v = 1 := by
+lemma fB0 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 0) :
+    f G ABC v = 1 := by
   simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, ↓reduceIte]
 
-lemma fC0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 0) : f G ABC v = 1 := by
+lemma fC0 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 0) :
+    f G ABC v = 1 := by
   simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, ↓reduceIte]
 
-lemma f0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (h : v ∈ ABC) (hv : G.degree v = 0) : f G ABC v = 1 := by
+lemma f0 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (h : v ∈ ABC) (hv : G.degree v = 0) :
+    f G ABC v = 1 := by
   rcases h with h | h | h
   · exact fA0 h hv
   · exact fB0 h hv
@@ -341,95 +349,110 @@ lemma f0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripart
 
 -- f(1)
 
-lemma fA1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 1) : f G ABC v = 5 / 6 := by
+lemma fA1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 1) :
+    f G ABC v = 5 / 6 := by
   simp only [f, hA, ↓reduceDIte, fA, hv, one_ne_zero, ↓reduceIte]
 
-lemma fB1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 1) : f G ABC v = 5 / 6 := by
+lemma fB1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 1) :
+    f G ABC v = 5 / 6 := by
   simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, one_ne_zero, ↓reduceIte]
 
-lemma fC1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 1) : f G ABC v = 1 / 6 := by
+lemma fC1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 1) :
+    f G ABC v = 1 / 6 := by
   simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, one_ne_zero, ↓reduceIte,
     OfNat.one_ne_ofNat, or_false, one_div]
 
 -- f(2)
 
-lemma fA2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 2) : f G ABC v = 2 / 3 := by
+lemma fA2 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 2) :
+    f G ABC v = 2 / 3 := by
   simp only [f, hA, ↓reduceDIte, fA, hv, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one,
     Nat.cast_ofNat]
   lia
 
-lemma fB2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 2) : f G ABC v = 1 / 3 := by
+lemma fB2 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 2) :
+    f G ABC v = 1 / 3 := by
   simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, one_div]
 
-lemma fC2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 2) : f G ABC v = 1 / 6 := by
+lemma fC2 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 2) :
+    f G ABC v = 1 / 6 := by
   simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, or_true, one_div]
 
 -- f(3)
 
-lemma fA3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 3) : f G ABC v = 1 / 2 := by
+lemma fA3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 3) :
+    f G ABC v = 1 / 2 := by
   simp only [f, hA, ↓reduceDIte, fA, hv, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one,
     Nat.cast_ofNat]
   linarith
 
-lemma fB3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 3) : f G ABC v = 1 / 3 := by
+lemma fB3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 3) :
+    f G ABC v = 1 / 3 := by
   simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, Nat.succ_ne_self, Nat.cast_ofNat, one_div]
   linarith
 
-lemma fC3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 3) : f G ABC v = 1 / 6 := by
+lemma fC3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 3) :
+    f G ABC v = 1 / 6 := by
   simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, Nat.succ_ne_self, or_self, Nat.cast_ofNat, one_div]
   linarith
 
 -- f(4)
 
-lemma fA4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 4) : f G ABC v = 2 / 5 := by
+lemma fA4 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 4) :
+    f G ABC v = 2 / 5 := by
   simp only [f, hA, ↓reduceDIte, fA, hv, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one,
     Nat.cast_ofNat]
   linarith
 
-lemma fB4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 4) : f G ABC v = 4 / 15 := by
+lemma fB4 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 4) :
+    f G ABC v = 4 / 15 := by
   simp only [f, not_A_of_B, hB, ↓reduceDIte, fB, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, Nat.cast_ofNat, Nat.reduceEqDiff]
   linarith
 
-lemma fC4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 4) : f G ABC v = 2 / 15 := by
+lemma fC4 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 4) :
+    f G ABC v = 2 / 15 := by
   simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, Nat.cast_ofNat, false_or, Nat.reduceEqDiff, ↓reduceIte]
   linarith
 
 -- f(5)
 
-lemma fA5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 5) : f G ABC v = 1 / 3 := by
+lemma fA5 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 5) :
+    f G ABC v = 1 / 3 := by
   simp only [f, hA, ↓reduceDIte, fA, hv, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one,
     Nat.cast_ofNat]
   linarith
 
 -- f(6)
 
-lemma fA6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 6) : f G ABC v = 2 / 7 := by
+lemma fA6 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 6) :
+    f G ABC v = 2 / 7 := by
   simp only [f, hA, ↓reduceDIte, fA, hv, OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one,
     Nat.cast_ofNat]
   linarith
 
-lemma f_le_fA {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    {v : Fin n} : f G ABC v ≤ fA (G.degree v) := by
+lemma f_le_fA {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] :
+    f G ABC v ≤ fA (G.degree v) := by
   if hvABC : v ∈ ABC then
     rcases hvABC with hA | hB | hC
     · simp only [f, hA, ↓reduceDIte, le_refl]
@@ -438,8 +461,8 @@ lemma f_le_fA {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
   else
     exact (f_eq_zero_of_notMem G hvABC) ▸ zero_le_fA
 
-lemma f_le_fB_of_not_A {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    {v : Fin n} (hAv : ¬ABC.A v) :
+lemma f_le_fB_of_not_A {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (hAv : ¬ABC.A v) :
     f G ABC v ≤ fB (G.degree v) := by
   if hv : v ∈ ABC then
     simp only [Tripartition.mem_iff, hAv, false_or] at hv
@@ -449,8 +472,8 @@ lemma f_le_fB_of_not_A {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] 
   else
     exact (f_eq_zero_of_notMem G hv) ▸ zero_le_fB
 
-lemma fA_eq_deg_mul_γ_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hAv : ABC.A v) (hdv : 3 ≤ G.degree v) :
+lemma fA_eq_deg_mul_γ_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (hAv : ABC.A v) (hdv : 3 ≤ G.degree v) :
     f G ABC v = G.degree v * γ G ABC v := by
   simp only [f, γ, hAv, ↓reduceDIte]
   have h1 : fA (G.degree v) = 2 / (G.degree v + 1 : ℝ) := by grind
@@ -462,8 +485,8 @@ lemma fA_eq_deg_mul_γ_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [Deci
   rw [h, Δf_eq' (Nat.zero_lt_of_lt hdv)]
   grind only
 
-lemma fB_eq_deg_mul_γ_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hBv : ABC.B v) (hdv : 4 ≤ G.degree v) :
+lemma fB_eq_deg_mul_γ_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (hBv : ABC.B v) (hdv : 4 ≤ G.degree v) :
     f G ABC v = G.degree v * γ G ABC v := by
   simp only [f, γ, hBv, not_A_of_B, ↓reduceDIte]
   have h1 : fB (G.degree v) = (4 / 3) / (G.degree v + 1 : ℝ) := by grind
@@ -475,8 +498,8 @@ lemma fB_eq_deg_mul_γ_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [Decid
   rw [h, Δf_eq' (Nat.zero_lt_of_lt hdv)]
   grind only
 
-lemma fC_eq_deg_mul_γ_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hCv : ABC.C v) (hdv : 4 ≤ G.degree v) :
+lemma fC_eq_deg_mul_γ_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (hCv : ABC.C v) (hdv : 4 ≤ G.degree v) :
     f G ABC v = G.degree v * γ G ABC v := by
   simp only [f, γ, hCv, not_A_of_C, not_B_of_C, ↓reduceDIte]
   have h1 : fC (G.degree v) = (2 / 3) / (G.degree v + 1 : ℝ) := by grind
@@ -499,8 +522,8 @@ lemma fA_le_13_of_5_le_deg' {d : ℕ} (hv : 5 ≤ d) : fA d ≤ 1 / 3 := by
   refine Nat.cast_le.mpr ?_
   simp only [Nat.reduceLeDiff, hv]
 
-lemma fA_le_13_of_5_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) (hv : 5 ≤ G.degree v) :
+lemma fA_le_13_of_5_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : 5 ≤ G.degree v) :
     f G ABC v ≤ 1 / 3 := by
   simp only [f, hA, ↓reduceDIte]
   exact fA_le_13_of_5_le_deg' hv
@@ -514,8 +537,8 @@ lemma fA_le_25_of_4_le_deg' {d : ℕ} (hv : 4 ≤ d) : fA d ≤ 2 / 5 := by
   refine Nat.cast_le.mpr ?_
   simp only [Nat.reduceLeDiff, hv]
 
-lemma fA_le_25_of_4_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) (hv : 4 ≤ G.degree v) :
+lemma fA_le_25_of_4_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : 4 ≤ G.degree v) :
     f G ABC v ≤ 2 / 5 := by
   simp only [f, hA, ↓reduceDIte]
   exact fA_le_25_of_4_le_deg' hv
@@ -531,8 +554,8 @@ lemma fA_le_12_of_3_le_deg' {d : ℕ} (hv : 3 ≤ d) : fA d ≤ 1 / 2 := by
       exact Nat.cast_le.mpr <| Nat.le_add_of_sub_le hv
     _ ≤ 1 / 2 := by linarith
 
-lemma fA_le_12_of_3_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) (hv : 3 ≤ G.degree v) :
+lemma fA_le_12_of_3_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : 3 ≤ G.degree v) :
     f G ABC v ≤ 1 / 2 := by
   simp only [f, hA, ↓reduceDIte]
   exact fA_le_12_of_3_le_deg' hv
@@ -544,8 +567,8 @@ lemma fA_le_23_of_2_le_deg' {d : ℕ} (hd : 2 ≤ d) : fA d ≤ 2 / 3 := by
   else
     exact le_trans (fA_le_12_of_3_le_deg' (by lia)) (by linarith)
 
-lemma fA_le_23_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) (hv : 2 ≤ G.degree v) :
+lemma fA_le_23_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : 2 ≤ G.degree v) :
     f G ABC v ≤ 2 / 3 := by
   simp only [f, hA, ↓reduceDIte]
   exact fA_le_23_of_2_le_deg' hv
@@ -556,14 +579,14 @@ lemma fA_le_56_of_1_le_deg' {d : ℕ} (hd : 1 ≤ d) : fA d ≤ 5 / 6 := by
   else
     exact le_trans (fA_le_23_of_2_le_deg' (by lia)) (by linarith)
 
-lemma fA_le_56_of_1_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hA : ABC.A v) (hv : 1 ≤ G.degree v) :
+lemma fA_le_56_of_1_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : 1 ≤ G.degree v) :
     f G ABC v ≤ 5 / 6 := by
   simp only [f, hA, ↓reduceDIte]
   exact fA_le_56_of_1_le_deg' hv
 
-lemma fB_le_13_if_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hB : ABC.B v) (hv : 2 ≤ G.degree v) :
+lemma fB_le_13_if_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : 2 ≤ G.degree v) :
     f G ABC v ≤ 1 / 3 := by
   simp only [f, hB, not_A_of_B, ↓reduceDIte, fB]
   split_ifs
@@ -575,16 +598,16 @@ lemma fB_le_13_if_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
       exact Nat.cast_le.mpr (by lia)
     _ ≤ 1 / 3 := by linarith
 
-lemma fB_le_56_if_1_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hB : ABC.B v) (hv : 1 ≤ G.degree v) :
+lemma fB_le_56_if_1_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : 1 ≤ G.degree v) :
     f G ABC v ≤ 5 / 6 := by
   if h1 : G.degree v = 1 then
     rw [fB1 hB h1]
   else
     exact le_trans (fB_le_13_if_2_le_deg hB (by lia)) (by linarith)
 
-lemma fC_le_16_if_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hC : ABC.C v) (hv : 2 ≤ G.degree v) :
+lemma fC_le_16_if_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : 2 ≤ G.degree v) :
     f G ABC v ≤ 1 / 6 := by
   simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC]
   split_ifs
@@ -596,16 +619,16 @@ lemma fC_le_16_if_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
       exact Nat.cast_le.mpr (by lia)
     _ ≤ 1 / 6 := by linarith
 
-lemma fC_le_16_if_1_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hC : ABC.C v) (hv : 1 ≤ G.degree v) :
+lemma fC_le_16_if_1_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : 1 ≤ G.degree v) :
     f G ABC v ≤ 1 / 6 := by
   if h1 : G.degree v = 1 then
     rw [fC1 hC h1]
   else
     exact fC_le_16_if_2_le_deg hC (by lia)
 
-lemma f_le_1_over_2_of_3_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : 3 ≤ G.degree v) :
+lemma f_le_1_over_2_of_3_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hv : 3 ≤ G.degree v) :
     f G ABC v ≤ 1 / 2 := by
   if hvABC : v ∈ ABC then
     rcases ABC.mem_iff.mp hvABC with hA | hB | hC
@@ -615,8 +638,9 @@ lemma f_le_1_over_2_of_3_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
   else
     grind [f, ABC.mem_iff]
 
-lemma f_le_1_over_3_of_4_le_deg_of_notA4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 4 ≤ G.degree v) (hv : ¬(ABC.A v ∧ G.degree v = 4)) :
+lemma f_le_1_over_3_of_4_le_deg_of_notA4 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)]
+    (hdv : 4 ≤ G.degree v) (hv : ¬(ABC.A v ∧ G.degree v = 4)) :
     f G ABC v ≤ 1 / 3 := by
   if hvABC : v ∈ ABC then
     rcases ABC.mem_iff.mp hvABC with hA | hB | hC
@@ -628,8 +652,14 @@ lemma f_le_1_over_3_of_4_le_deg_of_notA4 {n : ℕ} {G : SimpleGraph (Fin n)} [De
   else
     grind [f, ABC.mem_iff]
 
-lemma A2_of_f_lt_12_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : 2 ≤ G.degree v) (h : v ∈ ABC)
+lemma f_le_2_over_5_of_4_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : 4 ≤ G.degree v) :
+    f G ABC v ≤ 2 / 5 := by
+  have hfA4 : fA 4 = 2 / 5 := by lia
+  refine le_trans f_le_fA (hfA4 ▸ fA_decreasing hdv)
+
+lemma A2_of_f_lt_12_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hv : 2 ≤ G.degree v) (h : v ∈ ABC)
     (hf : 1 / 2 < f G ABC v) : ABC.A v ∧ G.degree v = 2 := by
   rcases h with hA | hB | hC
   · refine ⟨hA, ?_⟩
@@ -639,8 +669,9 @@ lemma A2_of_f_lt_12_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
   · grind [fB_le_13_if_2_le_deg hB hv]
   · grind [fC_le_16_if_2_le_deg hC hv]
 
-lemma f_le_1_over_3_of_4_le_deg_of_not_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : 4 ≤ G.degree v) (hA : ¬(ABC.A v ∧ G.degree v = 4)) :
+lemma f_le_1_over_3_of_4_le_deg_of_not_A4 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)]
+    (hv : 4 ≤ G.degree v) (hA : ¬(ABC.A v ∧ G.degree v = 4)) :
     f G ABC v ≤ 1 / 3 := by
   if hvABC : v ∈ ABC then
     rcases ABC.mem_iff.mp hvABC with hA | hB | hC
@@ -652,8 +683,9 @@ lemma f_le_1_over_3_of_4_le_deg_of_not_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [D
   else
     grind [f, ABC.mem_iff]
 
-lemma A2_or_A3_of_f_lt_25_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : 2 ≤ G.degree v) (h : v ∈ ABC)
+lemma A2_or_A3_of_f_lt_25_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)]
+    (hv : 2 ≤ G.degree v) (h : v ∈ ABC)
     (hf : 2 / 5 < f G ABC v) : ABC.A v ∧ (G.degree v = 2 ∨ G.degree v = 3) := by
   rcases h with hA | hB | hC
   · refine ⟨hA, ?_⟩
@@ -662,8 +694,8 @@ lemma A2_or_A3_of_f_lt_25_of_2_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [Decid
   · grind [fB_le_13_if_2_le_deg hB hv]
   · grind [fC_le_16_if_2_le_deg hC hv]
 
-lemma γA_eq_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hAv : ABC.A v) (hdv : 3 ≤ G.degree v) :
+lemma γA_eq_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hAv : ABC.A v) (hdv : 3 ≤ G.degree v) :
     γ G ABC v = 2 / ((G.degree v) * (G.degree v + 1 : ℝ)) := by
   simp only [γ, hAv, ↓reduceDIte, fA]
   split_ifs
@@ -674,8 +706,8 @@ lemma γA_eq_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
   rw [← heq, Δf_eq']
   lia
 
-lemma γB_eq_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hBv : ABC.B v) (hdv : 4 ≤ G.degree v) :
+lemma γB_eq_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hBv : ABC.B v) (hdv : 4 ≤ G.degree v) :
     γ G ABC v = (4 / 3) / ((G.degree v) * (G.degree v + 1 : ℝ)) := by
   simp only [γ, hBv, not_A_of_B, ↓reduceDIte, fB]
   split_ifs
@@ -686,8 +718,8 @@ lemma γB_eq_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.
   rw [← heq, Δf_eq']
   lia
 
-lemma γC_eq_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hCv : ABC.C v) (hdv : 4 ≤ G.degree v) :
+lemma γC_eq_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hCv : ABC.C v) (hdv : 4 ≤ G.degree v) :
     γ G ABC v = (2 / 3) / ((G.degree v) * (G.degree v + 1 : ℝ)) := by
   simp only [γ, hCv, not_A_of_C, not_B_of_C, ↓reduceDIte, fC]
   split_ifs
@@ -698,8 +730,8 @@ lemma γC_eq_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.
   rw [← heq, Δf_eq']
   lia
 
-lemma γ_le_γA_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 4 ≤ G.degree v) :
+lemma γ_le_γA_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : 4 ≤ G.degree v) :
     γ G ABC v ≤ fA (G.degree v - 1) - fA (G.degree v) := by
   if hvABC : v ∈ ABC then
     cases hvABC with
@@ -728,44 +760,52 @@ lemma γ_le_γA_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
     rw [← γ_eq_zero_of_notMem G hvABC]
     exact sub_nonneg_of_le <| fA_decreasing <| Nat.sub_le ..
 
-lemma γA1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 1) : γ G ABC v = 1 / 6 := by
+lemma γA1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 1) :
+    γ G ABC v = 1 / 6 := by
   simp only [γ, hA, ↓reduceDIte, fA, hv, tsub_self, ↓reduceIte, one_ne_zero, one_div]
   linarith
 
-lemma γA2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 2) : γ G ABC v = 1 / 6 := by
+lemma γA2 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 2) :
+    γ G ABC v = 1 / 6 := by
   simp only [γ, hA, ↓reduceDIte, fA, hv, Nat.add_one_sub_one, one_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_zero, OfNat.ofNat_ne_one, Nat.cast_ofNat, one_div]
   linarith
 
-lemma γA3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 3) : γ G ABC v = 1 / 6 := by
+lemma γA3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 3) :
+    γ G ABC v = 1 / 6 := by
   rw [γA_eq_of_three_le_deg hA (le_of_eq hv.symm), hv]
   linarith
 
-lemma γA4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 4) : γ G ABC v = 1 / 10 := by
+lemma γA4 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 4) :
+    γ G ABC v = 1 / 10 := by
   rw [γA_eq_of_three_le_deg hA (by lia), hv]
   linarith
 
-lemma γA5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 5) : γ G ABC v = 1 / 15 := by
+lemma γA5 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 5) :
+    γ G ABC v = 1 / 15 := by
   rw [γA_eq_of_three_le_deg hA (by lia), hv]
   linarith
 
-lemma γA6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 6) : γ G ABC v = 1 / 21 := by
+lemma γA6 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 6) :
+    γ G ABC v = 1 / 21 := by
   rw [γA_eq_of_three_le_deg hA (by lia), hv]
   linarith
 
-lemma γA7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 7) : γ G ABC v = 1 / 28 := by
+lemma γA7 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 7) :
+    γ G ABC v = 1 / 28 := by
   rw [γA_eq_of_three_le_deg hA (by lia), hv]
   linarith
 
-lemma γA8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 8) : γ G ABC v = 1 / 36 := by
+lemma γA8 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 8) :
+    γ G ABC v = 1 / 36 := by
   rw [γA_eq_of_three_le_deg hA (by lia), hv]
   linarith
 
@@ -795,8 +835,8 @@ lemma γA_decreasing_of_three_le_degree {d d' : ℕ} (hdd' : d ≤ d') (hd : 3 �
     refine Nat.mul_le_mul hdd' ?_
     simp only [add_le_add_iff_right, hdd']
 
-lemma γA_le_1_10_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 4 ≤ G.degree v) (hAv : ABC.A v) :
+lemma γA_le_1_10_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : 4 ≤ G.degree v) (hAv : ABC.A v) :
     γ G ABC v ≤ 1 / 10 := by
   simp only [γ, hAv, ↓reduceDIte, fA]
   split_ifs
@@ -818,25 +858,25 @@ lemma γA_le_1_10_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableR
         exact Nat.zero_le _
     _ ≤ 1 / 10 := by linarith
 
-lemma γB1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 1) : γ G ABC v = 1 / 6 := by
+lemma γB1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 1) : γ G ABC v = 1 / 6 := by
   simp only [γ, hB, not_A_of_B, ↓reduceDIte, fB, hv, tsub_self, ↓reduceIte, one_ne_zero, one_div]
   linarith
 
-lemma γB2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 2) : γ G ABC v = 1 / 2 := by
+lemma γB2 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 2) : γ G ABC v = 1 / 2 := by
   simp only [γ, hB, not_A_of_B, ↓reduceDIte, fB, hv, Nat.add_one_sub_one, one_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_zero, OfNat.ofNat_ne_one]
   linarith
 
-lemma γB3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hdv : G.degree v = 3) : γ G ABC v = 0 := by
+lemma γB3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hdv : G.degree v = 3) : γ G ABC v = 0 := by
   simp only [γ, hB, not_A_of_B, ↓reduceDIte, fB, hdv, ↓reduceIte, Nat.add_one_sub_one,
     OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, Nat.succ_ne_self, Nat.cast_ofNat]
   linarith
 
-lemma γB4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hdv : G.degree v = 4) : γ G ABC v = 1 / 15 := by
+lemma γB4 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hdv : G.degree v = 4) : γ G ABC v = 1 / 15 := by
   rw [γB_eq_of_four_le_deg hB (by lia), hdv]
   linarith
 
@@ -896,8 +936,8 @@ lemma γC_decreasing_of_four_le_degree {d d' : ℕ} (hdd' : d ≤ d') (hd : 4 �
     refine Nat.mul_le_mul hdd' ?_
     simp only [add_le_add_iff_right, hdd']
 
-lemma γB_le_1_15_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 4 ≤ G.degree v) (hBv : ABC.B v) :
+lemma γB_le_1_15_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : 4 ≤ G.degree v) (hBv : ABC.B v) :
     γ G ABC v ≤ 1 / 15 := by
   simp only [γ, hBv, not_A_of_B, ↓reduceDIte, fB]
   split_ifs
@@ -919,26 +959,29 @@ lemma γB_le_1_15_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableR
         exact Nat.zero_le _
     _ ≤ 1 / 15 := by linarith
 
-lemma γC1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 1) : γ G ABC v = 5 / 6 := by
+lemma γC1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 1) :
+    γ G ABC v = 5 / 6 := by
   simp only [γ, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, tsub_self, ↓reduceIte, one_ne_zero,
     OfNat.one_ne_ofNat, or_false, one_div]
   linarith
 
-lemma γC2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 2) : γ G ABC v = 0 := by
+lemma γC2 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 2) :
+    γ G ABC v = 0 := by
   simp only [γ, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, Nat.add_one_sub_one, one_ne_zero,
     ↓reduceIte, OfNat.one_ne_ofNat, or_false, one_div, OfNat.ofNat_ne_zero, OfNat.ofNat_ne_one,
     or_true, sub_self]
 
-lemma γC3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hdv : G.degree v = 3) : γ G ABC v = 0 := by
+lemma γC3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hdv : G.degree v = 3) :
+    γ G ABC v = 0 := by
   simp only [γ, hC, not_A_of_C, not_B_of_C, ↓reduceDIte, fC, hdv, ↓reduceIte, Nat.add_one_sub_one,
     OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, Nat.succ_ne_self, Nat.cast_ofNat, false_or]
   linarith
 
-lemma γC_le_1_30_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 4 ≤ G.degree v) (hCv : ABC.C v) :
+lemma γC_le_1_30_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : 4 ≤ G.degree v) (hCv : ABC.C v) :
     γ G ABC v ≤ 1 / 30 := by
   simp only [γ, hCv, not_A_of_C, not_B_of_C, ↓reduceDIte, fC]
   split_ifs
@@ -960,8 +1003,8 @@ lemma γC_le_1_30_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableR
         exact Nat.zero_le _
     _ ≤ 1 / 30 := by linarith
 
-lemma γ_le_γA_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 3 ≤ G.degree v) :
+lemma γ_le_γA_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : 3 ≤ G.degree v) :
     γ G ABC v ≤ fA (G.degree v - 1) - fA (G.degree v) := by
   have hobj : 0 ≤ fA (G.degree v - 1) - fA (G.degree v) := by
     have hd0 : G.degree v ≠ 0 := by lia
@@ -982,8 +1025,41 @@ lemma γ_le_γA_of_three_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
       simp only [← γ_eq_zero_of_notMem G hv, hobj]
   · exact γ_le_γA_of_four_le_deg hdv
 
-lemma γ_le_1_over_6_of_3_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 3 ≤ G.degree v) :
+lemma γ_le_γB_of_three_le_deg_of_notA {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (hdv : 3 ≤ G.degree v) (hA : ¬ABC.A v) :
+    γ G ABC v ≤ fB (G.degree v - 1) - fB (G.degree v) := by
+  if hdv3 : G.degree v = 3 then
+    simp only [γ, hA, ↓reduceDIte, fB, hdv3, Nat.add_one_sub_one, OfNat.ofNat_ne_zero, ↓reduceIte,
+      OfNat.ofNat_ne_one, Nat.succ_ne_self, Nat.cast_ofNat, fC, or_true, or_self, dite_eq_ite]
+    grind
+  else
+  have hd0 : G.degree v ≠ 0 := by lia
+  have hd0' : G.degree v - 1 ≠ 0 := by lia
+  have hd1 : G.degree v ≠ 1 := by lia
+  have hd1' : G.degree v - 1 ≠ 1 := by lia
+  have hd2 : G.degree v ≠ 2 := by lia
+  have hd2' : G.degree v - 1 ≠ 2 := by lia
+  if hv : v ∉ ABC then
+    rw [← γ_eq_zero_of_notMem G hv]
+    simp only [fB, hd0', ↓reduceIte, Nat.pred_eq_succ_iff, zero_add, hd2, Nat.reduceAdd, hdv3, hd0,
+      hd1, sub_nonneg, ge_iff_le]
+    refine (div_le_div_iff₀ add_one_pos add_one_pos).mpr ?_
+    simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_right₀, add_le_add_iff_right,
+      Nat.cast_le, tsub_le_iff_right, le_add_iff_nonneg_right, zero_le]
+  else
+    have : ABC.B v ∨ ABC.C v := by grind [ABC.mem_iff]
+    rcases this with hB | hC
+    · simp only [γ, hB, hA, ↓reduceDIte, le_refl]
+    · simp only [γ, hA, not_B_of_C, hC, ↓reduceDIte, ↓reduceIte, fB, fC, hd0, hd0', hd1, hd1', hd2,
+        hd2', false_or]
+      rw [Δf_eq'' (by linarith), Δf_eq'' (by linarith)]
+      refine (div_le_div_iff_of_pos_right ?_).mpr (by linarith)
+      refine Left.mul_pos ?_ add_one_pos
+      rw [← Nat.cast_zero, Nat.cast_lt]
+      linarith
+
+lemma γ_le_1_over_6_of_3_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (hdv : 3 ≤ G.degree v) :
     γ G ABC v ≤ 1 / 6 := by
   if hv : v ∈ ABC then
     refine le_trans (γ_le_γA_of_three_le_deg hdv) ?_
@@ -992,16 +1068,31 @@ lemma γ_le_1_over_6_of_3_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [Decidab
   else
     linarith [γ_eq_zero_of_notMem G hv]
 
-lemma γ_le_1_10_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 4 ≤ G.degree v) (hv : v ∈ ABC) :
+lemma γ_le_1_10_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : 4 ≤ G.degree v) :
     γ G ABC v ≤ 1 / 10 := by
-  rcases hv with h | h | h
-  · exact γA_le_1_10_of_4_le_degree hdv h
-  · refine le_trans (γB_le_1_15_of_4_le_degree hdv h) (by linarith)
-  · refine le_trans (γC_le_1_30_of_4_le_degree hdv h) (by linarith)
+  if hv : v ∈ ABC then
+    rcases hv with h | h | h
+    · exact γA_le_1_10_of_4_le_degree hdv h
+    · refine le_trans (γB_le_1_15_of_4_le_degree hdv h) (by linarith)
+    · refine le_trans (γC_le_1_30_of_4_le_degree hdv h) (by linarith)
+  else
+    linarith [γ_eq_zero_of_notMem G hv]
 
-lemma γA_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hAv : ABC.A v) (hdv : 4 ≤ G.degree v) :
+lemma γ_le_1_over_10_of_3_le_degree_of_not_A3 {n : ℕ} {G : SimpleGraph (Fin n)}
+    {ABC : Tripartition n} {v : Fin n} [Fintype (G.neighborSet v)]
+    (hdv : 3 ≤ G.degree v) (hA3 : ¬(ABC.A v ∧ G.degree v = 3)) :
+    γ G ABC v ≤ 1 / 10 := by
+  rcases Nat.eq_or_lt_of_le hdv with hdv | hdv
+  · have : v ∉ ABC ∨ ABC.B v ∨ ABC.C v := by grind [ABC.mem_iff]
+    rcases this with h | hB | hC
+    · linarith [γ_eq_zero_of_notMem G h]
+    · linarith [γB3 hB hdv.symm]
+    · linarith [γC3 hC hdv.symm]
+  · exact γ_le_1_10_of_4_le_degree (by linarith)
+
+lemma γA_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hAv : ABC.A v) (hdv : 4 ≤ G.degree v) :
     0 < γ G ABC v := by
   simp only [γ, hAv, ↓reduceDIte]
   haveI : fA (G.degree v - 1) - fA (G.degree v)
@@ -1012,8 +1103,8 @@ lemma γA_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
   simp only [add_lt_add_iff_right, Nat.cast_lt, tsub_lt_self_iff, zero_lt_one, and_true]
   exact Nat.zero_lt_of_lt hdv
 
-lemma γB_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hBv : ABC.B v) (hdv : 4 ≤ G.degree v) :
+lemma γB_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hBv : ABC.B v) (hdv : 4 ≤ G.degree v) :
     0 < γ G ABC v := by
   simp only [γ, not_A_of_B, hBv, ↓reduceDIte]
   haveI : fB (G.degree v - 1) - fB (G.degree v)
@@ -1024,8 +1115,8 @@ lemma γB_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
   simp only [add_lt_add_iff_right, Nat.cast_lt, tsub_lt_self_iff, zero_lt_one, and_true]
   exact Nat.zero_lt_of_lt hdv
 
-lemma γC_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hCv : ABC.C v) (hdv : 4 ≤ G.degree v) :
+lemma γC_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hCv : ABC.C v) (hdv : 4 ≤ G.degree v) :
     0 < γ G ABC v := by
   simp only [γ, not_A_of_C, not_B_of_C, hCv, ↓reduceDIte]
   haveI : fC (G.degree v - 1) - fC (G.degree v)
@@ -1036,22 +1127,34 @@ lemma γC_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
   simp only [add_lt_add_iff_right, Nat.cast_lt, tsub_lt_self_iff, zero_lt_one, and_true]
   exact Nat.zero_lt_of_lt hdv
 
-lemma γ_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∈ ABC) (hdv : 4 ≤ G.degree v) :
+lemma γ_pos_of_four_le_deg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hv : v ∈ ABC) (hdv : 4 ≤ G.degree v) :
     0 < γ G ABC v := by
   rcases hv with hAv | hBv | hCv
   · exact γA_pos_of_four_le_deg hAv hdv
   · exact γB_pos_of_four_le_deg hBv hdv
   · exact γC_pos_of_four_le_deg hCv hdv
 
-lemma γ_eq_0_of_degree_eq_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : G.degree v = 0) : γ G ABC v = 0 := by
+lemma γ_eq_0_of_degree_eq_0 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : G.degree v = 0) : γ G ABC v = 0 := by
   have hdv' : G.degree v - 1 = 0 := by grind only
   simp only [γ, hdv']
   simp only [hdv, sub_self, dite_eq_ite, ite_self]
 
-lemma γ_eq_0_iff {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    {v : Fin n} (hv : v ∈ ABC) (hdv : 1 ≤ G.degree v) :
+lemma A_or_γ_eq_0_of_deg_eq_3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : G.degree v = 3) :
+    ABC.A v ∨ γ G ABC v = 0 := by
+  have : v ∉ ABC ∨ ABC.A v ∨ ABC.B v ∨ ABC.C v := by grind [ABC.mem_iff]
+  rcases this with h | hA | hB | hC
+  · exact Or.inr <| (γ_eq_zero_of_notMem _ h).symm
+  · exact Or.inl hA
+  · refine Or.inr ?_
+    rw [γB3 hB hdv]
+  · refine Or.inr ?_
+    rw [γC3 hC hdv]
+
+lemma γ_eq_0_iff {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hv : v ∈ ABC) (hdv : 1 ≤ G.degree v) :
     γ G ABC v = 0 ↔
       ((G.degree v = 3 ∧ ABC.B v) ∨ (G.degree v = 3 ∧ ABC.C v) ∨ (G.degree v = 2 ∧ ABC.C v)) := by
   constructor
@@ -1068,12 +1171,12 @@ lemma γ_eq_0_iff {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC 
     · exact γC3 hCv hdv
     · exact γC2 hCv hdv
 
-lemma γ_eq_zero_of_deg_eq_zero {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : G.degree v = 0) : γ G ABC v = 0 := by
+lemma γ_eq_zero_of_deg_eq_zero {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : G.degree v = 0) : γ G ABC v = 0 := by
   simp only [γ, fA, hdv, zero_tsub, ↓reduceIte, sub_self, fB, fC, dite_eq_ite, ite_self]
 
-lemma if_γ_gt_one_over_six {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∈ ABC) (hγ : 1 / 6 < γ G ABC v) :
+lemma if_γ_gt_one_over_six {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hv : v ∈ ABC) (hγ : 1 / 6 < γ G ABC v) :
     ABC.B v ∧ G.degree v = 2 ∨ ABC.C v ∧ G.degree v = 1 := by
   have hdv : G.degree v ≠ 0 := by
     intro hdv
@@ -1093,58 +1196,68 @@ lemma if_γ_gt_one_over_six {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.
     OfNat.ofNat_ne_one, Nat.cast_ofNat, fB, Nat.succ_ne_self, fC, or_true, or_self,
     dite_eq_ite] at hγ
     rcases hv with hv | hv | hv <;> grind [not_A_of_C, not_B_of_C]
-  · grind only [γ_le_1_10_of_4_le_degree h hv]
+  · suffices (1 : ℝ) / 6 < 1 / 10 by linarith
+    refine lt_of_lt_of_le hγ (γ_le_1_10_of_4_le_degree h)
 
-lemma ℓA1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 1) : ℓ G ABC v = 1 / 6 := by
+lemma ℓA1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 1) :
+    ℓ G ABC v = 1 / 6 := by
   simp only [ℓ, hA, ↓reduceDIte, fA, hv, ↓reduceIte, one_ne_zero, one_div, Nat.reduceAdd,
     OfNat.ofNat_ne_zero, ↓reduceIte, OfNat.ofNat_ne_one, Nat.cast_ofNat]
   linarith
 
-lemma ℓA2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 2) : ℓ G ABC v = 1 / 6 := by
+lemma ℓA2 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 2) :
+    ℓ G ABC v = 1 / 6 := by
   simp only [ℓ, hA, ↓reduceDIte, fA, hv, Nat.reduceAdd, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, Nat.cast_ofNat]
   linarith
 
-lemma ℓA3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hA : ABC.A v) (hv : G.degree v = 3) : ℓ G ABC v = 1 / 10 := by
+lemma ℓA3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 3) :
+    ℓ G ABC v = 1 / 10 := by
   simp only [ℓ, hA, ↓reduceDIte, ↓reduceIte, fA, hv, Nat.reduceAdd, OfNat.ofNat_ne_zero,
     OfNat.ofNat_ne_one, Nat.cast_ofNat]
   linarith
 
-lemma ℓB1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 1) : ℓ G ABC v = 1 / 2 := by
+lemma ℓB1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 1) :
+    ℓ G ABC v = 1 / 2 := by
   simp only [ℓ, not_A_of_B, hB, ↓reduceDIte, ↓reduceIte, one_div, one_ne_zero, fB, hv,
     Nat.reduceAdd, OfNat.ofNat_ne_zero, OfNat.ofNat_ne_one]
   linarith
 
-lemma ℓB2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 2) : ℓ G ABC v = 0 := by
+lemma ℓB2 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 2) :
+    ℓ G ABC v = 0 := by
   simp only [ℓ, hB, not_A_of_B, ↓reduceDIte, fB, hv, ↓reduceIte, OfNat.ofNat_ne_zero,
     OfNat.ofNat_ne_one, OfNat.ofNat_ne_one, Nat.reduceAdd, Nat.succ_ne_self, Nat.cast_ofNat]
   linarith
 
-lemma ℓB3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hB : ABC.B v) (hv : G.degree v = 3) : ℓ G ABC v = 1 / 15 := by
+lemma ℓB3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 3) :
+    ℓ G ABC v = 1 / 15 := by
   simp only [ℓ, hB, not_A_of_B, ↓reduceDIte, fB, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, Nat.succ_ne_self, Nat.cast_ofNat, Nat.reduceAdd, Nat.reduceEqDiff]
   linarith
 
-lemma ℓC1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 1) : ℓ G ABC v = 0 := by
+lemma ℓC1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 1) :
+    ℓ G ABC v = 0 := by
   simp only [ℓ, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, one_ne_zero, ↓reduceIte,
     OfNat.one_ne_ofNat, or_false, one_div, Nat.reduceAdd, OfNat.ofNat_ne_zero, OfNat.ofNat_ne_one,
     or_true, sub_self]
 
-lemma ℓC2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 2) : ℓ G ABC v = 0 := by
+lemma ℓC2 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 2) :
+    ℓ G ABC v = 0 := by
   simp only [ℓ, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, or_true, one_div, Nat.reduceAdd, Nat.succ_ne_self, or_self, Nat.cast_ofNat]
   linarith
 
-lemma ℓC3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
-    (hC : ABC.C v) (hv : G.degree v = 3) : ℓ G ABC v = 1 / 30 := by
+lemma ℓC3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : G.degree v = 3) :
+    ℓ G ABC v = 1 / 30 := by
   simp only [ℓ, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, hv, OfNat.ofNat_ne_zero, ↓reduceIte,
     OfNat.ofNat_ne_one, Nat.succ_ne_self, or_self, Nat.cast_ofNat, Nat.reduceAdd, Nat.reduceEqDiff]
   linarith
@@ -1180,8 +1293,8 @@ lemma γA_decreasing {d d' : ℕ} (hdd' : d ≤ d') :
   · rename_i hd; simp_rw [Δf_eq, hd, Nat.cast_one]
     refine le_trans (H (by lia)) (by linarith)
 
-lemma ℓ_le_1_over_10_of_3_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (h : 3 ≤ G.degree v) :
+lemma ℓ_le_1_over_10_of_3_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (h : 3 ≤ G.degree v) :
     ℓ G ABC v ≤ 1 / 10 := by
   simp only [ℓ, fA, Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte, Nat.add_eq_right,
     Nat.cast_add, Nat.cast_one, fB, Nat.reduceEqDiff, fC, dite_eq_ite]
@@ -1205,8 +1318,8 @@ lemma ℓ_le_1_over_10_of_3_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [Decid
       _ ≤ (2 / 3) / 20 := div_le_div₀ (by grind) (le_refl _) Nat.ofNat_pos' H'
       _ ≤ 1 / 10 := by grind
 
-lemma ℓ_le_1_over_15_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (h : 4 ≤ G.degree v) :
+lemma ℓ_le_1_over_15_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (h : 4 ≤ G.degree v) :
     ℓ G ABC v ≤ 1 / 15 := by
   simp only [ℓ, fA, Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte, Nat.add_eq_right,
     Nat.cast_add, Nat.cast_one, fB, Nat.reduceEqDiff, fC, dite_eq_ite]
@@ -1229,6 +1342,21 @@ lemma ℓ_le_1_over_15_of_4_le_degree {n : ℕ} {G : SimpleGraph (Fin n)} [Decid
     calc (2 / 3) / ((G.degree v + 1 : ℝ) * (G.degree v + 1 + 1 : ℝ))
       _ ≤ (2 / 3) / 30 := div_le_div₀ (by linarith) (le_refl _) Nat.ofNat_pos' H'
       _ ≤ 1 / 15 := by linarith only
+
+lemma ℓ_le_1_over_15_of_3_le_degree_of_notA3 {n : ℕ} {G : SimpleGraph (Fin n)}
+    {ABC : Tripartition n} {v : Fin n} [Fintype (G.neighborSet v)]
+    (h : 3 ≤ G.degree v) (hA3 : ¬(ABC.A v ∧ G.degree v = 3)) :
+    ℓ G ABC v ≤ 1 / 15 := by
+  if hdv : G.degree v = 3 then
+    if hvABC : v ∈ ABC then
+      have : ABC.B v ∨ ABC.C v := by grind [ABC.mem_iff]
+      rcases this with hB | hC
+      · linarith [ℓB3 hB hdv]
+      · linarith [ℓC3 hC hdv]
+    else
+      grind [ℓ_eq_zero_of_notMem _ hvABC]
+  else
+    exact ℓ_le_1_over_15_of_4_le_degree (by lia)
 
 namespace Tripartition
 
@@ -1444,15 +1572,14 @@ lemma promote_toFinset_eq {n : ℕ} (ABC : Tripartition n) {x : Fin n} :
   simp only [← coe_mem_toFinset]
   exact ⟨mem_promote_of_mem ABC, mem_of_mem_promote ABC⟩
 
-@[simp]
 lemma sdiff_empty {n : ℕ} (ABC : Tripartition n) : (ABC \ ∅) = ABC := by
   ext <;> simp only [sdiff, notMem_empty, not_false_eq_true, and_true]
 
 lemma sdiff_eq {n : ℕ} (ABC : Tripartition n) (W : Finset (Fin n)) :
     (ABC \ W) = (ABC \ (W ∩ ABC.toFinset)) := by
   ext w <;> {
-    simp only [sdiff, toFinset, mem_iff,
-      mem_inter, mem_filter, mem_univ, true_and, not_and, not_or, and_congr_right_iff]
+    simp only [sdiff, toFinset, mem_iff, mem_inter, mem_filter, mem_univ, true_and, not_and, not_or,
+      and_congr_right_iff]
     intro H
     simp only [H, not_true_eq_false,
       not_A_of_B, not_A_of_C, not_B_of_A, not_B_of_C, not_C_of_A, not_C_of_B, not_false_eq_true,
@@ -1543,16 +1670,7 @@ lemma sdiff_demote_finset_eq_demote_finset_sdiff {n : ℕ} {ABC : Tripartition n
 lemma toFinset_eq {n : ℕ} {ABC : Tripartition n} {s : Finset (Fin n)} :
     (ABC \ s).toFinset = ABC.toFinset \ s := by
   ext w
-  simp only [toFinset, sdiff, mem_iff, mem_filter, mem_univ, true_and, mem_sdiff]
-  constructor
-  · intro hw
-    rcases hw with hw | hw | hw <;>
-      simp only [hw, not_A_of_B, not_A_of_C, not_B_of_A, not_B_of_C, not_C_of_A, not_C_of_B,
-        or_self, or_false, not_false_eq_true, and_self, or_true]
-  · intro ⟨hx, hxs⟩
-    rcases hx with hx | hx | hx <;>
-      simp only [ not_A_of_B, not_A_of_C, not_B_of_A, not_B_of_C, not_C_of_A, not_C_of_B, hx, hxs,
-        not_false_eq_true, and_self, and_true, or_self, or_false, or_true]
+  simp only [toFinset, sdiff, mem_iff, and_or_3, mem_filter, mem_univ, true_and, mem_sdiff]
 
 lemma sdiff_card {n : ℕ} (ABC : Tripartition n) {s : Finset (Fin n)}
     (hs : s ∩ ABC.toFinset ≠ ∅) : (ABC \ s).card < ABC.card := by
@@ -1569,14 +1687,19 @@ lemma sdiff_card {n : ℕ} (ABC : Tripartition n) {s : Finset (Fin n)}
     simp only [mem_iff, mem_filter, mem_univ, true_and] at hobj
     rcases hobj with ⟨_, h⟩ | ⟨⟨_, h⟩ | ⟨_, h⟩⟩ <;> exact h <| mem_of_mem_filter z hz
 
+lemma sdiff_toFinset' {n : ℕ} (ABC : Tripartition n) {s : Set (Fin n)} [Fintype s] :
+    (ABC \ s.toFinset).toFinset = ABC.toFinset \ s.toFinset := by
+  ext y
+  simp only [toFinset, sdiff, Set.mem_toFinset, mem_iff, and_or_3, mem_filter, mem_univ, true_and,
+    mem_sdiff]
+
 lemma sdiff_toFinset {n : ℕ} (ABC : Tripartition n) {s : Finset (Fin n)} :
     (ABC \ s).toFinset = ABC.toFinset \ s := by
   ext y
-  simp only [toFinset, sdiff, mem_iff, mem_filter, mem_univ, true_and, mem_sdiff]
-  constructor <;> simp only [or_and_right, imp_self]
+  simp only [toFinset, sdiff, mem_iff, and_or_3, mem_filter, mem_univ, true_and, mem_sdiff]
 
-lemma linear_forest_of_forest_respects {n : ℕ} (s : Finset (Fin n)) (G : SimpleGraph (Fin n))
-    [DecidableRel G.Adj] (ABC : Tripartition n) (hs : s ⊆ ABC.toFinset) :
+lemma linear_forest_of_forest_respects {n : ℕ} {s : Finset (Fin n)} {G : SimpleGraph (Fin n)}
+    [DecidableRel G.Adj] {ABC : Tripartition n} (hs : s ⊆ ABC.toFinset) :
     G.InducesForest s → respects s G ABC → G.InducesLinearForest s := by
   intro hf hresp
   refine ⟨hf, ?_⟩
@@ -1589,7 +1712,8 @@ lemma linear_forest_of_forest_respects {n : ℕ} (s : Finset (Fin n)) (G : Simpl
   · exact le_of_eq_of_le (h₃ hC) zero_le_two
 
 lemma respects_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} : respects {v} G ABC := by
+    {ABC : Tripartition n} {v : Fin n} :
+    respects {v} G ABC := by
   simp only [respects, mem_singleton, degree_in, card_eq_zero, forall_eq, mem_neighborFinset,
     SimpleGraph.irrefl, not_false_eq_true, inter_singleton_of_notMem, card_empty, zero_le,
     implies_true, and_self]
@@ -1623,8 +1747,8 @@ lemma respects_pair_of_Bs {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Ad
     simp only [card_singleton, le_refl]
   }
 
-lemma respects_union {n : ℕ} {s t : Finset (Fin n)} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) (hs : respects s G ABC) (ht : respects t G ABC)
+lemma respects_union {n : ℕ} {s t : Finset (Fin n)} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+    {ABC : Tripartition n} (hs : respects s G ABC) (ht : respects t G ABC)
     (hst' : ∀ y ∈ s, ∀ z ∈ t, ¬G.Adj y z) :
     respects (s ∪ t) G ABC := by
   intro w hw
@@ -1683,8 +1807,9 @@ lemma respects_mono {n : ℕ} {s t : Finset (Fin n)} (G : SimpleGraph (Fin n)) [
 
 end Tripartition
 
-lemma f_le_56 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    {v : Fin n} (hv : 0 < G.degree v) : f G ABC v ≤ 5 / (6 : ℝ) := by
+lemma f_le_56 {n : ℕ} (G : SimpleGraph (Fin n)) (ABC : Tripartition n)
+    {v : Fin n} [Fintype (G.neighborSet v)] (hv : 0 < G.degree v) :
+    f G ABC v ≤ 5 / (6 : ℝ) := by
   simp only [f, fA, fB, one_div, fC, dite_eq_ite]
   split_ifs
   any_goals grind
@@ -1707,8 +1832,8 @@ lemma f_le_56 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tr
         lia
       _ ≤ 5 / 6 := by linarith
 
-lemma f_le_two_fifths_of_γ_lt_one_sixth {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 0 < G.degree v) (hγv : γ G ABC v < 1 / 6) :
+lemma f_le_two_fifths_of_γ_lt_one_sixth {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (hdv : 0 < G.degree v) (hγv : γ G ABC v < 1 / 6) :
     f G ABC v ≤ 2 / 5 := by
   if hvABC : v ∈ ABC then
     rcases hvABC with hA | hB | hC
@@ -1726,8 +1851,8 @@ lemma f_le_two_fifths_of_γ_lt_one_sixth {n : ℕ} {G : SimpleGraph (Fin n)} [De
   else
     linarith [f_eq_zero_of_notMem G hvABC]
 
-lemma f_le_two_ninths_of_γ_lt_one_thirtieth {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hdv : 4 ≤ G.degree v) (hγv : γ G ABC v < 1 / 30) :
+lemma f_le_two_ninths_of_γ_lt_one_thirtieth {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (hdv : 4 ≤ G.degree v) (hγv : γ G ABC v < 1 / 30) :
     f G ABC v ≤ 2 / 9 := by
   if hvABC : v ∈ ABC then
     rcases hvABC with hA | hB | hC
@@ -1757,7 +1882,7 @@ lemma f_le_two_ninths_of_γ_lt_one_thirtieth {n : ℕ} {G : SimpleGraph (Fin n)}
     linarith [f_eq_zero_of_notMem G hvABC]
 
 lemma f_le_two_sevenths_of_γ_lt_one_fifteenth_of_γ_ne_zero {n : ℕ} {G : SimpleGraph (Fin n)}
-    [DecidableRel G.Adj] {ABC : Tripartition n} {v : Fin n}
+    {ABC : Tripartition n} {v : Fin n} [Fintype (G.neighborSet v)]
     (hγv : γ G ABC v < 1 / 15) (hγv₀ : γ G ABC v ≠ 0) :
     f G ABC v ≤ 2 / 7 := by
   if hvABC : v ∈ ABC then
@@ -1793,8 +1918,8 @@ lemma f_le_two_sevenths_of_γ_lt_one_fifteenth_of_γ_ne_zero {n : ℕ} {G : Simp
   else
     linarith [f_eq_zero_of_notMem G hvABC]
 
-lemma f_eq_in_sdiff {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    {s : Finset (Fin n)} {w : Fin n} (hw : w ∉ s) :
+lemma f_eq_in_sdiff {n : ℕ} (G : SimpleGraph (Fin n)) (ABC : Tripartition n)
+    {s : Finset (Fin n)} {w : Fin n} [Fintype (G.neighborSet w)] (hw : w ∉ s) :
     f G (ABC \ s) w = f G ABC w := by
   have : ABC.A w ↔ (ABC \ s).A w := ⟨fun h ↦ ⟨h, hw⟩, fun ⟨h, _⟩ ↦ h⟩
   have : ABC.B w ↔ (ABC \ s).B w := ⟨fun h ↦ ⟨h, hw⟩, fun ⟨h, _⟩ ↦ h⟩
@@ -1809,8 +1934,8 @@ lemma f_mono_degree {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
   intro heq
   simp only [f, fA, fB, one_div, fC, dite_eq_ite, heq]
 
-lemma f_pos_of_mem {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (v : Fin n) : v ∈ ABC → 0 < f G ABC v := by
+lemma f_pos_of_mem {n : ℕ} (G : SimpleGraph (Fin n)) (ABC : Tripartition n)
+    (v : Fin n) [Fintype (G.neighborSet v)] : v ∈ ABC → 0 < f G ABC v := by
   intro h
   rcases ABC.mem_iff.mp h with hA | hB | hC
   · simp only [f, hA, ↓reduceDIte, fA]
@@ -1846,14 +1971,14 @@ lemma f_mono {n : ℕ} {G₁ G₂ : SimpleGraph (Fin n)} [DecidableRel G₁.Adj]
     rw [← f_eq_zero_of_notMem G₁ hv, ← f_eq_zero_of_notMem G₂ hv]
 
 @[simp, grind! .]
-lemma γ_nonneg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    {v : Fin n} : 0 ≤ γ G ABC v := by
+lemma γ_nonneg {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] : 0 ≤ γ G ABC v := by
   have h : G.degree v - 1 ≤ G.degree v := Nat.sub_le ..
   simp only [γ, dite_eq_ite]
   split_ifs <;> simp only [sub_nonneg, fA_decreasing h, fB_decreasing h, fC_decreasing h, le_refl]
 
-lemma f_eq_sdiff {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    {s : Finset (Fin n)} {v : Fin n} (hv : v ∉ s) :
+lemma f_eq_sdiff {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {s : Finset (Fin n)} {v : Fin n} [Fintype (G.neighborSet v)] (hv : v ∉ s) :
     f G ABC v = f G (ABC \ s) v := by
   if hvABC : v ∈ ABC then
     rcases hvABC with hA | hB | hC
@@ -1865,7 +1990,7 @@ lemma f_eq_sdiff {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC :
       simp only [f, hC, hC', not_A_of_C, not_B_of_C, ↓reduceDIte]
   else
     have hvABC' : v ∉ (ABC \ s) := by
-      simp only [Tripartition.mem_iff, not_or] at hvABC
+      simp only [ABC.mem_iff, not_or] at hvABC
       simp only [Tripartition.sdiff, Tripartition.mem_iff, hvABC, hv, not_false_eq_true, and_true,
         or_self]
     rw [← f_eq_zero_of_notMem G hvABC, ← f_eq_zero_of_notMem G hvABC']
@@ -1897,8 +2022,8 @@ lemma eval_lt {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         mem_filter, mem_univ, true_and, f, fA, fB, one_div, fC, dite_eq_ite] at hx ⊢
       lia
     _ < ∑ v ∈ (ABC \ W).toFinset, f G ABC v + ∑ v ∈ (W ∩ ABC.toFinset), f G ABC v := by
-      simp only [Tripartition.sdiff_eq, inter_assoc, inter_self, lt_add_iff_pos_right]
       obtain ⟨w, hw⟩ := nonempty_def.mp <| nonempty_iff_ne_empty.mpr hW
+      simp only [Tripartition.sdiff, lt_add_iff_pos_right]
       calc 0
         _ < f G ABC w :=
           f_pos_of_mem G ABC w <| ABC.coe_mem_toFinset.mpr (mem_inter.mp hw).2
@@ -1919,14 +2044,14 @@ lemma eval_lt {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
       have _ {s t : Finset (Fin n)} : s ∩ t = t ∩ s := inter_comm s t
       have h' : (ABC \ W).toFinset = ABC.toFinset \ W := by
         ext
-        simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
-          mem_filter, mem_univ, true_and, mem_sdiff, and_or_3]
+        simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff, and_or_3,
+          mem_filter, mem_univ, true_and, mem_sdiff]
       rw [add_comm, inter_comm, h']
       exact Finset.sum_inter_add_sum_diff ..
 
 lemma degree_deleteIncidencesOf_neighbor {n : ℕ}
-    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {w : Fin n} {s : Finset (Fin n)} (hs : s ⊆ G.neighborFinset w) :
+    (G : SimpleGraph (Fin n)) {s : Finset (Fin n)} {w : Fin n} [Fintype (G.neighborSet w)]
+    [Fintype ((G.deleteIncidencesOf s).neighborSet w)] (hs : s ⊆ G.neighborFinset w) :
     G.degree w = (G.deleteIncidencesOf s).degree w + #s := by
   suffices G.neighborFinset w = (G.deleteIncidencesOf s).neighborFinset w ∪ s by
     simp only [degree, congrArg card this]
@@ -1959,45 +2084,47 @@ lemma degree_deleteIncidencesOf_neighbor {n : ℕ}
     · exact h.1
     · exact G.mem_neighborFinset .. |>.mp <| hs h
 
-lemma degree_deleteIncidencesOf_neighbor_singleton {n : ℕ}
-    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {v w : Fin n} (hw : G.Adj v w) :
+lemma degree_deleteIncidencesOf_neighbor_singleton {n : ℕ} (G : SimpleGraph (Fin n)) {v w : Fin n}
+    [Fintype (G.neighborSet w)] [Fintype ((G.deleteIncidencesOf {v}).neighborSet w)]
+    (hw : G.Adj v w) :
     G.degree w = (G.deleteIncidencesOf {v}).degree w + 1 := by
   rw [← card_singleton v]
   refine degree_deleteIncidencesOf_neighbor G ?_
   simp only [singleton_subset_iff, mem_neighborFinset, hw.symm]
 
-lemma f_deleteIncidencesOf_singleton {n : ℕ} (ABC : Tripartition n)
-    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {v w : Fin n} (hw : G.Adj v w) :
+lemma f_deleteIncidencesOf_singleton {n : ℕ} (ABC : Tripartition n) (G : SimpleGraph (Fin n))
+    {v w : Fin n} [Fintype (G.neighborSet w)] [Fintype ((G.deleteIncidencesOf {v}).neighborSet w)]
+    (hw : G.Adj v w) :
     f (G.deleteIncidencesOf {v}) (ABC \ {v}) w = f G ABC w + γ G ABC w := by
-  simp only [f, Tripartition.sdiff_eq, inter_assoc, inter_self, fA, fB, one_div, fC, dite_eq_ite, γ,
-    Nat.pred_eq_succ_iff, zero_add, Nat.reduceAdd]
-  rw [degree_deleteIncidencesOf_neighbor_singleton G hw]
-  simp only [Tripartition.sdiff, mem_singleton, hw.ne', not_false_eq_true, and_true,
-    Tripartition.sdiff.eq_1, Nat.add_eq_zero_iff, one_ne_zero, and_false, ↓reduceIte,
-    Nat.add_eq_right, Nat.cast_add, Nat.cast_one, Nat.reduceEqDiff, add_tsub_cancel_right]
+  have hdw : (G.deleteIncidencesOf {v}).degree w = G.degree w - 1 := by
+    have : #(G.neighborFinset w \ {v}) = #(G.neighborFinset w) - #{v} :=
+      card_sdiff_of_subset <| by simp only [singleton_subset_iff, mem_neighborFinset, hw.symm]
+    rw [← card_singleton v, degree, degree, ← this]
+    refine congrArg Finset.card ?_
+    ext u
+    simp only [mem_neighborFinset, deleteIncidencesOf_singleton_eq_deleteIncidenceSet,
+      mem_sdiff, mem_singleton]
+    constructor
+    · intro h
+      simp only [deleteIncidenceSet, deleteEdges_adj] at h
+      obtain ⟨h, h'⟩ := h
+      refine ⟨h, fun heq ↦ (heq ▸ h') (G.mk'_mem_incidenceSet_right_iff.mpr hw.symm)⟩
+    · intro ⟨h, hu⟩
+      refine deleteIncidenceSet_adj.mpr ⟨h, hw.ne', hu⟩
   if hA : (ABC \ {v}).A w then
-    simp only [hA.left, mem_singleton, hw.ne', not_false_eq_true, and_self, ↓reduceIte,
-      add_sub_cancel]
+    simp only [f, γ, hA, hA.1, ↓reduceDIte, hdw, add_sub_cancel]
   else if hB : (ABC \ {v}).B w then
-    simp only [hB.left, not_A_of_B, mem_singleton, hw.ne', not_false_eq_true, and_true, ↓reduceIte,
-      and_self, add_sub_cancel]
+    simp only [f, γ, hB, hB.1, not_A_of_B, ↓reduceDIte, hdw, add_sub_cancel]
   else if hC : (ABC \ {v}).C w then
-    simp only [hC.left, not_A_of_C, mem_singleton, hw.ne', not_false_eq_true, and_true, ↓reduceIte,
-      not_B_of_C, and_self, add_sub_cancel]
+    simp only [f, γ, hC, hC.1, not_A_of_C, not_B_of_C, ↓reduceDIte, hdw, add_sub_cancel]
   else
-    have hA' : ¬ABC.A w := fun this ↦ hA
-      <| by simp only [Tripartition.sdiff, mem_singleton, this, hw.ne', not_false_eq_true, and_self]
-    have hB' : ¬ABC.B w := fun this ↦ hB
-      <| by simp only [Tripartition.sdiff, mem_singleton, this, hw.ne', not_false_eq_true, and_self]
-    have hC' : ¬ABC.C w := fun this ↦ hC
-      <| by simp only [Tripartition.sdiff, mem_singleton, this, hw.ne', not_false_eq_true, and_self]
-    simp only [mem_singleton, false_and, ↓reduceIte, add_zero, hA', hB', hC']
+    simp only [f, γ, hA, hB, hC, ↓reduceDIte]
+    simp only [Tripartition.sdiff, mem_singleton, hw.ne', not_false_eq_true, and_true] at hA hB hC
+    simp only [hA, hB, hC, ↓reduceDIte, add_zero]
 
-lemma f_deleteIncidencesOf_isolated {n : ℕ} (ABC : Tripartition n)
-    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {v w : Fin n} (hv : G.degree v = 0) (hwne : w ≠ v) :
+lemma f_deleteIncidencesOf_isolated {n : ℕ} (ABC : Tripartition n) (G : SimpleGraph (Fin n))
+    {v w : Fin n} [Fintype (G.neighborSet v)] [Fintype (G.neighborSet w)]
+    [Fintype ((G.deleteIncidencesOf {v}).neighborSet w)] (hv : G.degree v = 0) (hwne : w ≠ v) :
     f (G.deleteIncidencesOf {v}) (ABC \ {v}) w = f G ABC w := by
   have hdeg : G.degree w = (G.deleteIncidencesOf {v}).degree w := by
     refine congrArg card ?_
@@ -2013,17 +2140,18 @@ lemma f_deleteIncidencesOf_isolated {n : ℕ} (ABC : Tripartition n)
     simp only [f, Tripartition.sdiff, mem_singleton, hA, hwne, not_false_eq_true, and_self,
       ↓reduceDIte, fA, hdeg]
   else if hB : ABC.B w then
-    simp only [f, Tripartition.sdiff, mem_singleton, hA, hwne, not_false_eq_true, and_true,
-      ↓reduceDIte, hB, and_self, fB, one_div, hdeg]
+    simp only [f, Tripartition.sdiff, mem_singleton, hB, hwne, not_false_eq_true, and_self,
+      not_A_of_B, ↓reduceDIte, fB, one_div, hdeg]
   else if hC : ABC.C w then
-    simp only [f, Tripartition.sdiff, mem_singleton, hA, hwne, not_false_eq_true, and_true,
-      ↓reduceDIte, hB, hC, and_self, fC, one_div, hdeg]
+    simp only [f, Tripartition.sdiff, mem_singleton, hC, hwne, not_false_eq_true, and_self,
+      not_A_of_C, ↓reduceDIte, not_B_of_C, fC, one_div, hdeg]
   else
     simp only [f, Tripartition.sdiff, mem_singleton, hA, false_and, ↓reduceDIte, hB, hC]
 
-lemma hsupp_mono {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    (hG : G.support.toFinset ⊆ ABC.toFinset)
-    {W : Finset _} : (G.deleteIncidencesOf W).support.toFinset ⊆ (ABC \ W).toFinset := by
+lemma hsupp_mono {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {W : Finset _}
+    [Fintype (G.support)] [Fintype ((G.deleteIncidencesOf W).support)]
+    (hG : G.support.toFinset ⊆ ABC.toFinset) :
+    (G.deleteIncidencesOf W).support.toFinset ⊆ (ABC \ W).toFinset := by
   intro u hu
   simp only [support, Set.mem_toFinset, SetRel.mem_dom, Set.mem_setOf_eq] at hu
   obtain ⟨v, hv⟩ := hu
@@ -2035,8 +2163,8 @@ lemma hsupp_mono {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC :
   · exact hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, huv⟩
   · exact fun hu ↦ false_of_ne <| h u |>.1 hu |>.2 huv |>.1
 
-lemma one_le_deg_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : IsVstar G ABC v) :
+lemma one_le_deg_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+    {v : Fin n} (hv : IsVstar G ABC v) :
     1 ≤ G.degree v := by
   by_contra
   simp only [not_le, Nat.lt_one_iff] at this
@@ -2044,31 +2172,31 @@ lemma one_le_deg_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Ad
   have hdv' : G.degree v - 1 = G.degree v := Nat.sub_one_eq_self.mpr this
   simp only [γ, hdv', sub_self, dite_eq_ite, ite_self, ne_eq, not_true_eq_false] at hγv
 
-lemma mem_ABC_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : IsVstar G ABC v) : v ∈ ABC :=
+lemma mem_ABC_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+    {v : Fin n} (hv : IsVstar G ABC v) : v ∈ ABC :=
   ABC.coe_mem_toFinset.mpr hv.1.1
 
-lemma γ_ne_zero_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : IsVstar G ABC v) : γ G ABC v ≠ 0 :=
+lemma γ_ne_zero_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+    {v : Fin n} (hv : IsVstar G ABC v) : γ G ABC v ≠ 0 :=
   hv.1.2
 
-lemma γ_vstar_le_γ {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {u v : Fin n} (hv : IsVstar G ABC v) (hu : u ∈ ABC)
-    (hγu : γ G ABC u ≠ 0) : γ G ABC v ≤ γ G ABC u := by
+lemma γ_vstar_le_γ {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+    {u v : Fin n} (hv : IsVstar G ABC v) (hu : u ∈ ABC) (hγu : γ G ABC u ≠ 0) :
+    γ G ABC v ≤ γ G ABC u := by
   if hkey : key G ABC v ≤ key G ABC u then
     exact Prod.Lex.monotone_fst _ _ hkey
   else
     simp only [not_le] at hkey
     exact Prod.Lex.monotone_fst _ _ <| hv.2 ⟨ABC.coe_mem_toFinset.mp hu, hγu⟩ (le_of_lt hkey)
 
-lemma ne_B3_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : IsVstar G ABC v) :
+lemma ne_B3_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+    {v : Fin n} (hv : IsVstar G ABC v) :
     ¬(ABC.B v ∧ G.degree v = 3) :=
   fun h ↦ γ_ne_zero_of_vstar hv
     <| γ_eq_0_iff (mem_ABC_of_vstar hv) (one_le_deg_of_vstar hv) |>.mpr <| Or.inl h.symm
 
-lemma ne_C3_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : IsVstar G ABC v) :
+lemma ne_C3_of_vstar {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} [G.LocallyFinite]
+    {v : Fin n} (hv : IsVstar G ABC v) :
     ¬(ABC.C v ∧ G.degree v = 3) :=
   fun h ↦ γ_ne_zero_of_vstar hv
     <| γ_eq_0_iff (mem_ABC_of_vstar hv) (one_le_deg_of_vstar hv) |>.mpr <| Or.inr <| Or.inl h.symm

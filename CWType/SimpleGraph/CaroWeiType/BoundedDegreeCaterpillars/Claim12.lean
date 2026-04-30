@@ -92,17 +92,13 @@ lemma Claim12 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
       · refine le_trans ?_ hcard
         haveI : u ≠ x ∧ u ≠ y ∧ v ≠ x ∧ v ≠ y := by
           refine ⟨?_, ?_, ?_, ?_⟩
-          · refine Ne.symm <| ne_of_mem_neighborFinset G ?_
-            refine mem_inter.mp (hxyNuv ?_) |>.1
+          · refine Ne.symm <| ne_of_mem_neighborFinset <| mem_inter.mp (hxyNuv ?_) |>.1
             simp only [mem_insert, mem_singleton, true_or]
-          · refine Ne.symm <| ne_of_mem_neighborFinset G ?_
-            refine mem_inter.mp (hxyNuv ?_) |>.1
+          · refine Ne.symm <| ne_of_mem_neighborFinset <| mem_inter.mp (hxyNuv ?_) |>.1
             simp only [mem_insert, mem_singleton, or_true]
-          · refine Ne.symm <| ne_of_mem_neighborFinset G ?_
-            refine mem_inter.mp (hxyNuv ?_) |>.2
+          · refine Ne.symm <| ne_of_mem_neighborFinset <| mem_inter.mp (hxyNuv ?_) |>.2
             simp only [mem_insert, mem_singleton, true_or]
-          · refine Ne.symm <| ne_of_mem_neighborFinset G ?_
-            refine mem_inter.mp (hxyNuv ?_) |>.2
+          · refine Ne.symm <| ne_of_mem_neighborFinset <| mem_inter.mp (hxyNuv ?_) |>.2
             simp only [mem_insert, mem_singleton, or_true]
         obtain ⟨hunex, huney, hvnex, hvney⟩ := this
         calc eval G ABC

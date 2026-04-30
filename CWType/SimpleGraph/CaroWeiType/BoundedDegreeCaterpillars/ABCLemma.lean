@@ -36,7 +36,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
   if hW : W = ∅ then
     have H : ∀ v ∈ ABC.toFinset, γ G ABC v = 0 := by
       intro v hv
-      rcases lt_or_eq_of_le <| @γ_nonneg _ G _ ABC v with hγ | hγ
+      rcases lt_or_eq_of_le <| (γ_nonneg : 0 ≤ γ G ABC v) with hγ | hγ
       · have hvW : v ∈ W := by simp only [mem_filter, mem_univ, hv, hγ, and_self, W]
         have : W.Nonempty := nonempty_def.mpr ⟨_, hvW⟩
         grind

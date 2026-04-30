@@ -6,20 +6,19 @@ import Mathlib.Data.Real.Basic
 namespace SimpleGraph
 
 @[simp, reducible]
-def degree_in {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj]
-    (s : Finset V) (x : V) : ℕ :=
+def degree_in {V : Type*} [DecidableEq V] (G : SimpleGraph V) (s : Finset V) (x : V)
+    [Fintype (G.neighborSet x)] : ℕ :=
   (G.neighborFinset x ∩ s).card
 
-def closed_neighborFinset_of_Finset {V : Type*} [Fintype V] [DecidableEq V]
-    (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) : Finset V :=
+def closed_neighborFinset_of_Finset {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V)
+    [DecidableRel G.Adj] (s : Finset V) : Finset V :=
   {v : V | v ∈ s ∨ ∃ x ∈ s, G.Adj v x}
 
-def N2 {V : Type*} [Fintype V] [DecidableEq V]
-    (G : SimpleGraph V) [DecidableRel G.Adj] (v : V) : Finset V :=
+def N2 {V : Type*} [DecidableEq V] (G : SimpleGraph V) (v : V) : Set V :=
   {u : V | u ≠ v ∧ ¬G.Adj u v ∧ ∃ w, G.Adj u w ∧ G.Adj w v}
 
-def N2_of_Finset {V : Type*} [Fintype V] [DecidableEq V]
-    (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) : Finset V :=
+def N2_of_Finset {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj]
+    (s : Finset V) : Finset V :=
   {u : V | u ∉ s ∧ (∀ x ∈ s, ¬G.Adj u x) ∧ ∃ x ∈ s, ∃ w ∉ s, G.Adj u w ∧ G.Adj w x}
 
 def deleteIncidencesOf {V : Type*} (G : SimpleGraph V) (s : Finset V) :

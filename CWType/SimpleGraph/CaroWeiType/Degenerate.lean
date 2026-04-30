@@ -4,6 +4,8 @@ import Mathlib.Data.Nat.Cast.Order.Field
 import CWType.SimpleGraph.CaroWeiType.Basic
 import CWType.SimpleGraph.CaroWeiType.Lemmas
 
+open CaroWeiType
+
 noncomputable def aks_bound (k : ℕ) (d : ℕ) : ℝ :=
   min 1 ((k + 1) * (d + 1 : ℝ)⁻¹)
 
@@ -114,11 +116,11 @@ open Finset
 
 namespace SimpleGraph
 
-abbrev IsDegenerateSet {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (k : ℕ)
+abbrev IsDegenerateSet {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] (k : ℕ)
     (s : Finset (Fin n)) :=
   ∀ t ⊆ s, t ≠ ∅ → ∃ x ∈ t, G.degree_in t x ≤ k
 
-lemma IsDegenerateSet_union {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {k : ℕ}
+lemma IsDegenerateSet_union {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {k : ℕ}
     (s₁ s₂ : Finset (Fin n)) (hs₁ : G.IsDegenerateSet k s₁) (hs₂ : ∀ x ∈ s₂, G.degree x ≤ k) :
     G.IsDegenerateSet k (s₁ ∪ s₂) := by
   intro t ht htne
@@ -138,7 +140,7 @@ lemma IsDegenerateSet_union {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.
         refine mem_inter.mpr ⟨hy, hy'⟩
     exact hs₁ t ht' htne
 
-lemma IsDegenerateSet_union_singleton {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {k : ℕ}
+lemma IsDegenerateSet_union_singleton {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {k : ℕ}
     (s : Finset (Fin n)) (hs : G.IsDegenerateSet k s) {v : Fin n} (hv : G.degree_in s v ≤ k) :
     G.IsDegenerateSet k (s ∪ {v}) := by
   intro t ht htne
@@ -155,7 +157,7 @@ lemma IsDegenerateSet_union_singleton {n : ℕ} (G : SimpleGraph (Fin n)) [Decid
     · exact hvt ((mem_singleton.mp hx') ▸ hx) |>.elim
 
 lemma IsDegenerateSet_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
-    [DecidableRel G₁.Adj] [DecidableRel G₂.Adj] (hle : G₁ ≤ G₂) (k : ℕ)
+    [G₁.LocallyFinite] [G₂.LocallyFinite] (hle : G₁ ≤ G₂) (k : ℕ)
     (s : Finset (Fin n)) (h : G₂.IsDegenerateSet k s) : G₁.IsDegenerateSet k s := by
   intro t ht htne
   obtain ⟨x, hx, hxdeg⟩ := h t ht htne
@@ -166,8 +168,8 @@ lemma IsDegenerateSet_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
   simp only [mem_neighborFinset] at hy ⊢
   exact hle hy
 
-lemma IsDegenerateSet_mono' {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (k : ℕ)
-    (s₁ s₂ : Finset (Fin n)) (hs : s₁ ∩ s₂ = ∅)
+lemma IsDegenerateSet_mono' {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] (k : ℕ)
+    (s₁ s₂ : Finset (Fin n)) (hs : s₁ ∩ s₂ = ∅) [(G.deleteIncidencesOf s₂).LocallyFinite]
     (h : (G.deleteIncidencesOf s₂).IsDegenerateSet k s₁) :
     G.IsDegenerateSet k s₁ := by
   intro t ht htne
@@ -363,7 +365,7 @@ theorem AlonKahnSeymour {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
   obtain ⟨v, ⟨hvX, hdegv⟩⟩ := G.exists_minimal_degree_vertex_in X
   if hδ : (G.neighborFinset v ∩ X).card ≤ k then
     obtain ⟨s', ⟨hs', hdeg', hcard'⟩⟩ :=
-      ih (G.deleteIncidenceSet v) (X \ {v}) (deleteIncidenceSet_support G X hX)
+      ih (G.deleteIncidenceSet v) (X \ {v}) (deleteIncidenceSet_support hX)
         (card_setminus_singleton' hvX hcard)
     refine ⟨s' ∪ {v}, ?_, ?_, ?_⟩
     · intro x hx
@@ -393,54 +395,55 @@ theorem AlonKahnSeymour {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
           _ ≤ ↑(#s') + 1 := by
             simp only [add_le_add_iff_left]
             exact min_le_left ..
-  else ?_
-  simp only [not_le] at hδ
-  obtain ⟨v', ⟨hv'X, hdegv'⟩⟩ := G.exists_maximal_degree_vertex_in X
-  obtain ⟨s', ⟨hs', ⟨hdeg', hcard'⟩⟩⟩ :=
-    ih (G.deleteIncidenceSet v') (X \ {v'}) (deleteIncidenceSet_support G X hX)
-     (card_setminus_singleton' hv'X hcard)
-  refine ⟨s', subset_eq_inter hs', ?_, ?_⟩
-  · refine DegenerateSet_mono_bounded_degree_not_in G k s' hdeg' ?_
-    exact fun this ↦ Finset.mem_sdiff.mp (hs' this) |>.2 <| mem_singleton.mpr rfl
-  · refine le_trans ?_ hcard'
-    have hvΔ : G.degree v' = G.maxDegree := by
-      refine G.maxDegree_iff.mpr ?_
-      intro w
-      if hw : w ∈ G.support then
-        simp only [G.degree_eq X hX]
-        exact hdegv' w (hX hw)
-      else
-        rw [degree_eq_zero_iff_notMem_support G w |>.mpr hw]
-        exact Nat.zero_le _
-    have hΔk : G.maxDegree > k := by
-      rw [← hvΔ]
-      refine lt_of_le_of_lt' ?_ hδ
-      rw [G.degree_eq _ hX]
-      exact hdegv' _ hvX
-    refine cw_bound_mono (aks_bound k) G hvΔ hΔk X (Set.toFinset_subset.mpr hX) ?_ ?_ ?_
-    · intro d₁ d₂ hd₁ hd₂
-      exact aks_gain_decreasing' k d₁ d₂ hd₁ hd₂
-    · intro x hx
-      simp_all only [gt_iff_lt]
-      calc k
-        _ < #(G.neighborFinset v ∩ X) := hδ
-        _ ≤ #(G.neighborFinset x ∩ X) := by
-          refine hdegv x (hX ?_)
-          refine G.degree_pos_iff_mem_support x |>.mp ?_
-          exact Adj.degree_pos_left <| (G.mem_neighborFinset v' x).mp hx |>.symm
-        _ ≤ G.degree x := by
-          rw [G.degree_eq X hX x]
-    · intro d hd
-      simp only [aks_bound_eq' k (d-1) (Nat.le_sub_one_of_lt hd)]
-      simp only [aks_bound_eq' k d (le_of_lt hd)]
-      suffices (d + 1 : ℝ)⁻¹ ≤ (d : ℝ) * (((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹) by
-        calc (k + 1 : ℝ) * (d + 1 : ℝ)⁻¹
-          _ ≤ (k + 1 : ℝ) * ((d : ℝ) * (((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹)) := by
-            simp only [Nat.cast_add_one_pos k, mul_le_mul_iff_right₀, this]
-          _ ≤ (d : ℝ) * ((k + 1 : ℝ) * ((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (k + 1 : ℝ) * (d + 1 : ℝ)⁻¹) := by
-            linarith
-      refine le_of_eq ?_
-      exact Eq.symm <| avg_gain d (by exact Nat.zero_lt_of_lt hd)
+  else
+    simp only [not_le] at hδ
+    obtain ⟨v', ⟨hv'X, hdegv'⟩⟩ := G.exists_maximal_degree_vertex_in X
+    obtain ⟨s', ⟨hs', ⟨hdeg', hcard'⟩⟩⟩ :=
+      ih (G.deleteIncidenceSet v') (X \ {v'}) (deleteIncidenceSet_support hX)
+       (card_setminus_singleton' hv'X hcard)
+    refine ⟨s', subset_eq_inter hs', ?_, ?_⟩
+    · refine DegenerateSet_mono_bounded_degree_not_in G k s' hdeg' ?_
+      exact fun this ↦ Finset.mem_sdiff.mp (hs' this) |>.2 <| mem_singleton.mpr rfl
+    · refine le_trans ?_ hcard'
+      have hvΔ : G.degree v' = G.maxDegree := by
+        refine G.maxDegree_iff.mpr ?_
+        intro w
+        if hw : w ∈ G.support then
+          simp only [G.degree_eq X hX]
+          exact hdegv' w (hX hw)
+        else
+          rw [degree_eq_zero_iff_notMem_support G w |>.mpr hw]
+          exact Nat.zero_le _
+      have hΔk : G.maxDegree > k := by
+        rw [← hvΔ]
+        refine lt_of_le_of_lt' ?_ hδ
+        rw [G.degree_eq _ hX]
+        exact hdegv' _ hvX
+      refine cw_bound_mono (aks_bound k) G hvΔ hΔk X (Set.toFinset_subset.mpr hX) ?_ ?_ ?_
+      · intro d₁ d₂ hd₁ hd₂
+        exact aks_gain_decreasing' k d₁ d₂ hd₁ hd₂
+      · intro x hx
+        simp_all only [gt_iff_lt]
+        calc k
+          _ < #(G.neighborFinset v ∩ X) := hδ
+          _ ≤ #(G.neighborFinset x ∩ X) := by
+            refine hdegv x (hX ?_)
+            refine G.degree_pos_iff_mem_support x |>.mp ?_
+            exact Adj.degree_pos_left <| (G.mem_neighborFinset v' x).mp hx |>.symm
+          _ ≤ G.degree x := by
+            rw [G.degree_eq X hX x]
+      · intro d hd
+        simp only [aks_bound_eq' k (d-1) (Nat.le_sub_one_of_lt hd)]
+        simp only [aks_bound_eq' k d (le_of_lt hd)]
+        suffices (d + 1 : ℝ)⁻¹ ≤ (d : ℝ) * (((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹) by
+          calc (k + 1 : ℝ) * (d + 1 : ℝ)⁻¹
+            _ ≤ (k + 1 : ℝ) * ((d : ℝ) * (((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (d + 1 : ℝ)⁻¹)) := by
+              simp only [Nat.cast_add_one_pos k, mul_le_mul_iff_right₀, this]
+            _ ≤ (d : ℝ) * ((k + 1 : ℝ) *
+                ((d - 1 : ℕ) + 1 : ℝ)⁻¹ - (k + 1 : ℝ) * (d + 1 : ℝ)⁻¹) := by
+              linarith
+        refine le_of_eq ?_
+        exact Eq.symm <| avg_gain d (by exact Nat.zero_lt_of_lt hd)
 
 theorem DegenerateSet_LowerBound (k : ℕ) :
     IsCaroWeiTypeLowerBound (aks_bound k) (fun G s ↦ G.graph.IsDegenerateSet k s) := by

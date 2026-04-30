@@ -48,8 +48,8 @@ def sdiff {n : ℕ} (ABC : Tripartition n) (s : Finset (Fin n)) : Tripartition n
   B := fun v ↦ ABC.B v ∧ v ∉ s
   C := fun v ↦ ABC.C v ∧ v ∉ s
   sound x := by
-    obtain ⟨h₁, h₂, h₃⟩ := ABC.sound x
-    simp_all
+    if hxs : x ∈ s then simp only [hxs, not_true_eq_false, and_false, not_false_eq_true, true_and]
+    else simp only [hxs, not_false_eq_true, and_true, ABC.sound x]
 
 infixl:50 " \\ " => sdiff
 
@@ -86,27 +86,24 @@ noncomputable def fC (d : ℕ) : ℝ :=
   else (2 / 3) / (d + 1 : ℝ)
 
 @[simp]
-noncomputable def f {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (v : Fin n) : ℝ := by
-  classical
+noncomputable def f {n : ℕ} (G : SimpleGraph (Fin n)) (ABC : Tripartition n)
+    (v : Fin n) [Fintype (G.neighborSet v)] : ℝ := by
   if ABC.A v      then exact fA (G.degree v)
   else if ABC.B v then exact fB (G.degree v)
   else if ABC.C v then exact fC (G.degree v)
   else                 exact 0
 
 @[simp]
-noncomputable def γ {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (v : Fin n) : ℝ := by
-  classical
+noncomputable def γ {n : ℕ} (G : SimpleGraph (Fin n)) (ABC : Tripartition n)
+    (v : Fin n) [Fintype (G.neighborSet v)] : ℝ := by
   if ABC.A v      then exact fA (G.degree v - 1) - fA (G.degree v)
   else if ABC.B v then exact fB (G.degree v - 1) - fB (G.degree v)
   else if ABC.C v then exact fC (G.degree v - 1) - fC (G.degree v)
   else                 exact 0
 
 @[simp]
-noncomputable def ℓ {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (v : Fin n) : ℝ := by
-  classical
+noncomputable def ℓ {n : ℕ} (G : SimpleGraph (Fin n)) (ABC : Tripartition n)
+    (v : Fin n) [Fintype (G.neighborSet v)] : ℝ := by
   if ABC.A v      then exact fA (G.degree v) - fA (G.degree v + 1)
   else if ABC.B v then exact fB (G.degree v) - fB (G.degree v + 1)
   else if ABC.C v then exact fC (G.degree v) - fC (G.degree v + 1)
@@ -124,11 +121,11 @@ def Objective {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     s ⊆ ABC.toFinset ∧ G.InducesForest s ∧ ABC.respects s G ∧ eval G ABC ≤ #s
 
 @[simp, reducible]
-noncomputable def key {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+noncomputable def key {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (ABC : Tripartition n) : Fin n → ℝ ×ₗ ℤ :=
   fun v ↦ ⟨γ G ABC v, -G.degree v⟩
 
-def IsVstar {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
+def IsVstar {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] (ABC : Tripartition n)
     (v : Fin n) : Prop :=
   MinimalFor (fun u ↦ u ∈ ABC.toFinset ∧ γ G ABC u ≠ 0) (key G ABC) v
 

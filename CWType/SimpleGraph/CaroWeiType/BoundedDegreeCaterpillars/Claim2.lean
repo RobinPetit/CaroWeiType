@@ -27,12 +27,12 @@ lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
   have hcap : G.closed_neighborFinset_of_Finset F ∩ ABC.toFinset ≠ ∅ := by
     refine Nonempty.ne_empty <| nonempty_def.mpr ?_
     obtain ⟨x, hx⟩ := nonempty_def.mp hFne
-    refine ⟨x, mem_inter.mpr ⟨closed_neighborFinset_contains_Finset G F <| hx, hF hx⟩⟩
+    refine ⟨x, mem_inter.mpr ⟨closed_neighborFinset_contains_Finset hx, hF hx⟩⟩
   obtain ⟨s', hs', hlf, hresp, hcard'⟩ :=
     ih (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F)
       (ABC \ (G.closed_neighborFinset_of_Finset F)) (hsupp_mono hG) (ABC.sdiff_card hcap)
   have hresp : respects (s' ∪ F) G ABC := by
-    refine respects_union G ABC (respects_mono G ABC hs' hresp) hF' ?_
+    refine respects_union (respects_mono G ABC hs' hresp) hF' ?_
     intro y hy z hz this
     have _ : y ∈ G.closed_neighborFinset_of_Finset F := by
       simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
@@ -75,7 +75,7 @@ lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
         let hobj := hs' hx
         simp [Tripartition.sdiff, Tripartition.toFinset] at hobj
         have hfinal : x ∉ G.closed_neighborFinset_of_Finset F := by grind
-        exact fun hx ↦ hfinal <| closed_neighborFinset_contains_Finset G F hx
+        exact fun hx ↦ hfinal <| closed_neighborFinset_contains_Finset hx
 
 private lemma hdeg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {w : Fin n}
     {F : Finset (Fin n)} (hw : w ∈ G.N2_of_Finset F) :
@@ -285,7 +285,7 @@ lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       refine fun h ↦ ⟨fun x ↦ ⟨fun h' ↦ ⟨h, fun _ ↦ ?_⟩, h.ne⟩, h.ne⟩
       rcases h' with hx | hx
       · constructor
-        · exact fun heq ↦ hz' <| closed_neighborFinset_contains_Finset G F <| heq ▸ hx
+        · exact fun heq ↦ hz' <| closed_neighborFinset_contains_Finset <| heq ▸ hx
         · refine fun heq ↦ hz' ?_
           simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
           exact Or.inr ⟨x, hx, heq ▸ h⟩
