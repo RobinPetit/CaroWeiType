@@ -13,7 +13,7 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-private lemma _neighborhood_3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+private lemma _neighborhood_3 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {v w : Fin n} (hvw : G.Adj v w) (hdv : G.degree v = 3)
     (f : Fin n → ℝ) :
     ∃ u₁ u₂ : Fin n, G.neighborFinset v = {w, u₁, u₂} ∧ f u₁ ≤ f u₂ := by
@@ -25,11 +25,11 @@ private lemma _neighborhood_3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel 
   · exact ⟨z, x, ⟨by grind, hfzy.trans hfyx⟩⟩
   · exact ⟨y, x, ⟨by grind, hfyx⟩⟩
 
-private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     {v w : Fin n} (hCv : ABC.C v) (hCw : ABC.C w) (hvw : G.Adj v w)
     (hdv : G.degree v = 3) (hdw : G.degree w = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (Objective G ABC) ∨
       (∃ u₁ u₂ : Fin n,
@@ -148,10 +148,10 @@ private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
         refine Or.inl <| Claim5 hG ih ⟨u₁, by simp only [mem_iff, hCu₁, or_true], ?_⟩
         exact Nat.le_of_not_lt hdegu₁
 
-lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v w : Fin n} (hvw : G.Adj v w)
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   cases (_neighborhood_3' hG hCv hCw hvw hdv hdw ih) with
@@ -172,23 +172,23 @@ lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         by_contra
         have hxw : ¬G.Adj x w :=
           fun h ↦ (not_iff_not.mpr (G.mem_neighborFinset w x) |>.mp (by grind)) h.symm
-        simp only [N2_of_Finset, mem_singleton, forall_eq, exists_eq_left,
-          mem_inter, mem_insert, true_or, mem_filter, mem_univ,
-          not_false_eq_true, true_and, not_and, not_exists, S, hxw, hxnew] at hx
-        refine (hx v hvw.ne |>.mt <| Decidable.not_not.mpr hvw) ?_
-        refine Adj.symm <| G.mem_neighborFinset .. |>.mp ?_
-        simp only [hNv, mem_insert, mem_singleton, true_or, or_true]
+        simp only [mem_inter, mem_insert, mem_singleton, true_or, true_and, S] at hx
+        have := not_iff_not.mpr mem_N2_of_Finset_iff |>.mp hx
+        simp only [mem_singleton, hxnew, not_false_eq_true, forall_eq, hxw, exists_eq_left,
+          true_and, not_exists, not_and] at this
+        refine this v hvw.ne ?_ hvw
+        refine Adj.symm <| G.mem_neighborFinset .. |>.mp <| by simp [hNv]
       · by_contra
         have hy : y ∉ S := hS' ▸ notMem_empty y
         have hynew : y ≠ w := by grind
         have hyw : ¬G.Adj y w :=
           fun h ↦ (not_iff_not.mpr (G.mem_neighborFinset w y) |>.mp (by grind)) h.symm
-        simp only [N2_of_Finset, mem_singleton, forall_eq, exists_eq_left,
-          mem_inter, mem_insert, mem_filter, mem_univ,
-          not_false_eq_true, true_and, not_and, not_exists, S, hyw, hynew, or_true] at hy
-        refine (hy v hvw.ne |>.mt <| Decidable.not_not.mpr hvw) ?_
-        refine Adj.symm <| G.mem_neighborFinset .. |>.mp ?_
-        simp only [hNv, mem_insert, mem_singleton, or_true]
+        simp only [mem_inter, mem_insert, mem_singleton, or_true, true_and, S] at hy
+        have := not_iff_not.mpr mem_N2_of_Finset_iff |>.mp hy
+        simp only [mem_singleton, hynew, not_false_eq_true, forall_eq, hyw, exists_eq_left,
+          true_and, not_exists, not_and] at this
+        refine this v hvw.ne ?_ hvw
+        refine Adj.symm <| G.mem_neighborFinset .. |>.mp <| by simp [hNv]
     have hvwABC : {v, w} ∩ ABC.toFinset ≠ ∅ := by
       refine nonempty_iff_ne_empty.mp (nonempty_def.mpr ⟨v, mem_inter.mpr ⟨mem_insert_self .., ?_⟩⟩)
       exact ABC.mem_toFinset.mp <| ABC.mem_iff.mpr <| Or.inr <| Or.inr hCv

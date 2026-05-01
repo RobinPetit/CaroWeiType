@@ -10,9 +10,9 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-lemma Claim5_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim5_0 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x = 0) → Objective G ABC := by
   intro ⟨x, hx, hdegx0⟩
@@ -67,11 +67,11 @@ lemma Claim5_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
         let hobj := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs'1 hmem) |>.2
         simp only [mem_singleton, not_true_eq_false] at hobj
 
-private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] {x u : Fin n} (hu' : ∀ y, G.Adj x y → y = u)
     (hABx : ABC.A x ∨ ABC.B x) (hCu : ¬ABC.C u) (hxu : G.Adj x u)
     (hdx : G.degree x = 1) {s : Finset (Fin n)} (hs : s ⊆ ((ABC \ {x}).demote u).toFinset)
-    (hsresp : respects s (G.deleteIncidenceSet x) ((ABC \ {x}).demote u)) :
+    (hsresp : respects s (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u)) :
     respects (s ∪ {x}) G ABC  := by
   have hxnotins : x ∉ s := by
     intro this
@@ -99,19 +99,26 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
   · if heq : z = u then
     subst heq
     simp only [IsEmpty.forall_iff, and_true, hCu]
+    have hdeg : G.degree_in (s ∪ {x}) z ≤ (G.deleteIncidencesOf {x}).degree_in s z + #{x} := by
+      refine degree_in_deleteIncidenceSet' s {x} ?_ ?_
+      · exact singleton_inter_eq_empty_iff.mpr hxnotins
+      · simp only [mem_singleton]
+        refine ne_of_mem_of_not_mem hz ?_
+        intro hxs
+        have := hs hxs
+        simp only [← demote_toFinset_eq, toFinset_eq, mem_sdiff, mem_singleton, not_true_eq_false,
+          and_false] at this
     refine ⟨?_, ?_⟩
     · intro hAz
       have hB'z : ((ABC \ {x}).demote z).B z := by
         refine demote_from_A (ABC \ {x}) ?_
         simp [Tripartition.sdiff, hAz, hxu.ne']
-      exact le_trans (degree_in_deleteIncidenceSet' s hxnotins hxu)
-        <| add_le_add_left (hsresp z hz |>.2.1 hB'z) 1
+      exact le_trans hdeg (add_le_add_left (hsresp z hz |>.2.1 hB'z) 1)
     · intro hBz
       have hC'z : ((ABC \ {x}).demote z).C z := by
         refine demote_from_B (ABC \ {x}) ?_
         simp [Tripartition.sdiff, hBz, hxu.ne']
-      exact le_trans (degree_in_deleteIncidenceSet' s hxnotins hxu)
-        <| add_le_add_left (le_of_eq <| hsresp z hz |>.2.2 hC'z) 1
+      exact le_trans hdeg (add_le_add_left (le_of_eq <| hsresp z hz |>.2.2 hC'z) 1)
     else
       have h1 : G.degree_in (s ∪ {x}) z = G.degree_in s z := by
         refine congrArg Finset.card ?_
@@ -121,11 +128,12 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
         intro hzy heq
         let hobj := hu' z (heq ▸ hzy.symm)
         contradiction
-      have h2 : G.degree_in s z = (G.deleteIncidenceSet x).degree_in s z := by
+      have h2 : G.degree_in s z = (G.deleteIncidencesOf {x}).degree_in s z := by
         refine congrArg Finset.card ?_
         ext y
-        simp only [mem_inter, mem_neighborFinset, deleteIncidenceSet, incidenceSet,
-          deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or,
+        simp only [mem_inter, mem_neighborFinset, deleteIncidencesOf, deleteIncidenceSet,
+          incidenceSet, mem_singleton, iInf_iInf_eq_left, inf_adj, deleteEdges_adj,
+          Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, and_self_left,
           and_congr_left_iff, iff_self_and, forall_self_imp]
         intro hy hzy
         constructor
@@ -143,9 +151,9 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
       · exact fun hB ↦ h₂ <| B_of_demote_ne _ heq ⟨hB, hznotinx⟩
       · exact fun hC ↦ h₃ <| C_of_demote_ne _ ⟨hC, hznotinx⟩
 
-lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x = 1) → Objective G ABC := by
   intro ⟨x, hx, hdegx⟩
@@ -185,8 +193,8 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
   else
     -- {u, x} ⊆ A ∪ B as well
     obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
-      refine ih (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) ?_ ?_
-      · simp_rw [← deleteIncidencesOf_singleton_eq_deleteIncidenceSet x, ← demote_toFinset_eq _]
+      refine ih (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) ?_ ?_
+      · simp_rw [← demote_toFinset_eq _]
         exact hsupp_mono hG
       · simp only [← Tripartition.card_demote_eq_card]
         refine Tripartition.sdiff_card ABC ?_
@@ -225,9 +233,14 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
         refine le_trans ?_ hzdeg
         refine card_le_card ?_
         intro y
-        simp only [mem_inter, mem_neighborFinset, deleteIncidenceSet, incidenceSet, deleteEdges_adj,
-          Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, and_imp]
-        refine fun hzy hy ↦ ⟨⟨hzy, fun _ ↦ by grind [Adj.ne]⟩, hy⟩
+        simp only [mem_inter, mem_neighborFinset, deleteIncidencesOf, deleteIncidenceSet,
+          incidenceSet, mem_singleton, iInf_iInf_eq_left, inf_adj, deleteEdges_adj,
+          Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, and_self_left, and_imp]
+        intro hzy hyt
+        simp only [hzy, forall_const, true_and, hyt, and_true]
+        refine ⟨?_, ?_⟩
+        · exact Ne.symm <| ne_of_mem_of_not_mem hzt hxt
+        · exact Ne.symm <| ne_of_mem_of_not_mem hyt hxt
     · have : ((ABC \ {x}).demote u).toFinset = ABC.toFinset \ {x} := by
         simp_rw [← demote_toFinset_eq, sdiff_toFinset]
       calc ∑ v ∈ ABC.toFinset, f G ABC v
@@ -244,19 +257,22 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
           rw [← sum_singleton (f G ABC ·) u]
           refine Eq.symm <| sum_sdiff ?_
           simp [hu.ne', ABC.mem_toFinset.mp huABC]
-        _ = ∑ v ∈ (ABC.toFinset \ {x}) \ {u}, f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) v
+        _ = ∑ v ∈ (ABC.toFinset \ {x}) \ {u}, f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) v
             + f G ABC u + 5 / 6 := by
           simp only [add_left_inj]
           refine sum_congr rfl ?_
           intro v hv
           simp only [mem_sdiff, mem_singleton] at hv
-          have hdegeq : G.degree v = (G.deleteIncidenceSet x).degree v := by
+          have hdegeq : G.degree v = (G.deleteIncidencesOf {x}).degree v := by
             refine congrArg Finset.card ?_
             ext w
-            simp only [mem_neighborFinset, deleteIncidenceSet, incidenceSet, deleteEdges_adj,
-              Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, Ne.symm hv.1.2, false_or, not_and,
-              iff_self_and, forall_self_imp]
-            refine fun hvw heq ↦ hv.2 <| hu' v (heq ▸ hvw.symm)
+            constructor
+            · intro h
+              refine (mem_neighborFinset_deleteIncidencesOf_iff_of_notMem ?_ ?_).mp h
+              · refine notMem_singleton.mpr ?_
+                exact fun heq ↦ hv.2 <| hu' _ (heq ▸ (G.mem_neighborFinset .. |>.mp h |>.symm))
+              · exact notMem_singleton.mpr hv.1.2
+            · exact mem_neighborFinset_of_deleteIncidencesOf_mem_neighborFinset
           if hA : ABC.A v then
             have hA' : (ABC \ {x}).demote u |>.A v := by
               refine A_of_demote_ne _ hv.2 ⟨hA, ?_⟩
@@ -280,35 +296,35 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
               simp only [mem_singleton, hv.1, not_false_eq_true]
             simp only [f, not_A_of_C, ↓reduceDIte, not_B_of_C, hC, hC', fC, hdegeq]
         _ = ∑ v ∈ ((ABC \ {x}).demote u).toFinset \ {u},
-              f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) v
+              f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) v
             + f G ABC u + 5 / 6 := by
           simp only [add_left_inj]
           refine sum_congr ?_ (fun _ _ ↦ rfl)
           refine congrArg (fun (s : Finset _) ↦ s \ _) ?_
           exact this.symm
         _ = ∑ v ∈ ((ABC \ {x}).demote u).toFinset \ {u},
-              f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) v
-            + f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) u
-            - f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) u
+              f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) v
+            + f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) u
+            - f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) u
             + f G ABC u + 5 / 6 := by
           lia
         _ = ∑ v ∈ ((ABC \ {x}).demote u).toFinset,
-              f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) v
-            - f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) u + f G ABC u + 5 / 6 := by
+              f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) v
+            - f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) u + f G ABC u + 5 / 6 := by
           simp only [add_left_inj, sub_left_inj]
           rw [← sum_singleton (f _ _ ·) u]
           refine sum_sdiff ?_
           simp only [singleton_subset_iff, this, ABC.mem_toFinset.mp huABC, mem_sdiff, hu.ne',
             mem_singleton, not_false_eq_true, and_true]
-        _ = eval (G.deleteIncidenceSet x) ((ABC \ {x}).demote u)
-            - f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) u + f G ABC u + 5 / 6 := by
+        _ = eval (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u)
+            - f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) u + f G ABC u + 5 / 6 := by
           simp only [add_left_inj]
           rfl
-        _ ≤ #s - f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) u + f G ABC u + 5 / 6 := by
+        _ ≤ #s - f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) u + f G ABC u + 5 / 6 := by
           refine add_le_add_left ?_ _
           refine add_le_add_left ?_ _
           exact add_le_add_left hscard _
-        _ ≤ #s + 1 + (- f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) u
+        _ ≤ #s + 1 + (- f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) u
             + f G ABC u - 1 / 6) := by
           linarith
       have hcardunion : (#(s ∪ {x}) : ℝ) = #s + (1 : ℝ) := by
@@ -316,10 +332,10 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
         refine Nat.cast_inj.mpr <| card_union_of_disjoint <| disjoint_singleton_right.mpr hxnotins
       rw [hcardunion]
       refine add_le_iff_nonpos_right _ |>.mpr ?_
-      calc -f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) u + f G ABC u - 1 / 6
-        _ = f G ABC u - f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) u - 1 / 6 := by
+      calc -f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) u + f G ABC u - 1 / 6
+        _ = f G ABC u - f (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u) u - 1 / 6 := by
           lia
-        _ = f G ABC u - f (G.deleteIncidenceSet x) (ABC.demote u) u - 1 / 6 := by
+        _ = f G ABC u - f (G.deleteIncidencesOf {x}) (ABC.demote u) u - 1 / 6 := by
           ring_nf
           simp only [add_right_inj, sub_right_inj]
           have hABu : ABC.A u ∨ ABC.B u := by
@@ -352,21 +368,21 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
             _ = #(G.neighborFinset u \ {x}) + 1 := by
               rw [← card_singleton x]
               exact card_union_of_disjoint sdiff_disjoint
-            _ = #((G.deleteIncidenceSet x).neighborFinset u) + 1 := by
+            _ = #((G.deleteIncidencesOf {x}).neighborFinset u) + 1 := by
               simp only [add_left_inj]
               refine congrArg _ ?_
               ext w
-              simp only [neighborFinset, neighborSet, Set.toFinset_setOf, mem_sdiff, mem_filter,
-                mem_univ, true_and, mem_singleton, deleteIncidenceSet, incidenceSet,
-                deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or,
-                and_congr_right_iff]
+              simp only [neighborFinset, neighborSet, mem_sdiff, Set.mem_toFinset, Set.mem_setOf_eq,
+                mem_singleton, deleteIncidencesOf, deleteIncidenceSet, incidenceSet,
+                iInf_iInf_eq_left, inf_adj, deleteEdges_adj, mem_edgeSet, Sym2.mem_iff, not_and,
+                not_or, and_self_left, and_congr_right_iff]
               grind
           exact le_refl _
         _ = 0 := sub_self _
 
-lemma Claim5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim5 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x ≤ 1) → Objective G ABC := by
   intro ⟨x, hx, hdegx⟩

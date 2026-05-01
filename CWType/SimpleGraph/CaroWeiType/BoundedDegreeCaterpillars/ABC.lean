@@ -102,7 +102,7 @@ def card {n : ℕ} (ABC : Tripartition n) [ABC.Decidable] : ℕ :=
 
 open SimpleGraph
 
-def respects {n : ℕ} (s : Finset (Fin n)) (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+def respects {n : ℕ} (s : Finset (Fin n)) (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (ABC : Tripartition n) : Prop :=
   ∀ w ∈ s,
     (ABC.A w → G.degree_in s w ≤ 2)
@@ -155,12 +155,12 @@ noncomputable def ℓ {n : ℕ} (G : SimpleGraph (Fin n)) (ABC : Tripartition n)
   else                 exact 0
 
 @[simp]
-noncomputable def eval {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+noncomputable def eval {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (ABC : Tripartition n) [ABC.Decidable] : ℝ :=
   ∑ v ∈ ABC.toFinset, f G ABC v
 
 @[simp, reducible]
-def Objective {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+def Objective {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (ABC : Tripartition n) [ABC.Decidable] : Prop :=
   ∃ s : Finset (Fin n),
     s ⊆ ABC.toFinset ∧ G.InducesForest s ∧ ABC.respects s G ∧ eval G ABC ≤ #s

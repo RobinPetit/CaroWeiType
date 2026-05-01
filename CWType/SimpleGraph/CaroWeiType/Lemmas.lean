@@ -184,9 +184,27 @@ lemma eq_sdiff_of_empty_inter {s t : Finset α} (hcap : t ∩ s = ∅) :
   simp only [mem_sdiff, iff_self_and]
   exact fun hus hut ↦ notMem_empty _ <| hcap ▸ mem_inter.mpr ⟨hut, hus⟩
 
+lemma singleton_inter_eq_empty_iff {s : Finset α} {x : α} :
+    ({x} ∩ s) = ∅ ↔ x ∉ s := by
+  constructor
+  · exact fun h hxs ↦ notMem_empty _ <| h ▸ mem_inter.mpr ⟨mem_singleton.mpr rfl, hxs⟩
+  · intro hx
+    ext
+    simp only [hx, not_false_eq_true, singleton_inter_of_notMem, notMem_empty]
+
+lemma disjoint_of_sdiff {X Y Z : Finset α} (h : X ⊆ Y \ Z) :
+    X ∩ Z = ∅ := by
+  ext x
+  simp only [mem_inter, notMem_empty, iff_false, not_and]
+  exact fun hx ↦ mem_sdiff.mp (h hx) |>.2
+
 lemma notMem_of_empty_inter_of_mem {s t : Finset α} {x : α}
     (h : s ∩ t = ∅) (hxt : x ∈ t) : x ∉ s :=
   fun hxs ↦ notMem_empty x (h ▸ mem_inter.mpr ⟨hxs, hxt⟩)
+
+lemma notMem_of_empty_inter_of_mem' {s t : Finset α} {x : α}
+    (h : s ∩ t = ∅) (hxs : x ∈ s) : x ∉ t :=
+  notMem_of_empty_inter_of_mem (inter_comm s t ▸ h) hxs
 
 lemma subset_eq_inter {s₁ s₂ t : Finset α} (h : t ⊆ (s₁ \ s₂)) :
     t ⊆ s₁ :=
@@ -389,7 +407,45 @@ open CaroWeiType
 
 namespace SimpleGraph
 
-variable {V : Type*} {G : SimpleGraph V}
+private noncomputable instance {α : Type*} {s t : Set α} [Fintype s] [Fintype t] :
+    Fintype ((s ∪ t) : Set _) := by
+  classical
+  exact Set.fintypeUnion s t
+
+variable {V : Type*}
+
+noncomputable instance {s : Set (Sym2 V)} [Fintype s] : fromEdgeSet s |>.LocallyFinite := by
+  intro v
+  simp only [neighborSet, fromEdgeSet_adj]
+  let f : (fromEdgeSet s).neighborSet v → s := by
+    intro ⟨w, hw⟩
+    simp only [mem_neighborSet, fromEdgeSet_adj, ne_eq] at hw
+    exact ⟨s(v, w), hw.1⟩
+  have hf : Function.Injective f := by
+    intro u u' h
+    have hu := u.2
+    have hu' := u'.2
+    simp only [Subtype.mk.injEq, Sym2.eq, Sym2.rel_iff', Prod.mk.injEq, true_and, Prod.swap_prod_mk,
+      f] at h
+    simp only [mem_neighborSet, fromEdgeSet_adj, ne_eq] at hu hu'
+    match h with
+    | Or.inl h => exact SetCoe.ext h
+    | Or.inr h => simp only [hu'.2, false_and] at h
+  exact Fintype.ofInjective _ hf
+
+variable {G : SimpleGraph V}
+
+noncomputable instance {G' : SimpleGraph V} [inst : G.LocallyFinite] [inst' : G'.LocallyFinite] :
+    (G ⊔ G').LocallyFinite := by
+  intro v
+  have : ((G ⊔ G').neighborSet v) = G.neighborSet v ∪ G'.neighborSet v := rfl
+  rw [this]
+  infer_instance
+
+noncomputable instance [G.LocallyFinite] {s : Set (Sym2 V)} [Fintype s] :
+    fromEdgeSet (G.edgeSet ∪ s) |>.LocallyFinite := by
+  rw [fromEdgeSet_union, fromEdgeSet_edgeSet]
+  infer_instance
 
 lemma mem_of_subset_of_degree_pos {s : Finset V} {v : V}
     [Fintype (G.neighborSet v)] (h : G.support ⊆ s) (hv : 0 < G.degree v) :
@@ -521,28 +577,101 @@ theorem deleteIncidenceSet_support [DecidableEq V] {X : Finset V} (hX : G.suppor
     exact ⟨x, hwx⟩
   · exact Ne.symm <| h hwx |>.1
 
-lemma closed_neighborFinset_of_singleton_eq [DecidableRel G.Adj] [Fintype V] [DecidableEq V]
+lemma closed_neighborFinset_of_singleton_eq [DecidableEq V] [G.LocallyFinite]
     {v : V} : G.closed_neighborFinset_of_Finset {v} = G.neighborFinset v ∪ {v} := by
   ext w
-  simp only [closed_neighborFinset_of_Finset, mem_singleton, exists_eq_left, mem_filter, mem_univ,
-    true_and, union_singleton, mem_insert, mem_neighborFinset]
-  exact or_congr_right adj_iff_adj
+  simp only [closed_neighborFinset_of_Finset, singleton_biUnion, singleton_union, mem_insert,
+    mem_neighborFinset, union_singleton]
 
-lemma closed_neighborFinset_contains_Finset [Fintype V] [DecidableEq V] [DecidableRel G.Adj]
-    {s : Finset V} : s ⊆ G.closed_neighborFinset_of_Finset s := by
+lemma closed_neighborFinset_contains_Finset [DecidableEq V] [G.LocallyFinite] {s : Finset V} :
+    s ⊆ G.closed_neighborFinset_of_Finset s := by
   intro u hu
-  simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, hu, true_or, and_self]
+  simp only [closed_neighborFinset_of_Finset, mem_union, hu, mem_biUnion, mem_neighborFinset,
+    true_or]
 
-lemma mem_closed_neighborFinset_of_adj [Fintype V] [DecidableEq V] [DecidableRel G.Adj]
-    {s : Finset V} {v w : V} (hv : v ∈ s) (hvw : G.Adj w v) :
+lemma mem_closed_neighborFinset_of_adj' [DecidableEq V] [G.LocallyFinite] {s : Finset V}
+    {v w : V} (hv : v ∈ s) (hvw : G.Adj v w) :
     w ∈ G.closed_neighborFinset_of_Finset s := by
-  simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
+  simp only [closed_neighborFinset_of_Finset, mem_union, mem_biUnion, mem_neighborFinset]
   exact Or.inr ⟨v, hv, hvw⟩
 
-lemma mem_closed_neighborFinset_of_adj' [Fintype V] [DecidableEq V] [DecidableRel G.Adj]
-    {s : Finset V} {v w : V} (hv : v ∈ s) (hvw : G.Adj v w) :
+lemma mem_closed_neighborFinset_of_adj [DecidableEq V] [G.LocallyFinite] {s : Finset V}
+    {v w : V} (hv : v ∈ s) (hvw : G.Adj w v) :
     w ∈ G.closed_neighborFinset_of_Finset s :=
-  mem_closed_neighborFinset_of_adj hv hvw.symm
+  mem_closed_neighborFinset_of_adj' hv hvw.symm
+
+lemma mem_closed_neighborFinset_iff [DecidableEq V] [G.LocallyFinite] {s : Finset V} {v : V} :
+    v ∈ G.closed_neighborFinset_of_Finset s ↔ v ∈ s ∨ ∃ w ∈ s, G.Adj w v := by
+  simp only [closed_neighborFinset_of_Finset, mem_union, mem_biUnion, mem_neighborFinset]
+
+lemma mem_open_neighborFinset_iff [DecidableEq V] [G.LocallyFinite] {s : Finset V} {v : V} :
+    v ∈ (G.closed_neighborFinset_of_Finset s) \ s ↔ (∃ w ∈ s, G.Adj w v) ∧ v ∉ s := by
+  simp only [mem_sdiff]
+  constructor
+  · intro ⟨hv, hvs⟩
+    exact ⟨Or.resolve_left (mem_closed_neighborFinset_iff.mp hv) hvs, hvs⟩
+  · intro ⟨h, hvs⟩
+    refine ⟨?_, hvs⟩
+    refine mem_closed_neighborFinset_iff.mpr <| Or.inr h
+
+lemma mem_N2_of_Finset_iff [DecidableEq V] [G.LocallyFinite] {s : Finset V} {v : V} :
+    v ∈ G.N2_of_Finset s
+      ↔ (v ∉ s ∧ (∀ x ∈ s, ¬G.Adj v x) ∧ ∃ x ∈ s, ∃ w ∉ s, G.Adj v w ∧ G.Adj w x) := by
+  simp only [N2_of_Finset]
+  constructor
+  · intro h
+    refine ⟨?_, ?_, ?_⟩
+    · exact closed_neighborFinset_contains_Finset.mt <| mem_sdiff.mp h |>.2
+    · exact fun _ hx ↦ mem_closed_neighborFinset_of_adj hx |>.mt <| mem_sdiff.mp h |>.2
+    · have := mem_closed_neighborFinset_iff.mp <| mem_sdiff.mp h |>.1
+      simp only [mem_sdiff.mp h |>.2, false_or] at this
+      obtain ⟨w, hw, hwv⟩ := this
+      have hw' : w ∉ s := (mem_closed_neighborFinset_of_adj' · hwv) |>.mt <| mem_sdiff.mp h |>.2
+      have := mem_closed_neighborFinset_iff.mp hw
+      simp only [hw', false_or] at this
+      obtain ⟨x, hx, hxw⟩ := this
+      refine ⟨x, hx, w, hw', hwv.symm, hxw.symm⟩
+  · intro ⟨hv₀, hv₁, hv₂⟩
+    refine mem_sdiff.mpr ⟨?_, ?_⟩
+    · refine mem_closed_neighborFinset_iff.mpr <| Or.inr ?_
+      obtain ⟨x, hx, w, hw, hvw, hwx⟩ := hv₂
+      refine ⟨w, ?_, hvw.symm⟩
+      refine mem_closed_neighborFinset_iff.mpr <| Or.inr ?_
+      exact ⟨x, hx, hwx.symm⟩
+    · refine not_iff_not.mpr mem_closed_neighborFinset_iff |>.mpr ?_
+      simp only [hv₀, false_or, not_exists, not_and]
+      exact fun x hx ↦ not_adj_symm <| hv₁ x hx
+
+lemma mem_N2_of_Finset_iff' [DecidableEq V] [G.LocallyFinite] {s : Finset V} {v : V} :
+    v ∈ G.N2_of_Finset s
+      ↔ (v ∉ G.closed_neighborFinset_of_Finset s ∧ ∃ x ∈ s, ∃ w ∉ s, G.Adj v w ∧ G.Adj w x) := by
+  refine mem_N2_of_Finset_iff.trans ?_
+  simp only [mem_closed_neighborFinset_iff, not_or, not_exists, not_and]
+  constructor
+  · intro ⟨h₁, h₂, h₃⟩
+    exact ⟨⟨h₁, fun x hx ↦ not_adj_symm <| h₂ x hx⟩, h₃⟩
+  · intro ⟨⟨h₁, h₂⟩, h₃⟩
+    exact ⟨h₁, fun x hx ↦ not_adj_symm <| h₂ x hx, h₃⟩
+
+lemma N2_inter_Nle1_empty [DecidableEq V] [G.LocallyFinite] {s : Finset V} :
+    G.N2_of_Finset s ∩ G.closed_neighborFinset_of_Finset s = ∅ :=
+  disjoint_of_sdiff (subset_refl _)
+
+lemma Nle1_inter_N2_empty [DecidableEq V] [G.LocallyFinite] {s : Finset V} :
+    G.closed_neighborFinset_of_Finset s ∩ G.N2_of_Finset s = ∅ :=
+  inter_comm (G.closed_neighborFinset_of_Finset s) _ ▸ N2_inter_Nle1_empty
+
+lemma notMem_closed_neighborFinset_of_adj_of_notMem_closed_N2 [DecidableEq V] [G.LocallyFinite]
+    {s : Finset V} {v w : V} (hvw : G.Adj v w)
+    (hw₂ : w ∉ G.N2_of_Finset s) (hw : w ∉ G.closed_neighborFinset_of_Finset s) :
+    v ∉ G.closed_neighborFinset_of_Finset s := by
+  refine not_iff_not.mpr mem_closed_neighborFinset_iff |>.mpr ?_
+  have hw := not_iff_not.mpr mem_closed_neighborFinset_iff |>.mp hw
+  have hw₂ := not_iff_not.mpr mem_N2_of_Finset_iff |>.mp hw₂
+  simp only [not_or, not_exists, not_and] at hw hw₂ ⊢
+  have hvs : v ∉ s := fun hvs ↦ hw.2 _ hvs hvw
+  refine ⟨hvs, ?_⟩
+  exact fun x hx ↦ not_adj_symm <| hw₂ hw.1 (fun _ h ↦ not_adj_symm <| hw.2 _ h) x hx v hvs hvw.symm
 
 lemma deleteIncidencesOf_le {s : Finset V} :
     (G.deleteIncidencesOf s) ≤ G := by
@@ -619,19 +748,16 @@ lemma mem_neighborFinset_deleteIncidencesOf_iff_of_notMem
   ⟨mem_neighborFinset_deleteIncidencesOf_of_notMem_of_notMem_of_mem_neighborFinset hu hv,
     mem_neighborFinset_of_deleteIncidencesOf_mem_neighborFinset⟩
 
-lemma deleteIncidencesOf_mem_neighborFinset_iff_of_notMem
-    {u v : V} {s : Finset V} (hu : u ∉ s) (hv : v ∉ s)
-    [Fintype (G.neighborSet v)] [Fintype ((G.deleteIncidencesOf s).neighborSet v)] :
-    u ∈ G.neighborFinset v ↔ u ∈ (G.deleteIncidencesOf s).neighborFinset v := by
-  refine (G.mem_neighborFinset ..).trans <| (deleteIncidencesOf_adj_iff_of_notMem hv hu).trans ?_
-  exact Iff.symm <| mem_neighborFinset ..
-
 lemma deleteIncidencesOf_notadj {s : Finset V} {x y : V} (hx : x ∈ s) :
     ¬(G.deleteIncidencesOf s).Adj x y := by
   simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, inf_adj, iInf_adj,
     deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq]
   intro hxy h
   exact false_of_ne (h x |>.1 hx |>.2 hxy |>.1) |>.elim
+
+lemma deleteIncidencesOf_notadj' {s : Finset V} {x y : V} (hx : x ∈ s) :
+    ¬(G.deleteIncidencesOf s).Adj y x :=
+  not_adj_symm <| deleteIncidencesOf_notadj hx
 
 lemma notMem_of_adj_deleteIncidencesOf {s : Finset V} {v w : V}
     (h : (G.deleteIncidencesOf s).Adj v w) : v ∉ s :=
@@ -961,12 +1087,6 @@ theorem minDegree_iff' {v : V} (X : Finset V) (hX : X.Nonempty) (hv : v ∈ X) [
       exact hdz ▸ h _ hz
     · exact min'_le _ _ (mem_image_of_mem _ hv)
 
--- lemma neighborFinset_subset_support {v : V} [Fintype (G.neighborSet v)] [Fintype (G.support)] :
---     G.neighborFinset v ⊆ G.support.toFinset := by
---   intro w hw
---   refine Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, Adj.symm ?_⟩
---   exact G.mem_neighborFinset .. |>.mp hw
-
 lemma neighborFinset_eq_deg2' [DecidableEq V] {v : V} (f : V → ℝ) [Fintype (G.neighborSet v)] :
     G.degree v = 2 → ∃ u w, G.neighborFinset v = {u, w} ∧ f w ≤ f u := by
   intro h
@@ -1094,46 +1214,33 @@ lemma degree_in_union_eq [DecidableEq V] {u : V} {s t : Finset V} [Fintype (G.ne
   have h : w ∈ (∅ : Finset _) := ht ▸ mem_inter.mpr ⟨hwt, G.mem_neighborFinset .. |>.mpr huw⟩
   simp at h
 
-lemma degree_in_deleteIncidenceSet [DecidableEq V] {u v : V} (s : Finset V)
-    [Fintype (G.neighborSet v)] [Fintype ((G.deleteIncidenceSet u).neighborSet v)]
-    (hu : u ∉ s) (hu' : u ≠ v) :
-    (G.deleteIncidenceSet u).degree_in s v = G.degree_in s v := by
+lemma degree_in_deleteIncidencesOf [DecidableEq V] {v : V} (s t : Finset V)
+    [Fintype (G.neighborSet v)] [Fintype ((G.deleteIncidencesOf t).neighborSet v)]
+    (hu : t ∩ s = ∅) (hu' : v ∉ t) :
+    (G.deleteIncidencesOf t).degree_in s v = G.degree_in s v := by
   simp only [degree_in]
   refine congrArg card ?_
   ext w
-  simp only [deleteIncidenceSet, incidenceSet, mem_inter, mem_neighborFinset, deleteEdges_adj,
-    Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, hu', false_or, not_and, and_congr_left_iff,
-    and_iff_left_iff_imp, forall_self_imp]
-  intro hw hvw
-  exact fun heq ↦ hu (heq ▸ hw)
+  simp only [mem_inter, mem_neighborFinset, and_congr_left_iff]
+  intro hw
+  constructor
+  · exact adj_of_deleteIncidencesOf_adj
+  · exact deleteIncidencesOf_adj_of_notMem_of_notMem_of_adj hu' (notMem_of_empty_inter_of_mem hu hw)
 
-lemma degree_in_deleteIncidenceSet' [DecidableEq V] {u v : V} (s : Finset V)
-    [Fintype (G.neighborSet v)] [Fintype ((G.deleteIncidenceSet u).neighborSet v)]
-    (hu : u ∉ s) (huv : G.Adj u v) :
-    G.degree_in (s ∪ {u}) v ≤ (G.deleteIncidenceSet u).degree_in s v + 1 := by
+lemma degree_in_deleteIncidenceSet' [DecidableEq V] {v : V} (s t : Finset V)
+    [Fintype (G.neighborSet v)] [Fintype ((G.deleteIncidencesOf t).neighborSet v)]
+    (hu : t ∩ s = ∅) (hv : v ∉ t) :
+    G.degree_in (s ∪ t) v ≤ (G.deleteIncidencesOf t).degree_in s v + #t := by
   unfold degree_in
-  calc #(G.neighborFinset v ∩ (s ∪ {u}))
-    _ ≤ #(((G.deleteIncidenceSet u).neighborFinset v ∩ (s ∪ {u})) ∪ {u}) := by
-      refine card_le_card ?_
-      intro w
-      simp only [union_singleton, mem_inter, mem_neighborFinset, mem_insert, deleteIncidenceSet,
-        incidenceSet, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, or_true,
-        and_true, and_not_self, not_false_eq_true, inter_insert_of_notMem, not_and, not_or, and_imp]
-      intro hvw hw
-      rcases hw with hw | hw
-      · simp only [hw, not_true_eq_false, and_false, imp_false, and_not_self, false_and, or_false]
-      · refine Or.inr ⟨⟨hvw, ?_⟩, hw⟩
-        simp only [hvw, huv.ne, not_false_eq_true, true_and, forall_const]
-        exact fun heq ↦ hu (heq ▸ hw)
-    _ ≤ #((G.deleteIncidenceSet u).neighborFinset v ∩ (s ∪ {u})) + #({u} : Finset _) := by
-      exact card_union_le ..
-    _ = #((G.deleteIncidenceSet u).neighborFinset v ∩ s) + #({u} : Finset _) := by
-      simp only [union_singleton, card_singleton, Nat.add_right_cancel_iff]
-      refine congrArg card ?_
-      ext w
-      simp [deleteIncidenceSet, incidenceSet]
-    _ = #((G.deleteIncidenceSet u).neighborFinset v ∩ s) + 1 := by
-      simp
+  suffices (G.neighborFinset v ∩ (s ∪ t)) ⊆ (((G.deleteIncidencesOf t).neighborFinset v ∩ s) ∪ t) by
+    refine le_trans (card_le_card this) (card_union_le ..)
+  intro w hw
+  simp only [mem_inter, mem_neighborFinset, mem_union] at hw ⊢
+  rcases hw.2 with hws | hwt
+  · refine Or.inl ⟨?_, hws⟩
+    refine deleteIncidencesOf_adj_of_notMem_of_notMem_of_adj hv ?_ hw.1
+    exact notMem_of_empty_inter_of_mem hu hws
+  · exact Or.inr hwt
 
 lemma degree_in_neighbor [DecidableEq V] {u v : V} (s : Finset V) (huv : G.Adj u v) (hv : v ∉ s)
     [Fintype (G.neighborSet u)] :
@@ -1182,11 +1289,10 @@ lemma one_le_degree_of_mem_neighborFinset' {u v : V}
     1 ≤ G.degree u := by
   exact one_le_degree_of_mem_neighborFinset <| mem_neighborFinset_symm huv
 
-lemma one_le_degree_of_mem_N2 [Fintype V] [DecidableEq V] [DecidableRel G.Adj]
+lemma one_le_degree_of_mem_N2 [DecidableEq V] [G.LocallyFinite]
     {v : V} {F : Finset V} (hv : v ∈ G.N2_of_Finset F) [Fintype (G.neighborSet v)] :
     1 ≤ G.degree v := by
-  simp only [N2_of_Finset, mem_filter, mem_univ, true_and] at hv
-  obtain ⟨_, _, _, _, h, _⟩ := hv.2.2
+  obtain ⟨_, _, _, _, h, _⟩ := mem_N2_of_Finset_iff.mp hv |>.2.2
   exact one_le_degree_of_adj h
 
 lemma one_le_degree_of_walk_begin {u v : V} (hunev : u ≠ v) (w : G.Walk u v)

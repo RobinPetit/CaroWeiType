@@ -3,14 +3,14 @@ import CWType.SimpleGraph.CaroWeiType.Forests.Basic
 namespace SimpleGraph
 open Finset
 
-lemma InducesForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {v : Fin n} :
+lemma InducesForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {v : Fin n} :
     G.InducesForest {v} := by
   simp only [InducesForest, IsDegenerateSet, subset_singleton_iff, ne_eq, degree_in,
     forall_eq_or_imp, not_true_eq_false, notMem_empty, inter_empty, card_empty, zero_le, and_true,
     exists_false, imp_self, forall_eq, singleton_ne_empty, not_false_eq_true, mem_singleton,
     exists_eq_left, mem_neighborFinset, SimpleGraph.irrefl, inter_singleton_of_notMem, and_self]
 
-lemma InducesForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma InducesForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {v w : Fin n} : G.InducesForest {v, w} := by
   simp only [InducesForest, IsDegenerateSet]
   intro t ht htne
@@ -23,11 +23,11 @@ lemma InducesForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj
   simp only [mem_inter, mem_neighborFinset, mem_sdiff, mem_insert, mem_singleton] at hx ⊢
   grind [Adj.ne']
 
-lemma InducesLinearForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma InducesLinearForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {v : Fin n} : G.InducesLinearForest {v} := by
   simp [InducesLinearForest, InducesForest_singleton]
 
-lemma InducesLinearForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma InducesLinearForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {v w : Fin n} : G.InducesLinearForest {v, w} := by
   simp only [InducesLinearForest, InducesForest_pair, mem_insert, mem_singleton, degree_in,
     forall_eq_or_imp, mem_neighborFinset, SimpleGraph.irrefl, not_false_eq_true,
@@ -40,25 +40,25 @@ lemma InducesLinearForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
     exact card_le_card inter_subset_right
 
 lemma InducesForest_mono {n : ℕ} {G₁ G₂ : SimpleGraph (Fin n)}
-    [DecidableRel G₁.Adj] [DecidableRel G₂.Adj]
+    [G₁.LocallyFinite] [G₂.LocallyFinite]
     {s : Finset (Fin n)} (hle : G₁ ≤ G₂) (h : G₂.InducesForest s) : G₁.InducesForest s := by
   simp only [InducesForest] at h ⊢
   exact IsDegenerateSet_mono G₁ G₂ hle 1 s h
 
-lemma InducesForest_mono' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma InducesForest_mono' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {s₁ s₂ : Finset (Fin n)} (hs : s₁ ∩ s₂ = ∅)
     (h : (G.deleteIncidencesOf s₂).InducesForest s₁) :
     G.InducesForest s₁ := by
   exact IsDegenerateSet_mono' G 1 s₁ s₂ hs h
 
-lemma InducesForest_union_leaf {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+lemma InducesForest_union_leaf {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (s : Finset (Fin n)) (hs : G.InducesForest s) {v : Fin n} (hv : G.degree_in s v ≤ 1) :
     G.InducesForest (s ∪ {v}) := by
   simp only [InducesForest] at hs ⊢
   exact G.IsDegenerateSet_union_singleton s hs hv
 
 lemma InducesForest_union_disjoint_neighborhoods {n : ℕ} {G : SimpleGraph (Fin n)}
-    [DecidableRel G.Adj] {s₁ s₂ : Finset (Fin n)} (hs₁ : G.InducesForest s₁)
+    [G.LocallyFinite] {s₁ s₂ : Finset (Fin n)} (hs₁ : G.InducesForest s₁)
     (hs₂ : G.InducesForest s₂) (h : ∀ x ∈ s₁, ∀ y ∈ s₂, ¬G.Adj x y) :
     G.InducesForest (s₁ ∪ s₂) := by
   intro t ht htne
@@ -82,7 +82,7 @@ lemma InducesForest_union_disjoint_neighborhoods {n : ℕ} {G : SimpleGraph (Fin
     simp only [mem_inter, mem_neighborFinset, and_congr_right_iff, iff_self_and]
     grind [Adj.symm]
 
-lemma no_induced_K3_of_InducesForest {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+lemma no_induced_K3_of_InducesForest {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (s : Finset (Fin n)) {x y z : Fin n} (hxy : G.Adj x y) (hyz : G.Adj y z) (hzx : G.Adj z x) :
     G.InducesForest s → ¬{x, y, z} ⊆ s := by
   intro hf ht

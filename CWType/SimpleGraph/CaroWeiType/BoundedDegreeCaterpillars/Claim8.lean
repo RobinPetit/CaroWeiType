@@ -12,9 +12,9 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v w : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3) (hvw : G.Adj v w)
     (hw : w ∈ ABC) (hdw : G.degree w ≤ 2) : Objective G ABC := by
@@ -25,9 +25,9 @@ private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
   else
     exact Claim6 hG ih ⟨_, by grind, hAw⟩
 
-lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (ABC : Tripartition n) [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
     (hne : x ≠ y) (hyx : f G ABC y ≤ f G ABC x) :

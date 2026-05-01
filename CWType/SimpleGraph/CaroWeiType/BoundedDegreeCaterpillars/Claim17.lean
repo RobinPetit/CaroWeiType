@@ -14,11 +14,11 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-private lemma Corollary2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+private lemma Corollary2' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] {u v w : Fin n} (hG : G.support ⊆ ABC.toFinset)
     (hvw : ¬G.Adj v w) (hv : G.Adj u v) (hw : G.Adj u w) (hvnew : v ≠ w)
     (hcard : 2 ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset {v, w}, f G ABC v)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   have hF : {v, w} ⊆ ABC.toFinset := by
@@ -34,7 +34,7 @@ private lemma Corollary2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Ad
   rw [← Nat.cast_two, Nat.cast_inj]
   exact Eq.symm <| card_pair hvnew
 
-private lemma Corollary2'' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+private lemma Corollary2'' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] {û v w x y s t : Fin n}
     (hG : G.support ⊆ ABC.toFinset)
     (hvw : ¬G.Adj v w) (hv : G.Adj û v) (hw : G.Adj û w) (hvnew : v ≠ w)
@@ -42,7 +42,7 @@ private lemma Corollary2'' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
     (hNv : G.neighborFinset v = {û, x, y}) (hNw : G.neighborFinset w = {û, s, t})
     (hNvw : ¬∃ u ∈ G.neighborFinset v ∩ G.neighborFinset w, u ≠ û)
     (hcard : 2 ≥ f G ABC v + f G ABC w + f G ABC û + f G ABC x + f G ABC y + f G ABC s + f G ABC t)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   refine Corollary2' hG hvw hv hw hvnew ?_ ih
@@ -88,23 +88,10 @@ private lemma Corollary2'' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.A
           }
         grind [degree]
   ext u
-  simp only [mem_insert, mem_singleton, closed_neighborFinset_of_Finset, exists_eq_or_imp,
-    ↓existsAndEq, true_and, mem_filter, mem_univ]
-  constructor
-  · intro h
-    have h : (u = v ∨ u = w) ∨ ((u ∈ G.neighborFinset v) ∨ (u ∈ G.neighborFinset w)) := by
-      grind only [= mem_insert, = mem_singleton]
-    rcases h with h | h | h
-    · simp only [h, true_or]
-    · exact Or.inr <| Or.inl <| Adj.symm <| G.mem_neighborFinset .. |>.mp h
-    · exact Or.inr <| Or.inr <| Adj.symm <| G.mem_neighborFinset .. |>.mp h
-  · intro h
-    rcases h with h | h | h
-    · grind only
-    · grind only [= mem_insert, = mem_singleton, G.mem_neighborFinset .. |>.mpr h.symm]
-    · grind only [= mem_insert, = mem_singleton, G.mem_neighborFinset .. |>.mpr h.symm]
+  simp only [closed_neighborFinset_of_Finset, biUnion_insert, singleton_biUnion]
+  grind only [= union_insert, = insert_union, = insert_eq_of_mem, = singleton_union, = mem_insert]
 
-private lemma _step1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _step1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     {u v w : Fin n}
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
     (hvnew : v ≠ w) (hv : G.Adj u v) (hw : G.Adj u w) :
@@ -122,10 +109,10 @@ private lemma _step1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
     have hfxs : f G ABC x ≤ f G ABC s := by lia
     exact ⟨w, v, s, t, x, y, hvnew.symm, hCw, hCv, hdw, hdv, hw, hv, hNw, hNv, hfts, hfyx, hfxs⟩
 
-private lemma _step2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _step2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     {v w : Fin n} (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ z ∈ G.neighborFinset v ∪ G.neighborFinset w, 1 / 6 ≤ γ G ABC z) → Objective G ABC := by
   intro h
@@ -135,13 +122,13 @@ private lemma _step2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
   · exact Corollary1 hG hz ih <| (fC3 hCv hdv) ▸ hγz
   · exact Corollary1 hG hz ih <| (fC3 hCw hdw) ▸ hγz
 
-private lemma _step3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _step3 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v w x y s t : Fin n}
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
     (hv : G.Adj û v) (hw : G.Adj û w) (hvw : ¬G.Adj v w) (hvnew : v ≠ w)
     (hNv : G.neighborFinset v = {û, x, y}) (hNw : G.neighborFinset w = {û, s, t})
     (h : ¬∃ z ∈ G.neighborFinset v ∪ G.neighborFinset w, 1 / 6 ≤ γ G ABC z)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ u ∈ G.neighborFinset v ∩ G.neighborFinset w, u ≠ û) → Objective G ABC := by
   have hF' : {v, w} ⊆ ABC.toFinset := by
@@ -156,10 +143,8 @@ private lemma _step3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
   have hNclosedvw : G.closed_neighborFinset_of_Finset {v, w}
       = {v, w} ∪ (G.neighborFinset v ∪ G.neighborFinset w) := by
     ext u
-    simp only [closed_neighborFinset_of_Finset, mem_insert, mem_singleton, exists_eq_or_imp,
-      ↓existsAndEq, true_and, mem_filter, mem_univ, insert_union, singleton_union, mem_union,
-      mem_neighborFinset]
-    grind [Adj.symm]
+    simp only [closed_neighborFinset_of_Finset, biUnion_insert, singleton_biUnion, insert_union,
+      singleton_union, mem_insert, mem_union, mem_neighborFinset]
   rw [hNclosedvw]
   calc (2 : ℝ)
     _ ≥ 1 / 6 + 1 / 6 + 4 * (2 / 5) := by linarith
@@ -194,10 +179,10 @@ private lemma _step3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
     exact fun h ↦ hvw h.symm
   · simp only [h, SimpleGraph.irrefl, not_false_eq_true, and_true, hvw]
 
-private lemma _step4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _step4 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v w : Fin n}
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ u ∈ G.neighborFinset v ∪ G.neighborFinset w, γ G ABC u = 0) → Objective G ABC := by
   intro hNvwγ
@@ -216,7 +201,7 @@ private lemma _step4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
     · exact Claim13 hG hu hCw hdw hu' hdu ih
   · exact Claim6 hG ih ⟨u, hdu, not_A_of_C hu'⟩
 
-private lemma _step5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _step5 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v w x y s t : Fin n}
     (hfû : f G ABC û ≤ 2 / 7)
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
@@ -224,7 +209,7 @@ private lemma _step5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
     (hNv : G.neighborFinset v = {û, x, y}) (hNw : G.neighborFinset w = {û, s, t})
     (hNvw : ¬∃ u ∈ G.neighborFinset v ∩ G.neighborFinset w, u ≠ û)
     (hfyx : f G ABC y ≤ f G ABC x) (hfts : f G ABC t ≤ f G ABC s) (hfsx : f G ABC s ≤ f G ABC x)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (f G ABC x ≤ 1 / 3) → Objective G ABC := by
   intro hfx
@@ -239,7 +224,7 @@ private lemma _step5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
     _ ≥ f G ABC v + f G ABC w + f G ABC û + f G ABC x + f G ABC y + f G ABC s + f G ABC t := by
       linarith
 
-private lemma _step6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _step6 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v w x y : Fin n}
     (hd1 : ∀ u ∈ ABC, 1 < G.degree u)
     (h : ∀ z ∈ G.neighborFinset v ∪ G.neighborFinset w, γ G ABC z < 1 / 6)
@@ -268,12 +253,12 @@ private lemma _step6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
     exact fA_decreasing' (by grind)
   exact ⟨hAx, hdx⟩
 
-private lemma _step7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _step7 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v w x y : Fin n} (hû : IsVstar G ABC û)
     (hAx : ABC.A x) (hdx : G.degree x = 4) (hCv : ABC.C v) (hdv : G.degree v = 3)
     (hv : G.Adj û v) (hNv : G.neighborFinset v = {û, x, y})
     (hNvwγ : ¬∃ u ∈ G.neighborFinset v ∪ G.neighborFinset w, γ G ABC u = 0)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨ γ G ABC û < 1 / 30 := by
   simp only [mem_union, not_exists, not_and] at hNvwγ
@@ -300,11 +285,11 @@ private lemma _step7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
       simp only [hNv, mem_insert, mem_singleton, or_true, mem_neighborFinset, true_or]
     _ = ∑ u ∈ {û, x, y}, γ G ABC u := by grind [degree]
 
-private lemma _step8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _step8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v x y : Fin n}
     (hAx : ABC.A x) (hdx : G.degree x = 4) (hCv : ABC.C v) (hdv : G.degree v = 3)
     (hv : G.Adj û v) (hNv : G.neighborFinset v = {û, x, y})
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨ γ G ABC y < 1 / 15 := by
   if hγy : γ G ABC y < 1 / 15 then exact Or.inr hγy
@@ -320,14 +305,14 @@ private lemma _step8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
       simp only [add_le_add_iff_left, hγy]
   grind [degree]
 
-private lemma _step9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _step9 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v w x y s t : Fin n}
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
     (hvw : ¬G.Adj v w) (hvnew : v ≠ w) (hv : G.Adj û v) (hw : G.Adj û w)
     (hfû : f G ABC û ≤ 2 / 9) (hfx : f G ABC x = 2 / 5) (hfy : f G ABC y ≤ 2 / 7)
     (hNv : G.neighborFinset v = {û, x, y}) (hNw : G.neighborFinset w = {û, s, t})
     (hNvw : ¬∃ u ∈ G.neighborFinset v ∩ G.neighborFinset w, u ≠ û)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨ 239 / 315 < f G ABC s + f G ABC t := by
   if H : 239 / 315 < f G ABC s + f G ABC t then exact Or.inr H
@@ -336,7 +321,7 @@ private lemma _step9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {A
   rw [fC3 hCv hdv, fC3 hCw hdw]
   linarith
 
-private lemma _A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+private lemma _A4 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {u : Fin n} (hdu : 2 ≤ G.degree u)
     (hfu : 1 / 3 < f G ABC u) (hγu : γ G ABC u < 1 / 6) :
     ABC.A u ∧ G.degree u = 4 := by
@@ -358,11 +343,11 @@ private lemma _A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC 
     simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte] at hfu
     linarith
 
-lemma Claim17 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim17 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v w : Fin n} (hû : IsVstar G ABC û)
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
     (hvnew : v ≠ w) (hv : G.Adj û v) (hw : G.Adj û w)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   obtain ⟨v, w, x, y, s, t, hvnew, hCv, hCw, hdv, hdw, hv, hw, hNv, hNw, hfyx, hfts, hfsx⟩ :=

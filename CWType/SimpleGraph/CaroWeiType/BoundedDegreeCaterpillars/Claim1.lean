@@ -9,10 +9,10 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] {v : Fin n} (hv : v ∈ ABC)
     (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ ∑ w ∈ G.neighborFinset v, γ G ABC w → Objective G ABC := by
   have hNv : G.neighborFinset v ⊆ ABC.toFinset :=
@@ -79,7 +79,7 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
         simp only [mem_neighborFinset, not_mem_neighborFinset_symm <| hwv ▸ hx.2, iff_false]
         exact not_adj_symm <| deleteIncidencesOf_notadj (mem_singleton.mpr hwv)
       else
-        refine (deleteIncidencesOf_mem_neighborFinset_iff_of_notMem ?_  hx.1.2).symm
+        refine (mem_neighborFinset_deleteIncidencesOf_iff_of_notMem ?_  hx.1.2).symm
         simp only [mem_singleton] at hwv ⊢
         exact hwv
     _ = ∑ x ∈ (ABC \ {v}).toFinset, f (G.deleteIncidencesOf {v}) (ABC \ {v}) x := by
@@ -96,10 +96,10 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       rw [this] at hobj
       exact hobj
 
-lemma Corollary1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma Corollary1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] {v w : Fin n} (hG : G.support ⊆ ABC.toFinset)
     (hw : G.Adj v w)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ γ G ABC w → Objective G ABC := by
   let hv := ABC.mem_toFinset.mpr <| hG <| G.mem_support.mpr ⟨w, hw⟩

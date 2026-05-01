@@ -21,7 +21,7 @@ private lemma exists_argmin {α β : Type*} [LinearOrder β] {s : Finset α} (hs
   · simp only [hy, le_refl]
   · exact hmin _ hy
 
-theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
+theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] (ABC : Tripartition n)
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) :
     Objective G ABC := by
   induction hcard : ABC.card using Nat.strong_induction_on generalizing G ABC with | h k ih
@@ -29,7 +29,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
     refine ⟨∅, ?_, ?_, ?_, ?_⟩ <;>
     simp [respects, card_eq_zero.mp <| hk ▸ hcard, InducesForest, IsDegenerateSet]
   else
-  have ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+  have ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC' :=
     fun G' _ ABC' _ hsupp' hcardABC' ↦ ih ABC'.card (hcard ▸ hcardABC') G' ABC' hsupp' rfl
   let W := ({v | v ∈ ABC.toFinset ∧ 0 < γ G ABC v} : Finset _)

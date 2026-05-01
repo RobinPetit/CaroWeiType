@@ -6,15 +6,15 @@ namespace SimpleGraph
 
 open Finset
 
-def InducesForest {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+def InducesForest {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (s : Finset (Fin n)) : Prop :=
   G.IsDegenerateSet 1 s
 
-def InducesLinearForest {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+def InducesLinearForest {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (s : Finset (Fin n)) : Prop :=
   G.InducesForest s ∧ ∀ x ∈ s, G.degree_in s x ≤ 2
 
-def InducesCaterpillar {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+def InducesCaterpillar {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (s : Finset (Fin n)) : Prop :=
   G.InducesLinearForest <| s \ {x ∈ s | (G.neighborFinset x ∩ s).card = 1}
 

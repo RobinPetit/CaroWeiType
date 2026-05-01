@@ -33,7 +33,7 @@ private lemma _adj_xy {n : ℕ} {G : SimpleGraph (Fin n)} (x y z : Fin n)
     not_false_eq_true, Set.mem_setOf_eq, Sym2.mem_iff, hxz.symm,
     hyz.symm, or_self, and_false, and_true]
 
-private lemma degree_G_le_degree_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+private lemma degree_G_le_degree_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     {v x y z w : Fin n} (hw : w ∉ ({v, x, y, z} : Finset _)) :
     (_op G x y z).degree w ≤ G.degree w := by
     refine card_le_card ?_
@@ -49,7 +49,7 @@ private lemma degree_G_le_degree_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) 
     · exact fun _ _ ↦ by grind only [= mem_insert]
     · exact fun _ _ ↦ hu
 
-private lemma f_G_le_f_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+private lemma f_G_le_f_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     {ABC : Tripartition n} {v x y z w : Fin n} (hw : w ∉ ({v, x, y, z} : Finset _)) :
     f G ABC w ≤ f (_op G x y z) ((ABC \ {z}).promote v) w := by
   if hAw : ABC.A w then
@@ -75,10 +75,10 @@ private lemma f_G_le_f_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) [Decidable
     · exact zero_le_fC
     · exact le_refl _
 
-lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ w, G.Adj v w ∧ f G ABC w ≤ 1 / 6) → Objective G ABC := by
   intro ⟨w, hvw, hfw⟩
@@ -323,10 +323,10 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
             grind
           rw [← fA2 hA'v hdv']
 
-lemma Corollary9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Corollary9 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ w, G.Adj v w ∧ ABC.C w) → Objective G ABC := by
   intro ⟨w, hvw, hCw⟩

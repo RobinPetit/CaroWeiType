@@ -114,12 +114,6 @@ lemma fC_decreasing {d d' : ℕ} (h : d ≤ d') : fC d' ≤ fC d := by
 lemma fC_decreasing' {d d' : ℕ} (h : fC d' < fC d) : d < d' := by
   exact Nat.lt_of_not_le <| fC_decreasing.mt <| not_le.mpr h
 
-lemma disjoint_of_sdiff {α : Type*} [DecidableEq α] {X Y Z : Finset α} (h : X ⊆ Y \ Z) :
-    X ∩ Z = ∅ := by
-  ext x
-  simp only [mem_inter, notMem_empty, iff_false, not_and]
-  exact fun hx ↦ mem_sdiff.mp (h hx) |>.2
-
 @[simp]
 lemma and_or_3 {p₁ p₂ p₃ q : Prop} : (p₁ ∧ q) ∨ (p₂ ∧ q) ∨ (p₃ ∧ q) ↔ (p₁ ∨ p₂ ∨ p₃) ∧ q := by
   constructor
@@ -1691,7 +1685,7 @@ lemma sdiff_toFinset {n : ℕ} (ABC : Tripartition n) [ABC.Decidable] {s : Finse
     Set.toFinset_setOf, mem_sdiff, mem_filter, mem_univ, true_and]
 
 lemma linear_forest_of_forest_respects {n : ℕ} {s : Finset (Fin n)} {G : SimpleGraph (Fin n)}
-    [DecidableRel G.Adj] {ABC : Tripartition n} [ABC.Decidable] (hs : s ⊆ ABC.toFinset) :
+    [G.LocallyFinite] {ABC : Tripartition n} [ABC.Decidable] (hs : s ⊆ ABC.toFinset) :
     G.InducesForest s → respects s G ABC → G.InducesLinearForest s := by
   intro hf hresp
   refine ⟨hf, ?_⟩
@@ -1703,14 +1697,14 @@ lemma linear_forest_of_forest_respects {n : ℕ} {s : Finset (Fin n)} {G : Simpl
   · exact le_trans (h₂ hB) one_le_two
   · exact le_of_eq_of_le (h₃ hC) zero_le_two
 
-lemma respects_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma respects_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} {v : Fin n} :
     respects {v} G ABC := by
   simp only [respects, mem_singleton, degree_in, card_eq_zero, forall_eq, mem_neighborFinset,
     SimpleGraph.irrefl, not_false_eq_true, inter_singleton_of_notMem, card_empty, zero_le,
     implies_true, and_self]
 
-lemma respects_pair_of_non_adj {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma respects_pair_of_non_adj {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} {v w : Fin n} (hvw : ¬G.Adj v w) : respects {v, w} G ABC := by
   intro u hu
   suffices G.degree_in {v, w} u = 0 by grind
@@ -1723,7 +1717,7 @@ lemma respects_pair_of_non_adj {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
     simp only [mem_neighborFinset, G.adj_symm.mt, hvw, not_false_eq_true]
   }
 
-lemma respects_pair_of_Bs {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma respects_pair_of_Bs {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} {v w : Fin n} (hBv : ABC.B v) (hBw : ABC.B w) :
     respects {v, w} G ABC := by
   intro u hu
@@ -1739,7 +1733,7 @@ lemma respects_pair_of_Bs {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Ad
     simp only [card_singleton, le_refl]
   }
 
-lemma respects_union {n : ℕ} {s t : Finset (Fin n)} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
+lemma respects_union {n : ℕ} {s t : Finset (Fin n)} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} (hs : respects s G ABC) (ht : respects t G ABC)
     (hst' : ∀ y ∈ s, ∀ z ∈ t, ¬G.Adj y z) :
     respects (s ∪ t) G ABC := by
@@ -1763,7 +1757,7 @@ lemma respects_union {n : ℕ} {s t : Finset (Fin n)} {G : SimpleGraph (Fin n)} 
     obtain ⟨hs1, hs2, hs3⟩ := ht w hw
     refine ⟨?_, ?_, ?_⟩ <;> { intro _; grind only }
 
-lemma respects_mono {n : ℕ} {s t : Finset (Fin n)} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+lemma respects_mono {n : ℕ} {s t : Finset (Fin n)} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (ABC : Tripartition n) [ABC.Decidable] (hs : s ⊆ (ABC \ t).toFinset)
     (hresp : respects s (G.deleteIncidencesOf t) (ABC \ t)) :
     respects s G ABC := by
@@ -1920,9 +1914,9 @@ lemma f_eq_in_sdiff {n : ℕ} (G : SimpleGraph (Fin n)) (ABC : Tripartition n)
   split_ifs
   any_goals lia
 
-lemma f_mono_degree {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n))
-    [DecidableRel G₁.Adj] [DecidableRel G₂.Adj] (ABC : Tripartition n)
-    {v : Fin n} : G₁.degree v = G₂.degree v → f G₁ ABC v = f G₂ ABC v := by
+lemma f_mono_degree {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n)) (ABC : Tripartition n)
+    {v : Fin n} [Fintype (G₁.neighborSet v)] [Fintype (G₂.neighborSet v)] :
+    G₁.degree v = G₂.degree v → f G₁ ABC v = f G₂ ABC v := by
   intro heq
   simp only [f, fA, fB, one_div, fC, dite_eq_ite, heq]
 
@@ -1948,8 +1942,8 @@ lemma f_pos_of_mem {n : ℕ} (G : SimpleGraph (Fin n)) (ABC : Tripartition n)
     simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_pos_iff_of_pos_right, inv_pos,
       one_add_pos]
 
-lemma f_mono {n : ℕ} {G₁ G₂ : SimpleGraph (Fin n)} [DecidableRel G₁.Adj] [DecidableRel G₂.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hle : G₂ ≤ G₁) :
+lemma f_mono {n : ℕ} {G₁ G₂ : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G₁.neighborSet v)] [Fintype (G₂.neighborSet v)] (hle : G₂ ≤ G₁) :
     f G₁ ABC v ≤ f G₂ ABC v := by
   if hv : v ∈ ABC then
     rcases ABC.mem_iff.mp hv with hA | hB | hC
@@ -1988,7 +1982,7 @@ lemma f_eq_sdiff {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
     rw [← f_eq_zero_of_notMem G hvABC, ← f_eq_zero_of_notMem G hvABC']
 
 private lemma eval_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n)) (hle : G₁ ≤ G₂)
-    [DecidableRel G₁.Adj] [DecidableRel G₂.Adj] (ABC : Tripartition n) [ABC.Decidable] :
+    [G₁.LocallyFinite] [G₂.LocallyFinite] (ABC : Tripartition n) [ABC.Decidable] :
     eval G₂ ABC ≤ eval G₁ ABC := by
   unfold eval
   refine sum_le_sum ?_
@@ -2003,7 +1997,7 @@ private lemma eval_mono {n : ℕ} (G₁ G₂ : SimpleGraph (Fin n)) (hle : G₁ 
   · simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC]
     exact fC_decreasing <| degree_le_of_le hle
 
-lemma eval_lt {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
+lemma eval_lt {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (ABC : Tripartition n) [ABC.Decidable] (W : Finset (Fin n)) (hW : W ∩ ABC.toFinset ≠ ∅) :
     eval G (ABC \ W) < eval G ABC := by
   unfold eval

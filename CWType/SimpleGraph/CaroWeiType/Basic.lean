@@ -10,20 +10,30 @@ def degree_in {V : Type*} [DecidableEq V] (G : SimpleGraph V) (s : Finset V) (x 
     [Fintype (G.neighborSet x)] : ℕ :=
   (G.neighborFinset x ∩ s).card
 
-def closed_neighborFinset_of_Finset {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V)
-    [DecidableRel G.Adj] (s : Finset V) : Finset V :=
-  {v : V | v ∈ s ∨ ∃ x ∈ s, G.Adj v x}
+def closed_neighborFinset_of_Finset {V : Type*} [DecidableEq V] (G : SimpleGraph V)
+    [G.LocallyFinite] (s : Finset V) : Finset V :=
+  s ∪ s.biUnion (G.neighborFinset ·)
 
-def N2 {V : Type*} [DecidableEq V] (G : SimpleGraph V) (v : V) : Set V :=
-  {u : V | u ≠ v ∧ ¬G.Adj u v ∧ ∃ w, G.Adj u w ∧ G.Adj w v}
-
-def N2_of_Finset {V : Type*} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj]
+def N2_of_Finset {V : Type*} [DecidableEq V] (G : SimpleGraph V) [G.LocallyFinite]
     (s : Finset V) : Finset V :=
-  {u : V | u ∉ s ∧ (∀ x ∈ s, ¬G.Adj u x) ∧ ∃ x ∈ s, ∃ w ∉ s, G.Adj u w ∧ G.Adj w x}
+  G.closed_neighborFinset_of_Finset (G.closed_neighborFinset_of_Finset s)
+    \ (G.closed_neighborFinset_of_Finset s)
 
 def deleteIncidencesOf {V : Type*} (G : SimpleGraph V) (s : Finset V) :
     SimpleGraph V :=
   G ⊓ ⨅ x ∈ s, G.deleteIncidenceSet x
+
+lemma deleteIncidensOf_neighborSet_subset {V : Type*} (G : SimpleGraph V) (s : Finset V) {v : V} :
+    (G.deleteIncidencesOf s).neighborSet v ⊆ G.neighborSet v := by
+  intro u
+  simp only [deleteIncidencesOf, mem_neighborSet, inf_adj, iInf_adj, ne_eq, and_imp]
+  intro h
+  simp only [h, implies_true]
+
+noncomputable instance {V : Type*} {G : SimpleGraph V} [G.LocallyFinite] {s : Finset V} :
+    (G.deleteIncidencesOf s).LocallyFinite :=
+  fun _ ↦ Set.Finite.fintype
+    <| Set.Finite.subset (Set.toFinite _) (deleteIncidensOf_neighborSet_subset ..)
 
 noncomputable instance instDecidableRel_deleteIncidencesOf {V : Type*} {W : Finset V}
     {G : SimpleGraph V} [DecidableRel G.Adj] : DecidableRel (G.deleteIncidencesOf W).Adj := by

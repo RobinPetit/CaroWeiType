@@ -11,11 +11,11 @@ namespace Tripartition
 open SimpleGraph
 open Finset
 
-lemma _notA23 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma _notA23 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {u v : Fin n} (huv : u ≠ v)
     (hBu : ABC.B u) (hdu : G.degree u = 3) (hBv : ABC.B v) (hdv : G.degree v = 3)
     {x : Fin n} (hx : x ∈ (G.neighborFinset u ∩ G.neighborFinset v))
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     (hAx : ABC.A x) (hdx : (G.degree x = 2 ∨ G.degree x = 3)) :
     Objective G ABC := by
@@ -28,12 +28,12 @@ lemma _notA23 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
       · exact mem_neighborFinset_symm <| (mem_inter.mp hx).2
     exact Claim11 hG hAx hdx hNx hBu hBv hdu hdv ih
 
-lemma Claim12 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim12 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {u v : Fin n} (huv : u ≠ v)
     (hBu : ABC.B u) (hdu : G.degree u = 3) (hBv : ABC.B v) (hdv : G.degree v = 3)
     {x y : Fin n} (hxy : x ≠ y)
     (hxyNuv : {x, y} ⊆ (G.neighborFinset u ∩ G.neighborFinset v))
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   if hx : (ABC.A x ∧ (G.degree x = 2 ∨ G.degree x = 3)) then
@@ -151,7 +151,7 @@ lemma Claim12 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
             simp only [add_left_inj, sub_left_inj]
             suffices ((ABC.toFinset \ {x, y, u, v}) ∪ {u, v}) = (ABC.toFinset \ {x, y}) by
               rw [← this]
-              have h' (H : SimpleGraph (Fin n)) [DecidableRel H.Adj] :
+              have h' (H : SimpleGraph (Fin n)) [H.LocallyFinite] :
                   ∑ w ∈ (ABC.toFinset \ {x, y, u, v}) ∪ {u, v},
                     f H (ABC \ {x, y}) w
                   = ∑ w ∈ ABC.toFinset \ {x, y, u, v}, f H (ABC \ {x, y}) w
