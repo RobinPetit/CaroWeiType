@@ -76,9 +76,10 @@ private lemma f_G_le_f_op_outside {n : ℕ} (G : SimpleGraph (Fin n)) [Decidable
     · exact le_refl _
 
 lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    (hG : G.support.toFinset ⊆ ABC.toFinset) {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ w, G.Adj v w ∧ f G ABC w ≤ 1 / 6) → Objective G ABC := by
   intro ⟨w, hvw, hfw⟩
   obtain ⟨x, y, z, hNv, hzy, hyx⟩ := neighborFinset_eq_deg3 (f G ABC ·) hdv
@@ -100,35 +101,19 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
       refine ABC.sdiff_card ?_
       suffices z ∈ ABC.toFinset by
         simp only [this, singleton_inter_of_mem, ne_eq, singleton_ne_empty, not_false_eq_true]
-      refine hG <| Set.mem_toFinset.mpr ?_
-      refine G.mem_support.mpr ⟨v, Adj.symm <| (G.mem_neighborFinset ..).mp ?_⟩
+      refine hG <| G.mem_support.mpr ⟨v, Adj.symm <| (G.mem_neighborFinset ..).mp ?_⟩
       simp only [hNv, mem_insert, mem_singleton, or_true]
     obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
       refine ih (_op G x y z) (ABC \ {z} |>.promote v) ?_ hcard
       rw [← promote_toFinset_eq]
       intro u hu
-      simp only [support, _op, deleteIncidencesOf, Set.union_singleton, mem_singleton,
-        deleteIncidenceSet, incidenceSet, edgeSet_fromEdgeSet, Set.mem_diff, Set.mem_insert_iff,
-        Sym2.mem_diagSet, deleteEdges_fromEdgeSet, fromEdgeSet_sdiff, iInf_iInf_eq_left,
-        sdiff_le_iff, le_sup_right, inf_of_le_right, sdiff_adj, fromEdgeSet_adj,
-        Sym2.eq, Sym2.rel_iff', Prod.swap_prod_mk, ne_eq, Set.mem_setOf_eq, Sym2.isDiag_iff_proj_eq,
-        not_and, Decidable.not_not, and_imp, Set.mem_toFinset, SetRel.mem_dom, Prod.mk.injEq,
-        mem_edgeSet, Sym2.mem_iff] at hu
-      simp only [Tripartition.sdiff_toFinset]
-      obtain ⟨u', hu', hu''⟩ := hu
-      have hx : x ∈ ABC.toFinset := hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, h₁'.symm⟩
-      have hy : y ∈ ABC.toFinset := hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, h₂'.symm⟩
-      refine mem_sdiff.mpr ⟨?_, ?_⟩
-      · rcases hu'.1 with ⟨hu | hu⟩ | hu
-        · exact hu.1 ▸ hx
-        · exact hu.1 ▸ hy
-        · exact hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨u', hu⟩
-      · simp only [mem_singleton]
-        intro heq
-        subst heq
-        simp only [Ne.symm H₂, false_and, Ne.symm H₃, or_self, false_or, true_or, forall_const,
-          _root_.not_imp_self] at hu' hu''
-        exact hu'.2 <| hu'' hu'.1
+      simp only [_op] at hu
+      simp only [toFinset, toSet, mem_sdiff_iff, Set.coe_toFinset, Set.mem_setOf_eq]
+      refine ⟨ABC.mem_toFinset.mpr <| hG ?_, notMem_of_mem_support_deleteIncidencesOf hu⟩
+      obtain ⟨u', hu'⟩ := mem_support _ |>.mp hu
+      rcases adj_fromEdgeSet_union_iff.mp <| deleteIncidencesOf_le hu' with hu' | hu'
+      · exact G.mem_support.mpr ⟨u', hu'⟩
+      · exact G.mem_support.mpr ⟨v, Adj.symm <| by grind⟩
     have hznotins : z ∉ s := by
       simp only [← promote_toFinset_eq, sdiff_toFinset] at hs
       intro this
@@ -187,8 +172,7 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
           refine C_of_promote_ne _ (Ne.symm heq) ⟨hCu, ?_⟩
           simp only [mem_singleton]
           exact fun heq ↦ (heq ▸ hznotins) hu
-    · have hinABC {u} (hu : G.Adj v u) : u ∈ ABC.toFinset :=
-        hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨v, hu.symm⟩
+    · have hinABC {u} (hu : G.Adj v u) : u ∈ ABC.toFinset := hG <| G.mem_support.mpr ⟨v, hu.symm⟩
       calc eval G ABC
         _ = ∑ w ∈ ABC.toFinset \ {v, x, y, z}, f G ABC w + ∑ w ∈ {v, x, y, z}, f G ABC w := by
           refine Eq.symm <| sum_sdiff ?_
@@ -196,7 +180,7 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
           simp only [mem_insert, mem_singleton] at hu
           rcases hu with h | h | h | h
           · subst h
-            simp [← ABC.coe_mem_toFinset, hBv]
+            simp [← ABC.mem_toFinset, hBv]
           · subst h; exact hinABC h₁'
           · subst h; exact hinABC h₂'
           · subst h; exact hinABC h₃'
@@ -230,7 +214,7 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
           refine mem_sdiff.mpr ⟨?_, by grind [h₃'.ne]⟩
           rcases hu with h | h | h
           · subst h
-            refine ABC.coe_mem_toFinset.mp ?_
+            refine ABC.mem_toFinset.mp ?_
             simp only [mem_iff, hBv, or_true, not_A_of_B, not_C_of_B, or_false]
           · subst h
             exact hinABC h₁'
@@ -340,15 +324,15 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
           rw [← fA2 hA'v hdv']
 
 lemma Corollary9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    (hG : G.support.toFinset ⊆ ABC.toFinset) {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ w, G.Adj v w ∧ ABC.C w) → Objective G ABC := by
   intro ⟨w, hvw, hCw⟩
   if hdw : G.degree w ≤ 1 then
     refine Claim5 hG ih ⟨w, ?_, hdw⟩
-    exact ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr
-      <| G.mem_support |>.mpr ⟨v, hvw.symm⟩
+    exact ABC.mem_toFinset.mpr <| hG <| G.mem_support |>.mpr ⟨v, hvw.symm⟩
   else
     refine Claim9 hG hBv hdv ih ⟨w, hvw, ?_⟩
     refine fC_le_16_if_2_le_deg hCw ?_

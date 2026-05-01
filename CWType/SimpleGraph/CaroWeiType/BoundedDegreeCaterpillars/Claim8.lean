@@ -13,9 +13,9 @@ open SimpleGraph
 open Finset
 
 private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
+    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v w : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3) (hvw : G.Adj v w)
     (hw : w ∈ ABC) (hdw : G.degree w ≤ 2) : Objective G ABC := by
   if hdw : G.degree w ≤ 1 then
@@ -26,16 +26,16 @@ private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
     exact Claim6 hG ih ⟨_, by grind, hAw⟩
 
 lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (ABC : Tripartition n) (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
+    (ABC : Tripartition n) [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
     (hne : x ≠ y) (hyx : f G ABC y ≤ f G ABC x) :
     ℓ G ABC x + ℓ G ABC y > 1 / 6 → Objective G ABC := by
   intro h
   have hv : v ∈ ABC := by grind [ABC.mem_iff]
   have hinABC {v₁ v₂} (h : G.Adj v₁ v₂) : v₁ ∈ ABC :=
-    ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr <| (mem_support G).mpr ⟨v₂, h⟩
+    ABC.mem_toFinset.mpr <| hG <| G.mem_support.mpr ⟨v₂, h⟩
   if hdx : G.degree x ≤ 2 then
     exact solve_deg_le_2 hG ih hBv hdegv hx.symm (hinABC hx) hdx
   else if hdy : G.degree y ≤ 2 then

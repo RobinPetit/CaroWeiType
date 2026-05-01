@@ -391,18 +391,18 @@ namespace SimpleGraph
 
 variable {V : Type*} {G : SimpleGraph V}
 
-lemma mem_of_subset_of_degree_pos {s : Finset V} {v : V} [Fintype G.support]
-    [Fintype (G.neighborSet v)] (h : G.support.toFinset ⊆ s) (hv : 0 < G.degree v) :
+lemma mem_of_subset_of_degree_pos {s : Finset V} {v : V}
+    [Fintype (G.neighborSet v)] (h : G.support ⊆ s) (hv : 0 < G.degree v) :
     v ∈ s :=
-  h <| Set.mem_toFinset.mpr <| G.degree_pos_iff_mem_support _ |>.mp hv
+  h <| G.degree_pos_iff_mem_support _ |>.mp hv
 
-lemma mem_of_subset_of_adj {s : Finset V} {v w : V} [Fintype G.support]
-    (h : G.support.toFinset ⊆ s) (hv : G.Adj w v) :
+lemma mem_of_subset_of_adj {s : Finset V} {v w : V}
+    (h : G.support ⊆ s) (hv : G.Adj w v) :
     v ∈ s :=
-  h <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨w, hv.symm⟩
+  h <| G.mem_support.mpr ⟨w, hv.symm⟩
 
-lemma mem_of_subset_of_mem_neighborFinset {s : Finset V} {v w : V} [Fintype G.support]
-    [Fintype (G.neighborSet w)] (h : G.support.toFinset ⊆ s) (hv : v ∈ G.neighborFinset w) :
+lemma mem_of_subset_of_mem_neighborFinset {s : Finset V} {v w : V}
+    [Fintype (G.neighborSet w)] (h : G.support ⊆ s) (hv : v ∈ G.neighborFinset w) :
     v ∈ s :=
   mem_of_subset_of_adj h (G.mem_neighborFinset .. |>.mp hv)
 
@@ -446,6 +446,15 @@ lemma ne_of_mem_neighborFinset {u v : V} [Fintype (G.neighborSet v)] :
 lemma ne'_of_mem_neighborFinset {u v : V} [Fintype (G.neighborSet v)] :
     u ∈ G.neighborFinset v → v ≠ u :=
   fun h ↦ Adj.ne <| G.mem_neighborFinset .. |>.mp h
+
+lemma notMem_singleton_of_mem_neighborFinset {u v : V} [Fintype (G.neighborSet v)] :
+    u ∈ G.neighborFinset v → u ∉ ({v} : Finset _) :=
+  fun h ↦ notMem_singleton.mpr <| ne_of_mem_neighborFinset h
+
+lemma notMem_singleton_of_mem_neighborFinset' {u v : V} [Fintype (G.neighborSet v)] :
+    u ∈ G.neighborFinset v → v ∉ ({u} : Finset _) :=
+  fun h ↦ notMem_singleton.mpr <| ne'_of_mem_neighborFinset h
+
 lemma le_fromEdgeSet_union {s : Set (Sym2 V)} :
     G ≤ (fromEdgeSet <| G.edgeSet ∪ s) :=
   fun _ _ hvw ↦ fromEdgeSet_adj _ |>.mpr ⟨Set.mem_union_left _ <| G.mem_edgeSet.mpr hvw, hvw.ne⟩
@@ -523,6 +532,17 @@ lemma closed_neighborFinset_contains_Finset [Fintype V] [DecidableEq V] [Decidab
     {s : Finset V} : s ⊆ G.closed_neighborFinset_of_Finset s := by
   intro u hu
   simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, hu, true_or, and_self]
+
+lemma mem_closed_neighborFinset_of_adj [Fintype V] [DecidableEq V] [DecidableRel G.Adj]
+    {s : Finset V} {v w : V} (hv : v ∈ s) (hvw : G.Adj w v) :
+    w ∈ G.closed_neighborFinset_of_Finset s := by
+  simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
+  exact Or.inr ⟨v, hv, hvw⟩
+
+lemma mem_closed_neighborFinset_of_adj' [Fintype V] [DecidableEq V] [DecidableRel G.Adj]
+    {s : Finset V} {v w : V} (hv : v ∈ s) (hvw : G.Adj v w) :
+    w ∈ G.closed_neighborFinset_of_Finset s :=
+  mem_closed_neighborFinset_of_adj hv hvw.symm
 
 lemma deleteIncidencesOf_le {s : Finset V} :
     (G.deleteIncidencesOf s) ≤ G := by
@@ -663,12 +683,13 @@ theorem cw_bound_mono (f : ℕ → ℝ) {n : ℕ} {v : Fin n}
     {δ : ℕ}
     (hΔ : G.maxDegree > δ)
     (X : Finset (Fin n))
-    (hX : G.support.toFinset ⊆ X)
+    (hX : G.support ⊆ X)
     (hγ : ∀ d₁ d₂, δ < d₁ → d₁ ≤ d₂ → f (d₂ - 1) - f d₂ ≤ f (d₁ - 1) - f d₁)
     (hNv : ∀ x ∈ G.neighborFinset v, G.degree x > δ)
     (hγ' : ∀ d, δ < d → d * (f (d - 1) - f d) ≥ f d) :
     ∑ x ∈ X, f (G.degree x) ≤ ∑ x ∈ (X \ {v}), f ((G.deleteIncidenceSet v).degree x) := by
-  have Nv_subs_X : G.neighborFinset v ⊆ X := subset_trans neighborFinset_subset_support hX
+  have Nv_subs_X : G.neighborFinset v ⊆ X :=
+    subset_trans neighborFinset_subset_support (Set.toFinset_subset.mpr hX)
   suffices f (G.degree v)
       ≤ ∑ x ∈ G.neighborFinset v, (f ((G.deleteIncidenceSet v).degree x) - f (G.degree x)) by
     calc ∑ x ∈ X, f (G.degree x)

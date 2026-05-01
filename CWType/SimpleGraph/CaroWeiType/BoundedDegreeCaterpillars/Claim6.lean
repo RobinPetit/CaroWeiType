@@ -12,9 +12,9 @@ open SimpleGraph
 open Finset
 
 lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ v, G.degree v = 2 ∧ ¬ABC.A v) → Objective G ABC := by
   intro h
   if hwdeg : ∃ w ∈ ABC, G.degree w ≤ 1 then
@@ -25,8 +25,7 @@ lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
   obtain ⟨u, w, huw, hle⟩ := neighborFinset_eq_deg2' (f G ABC ·) hdegv
   have hABC {x} : 0 < G.degree x → x ∈ ABC := by
     intro h
-    refine ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr ?_
-    exact G.degree_pos_iff_mem_support x |>.mp h
+    refine ABC.mem_toFinset.mpr <| hG <| G.degree_pos_iff_mem_support x |>.mp h
   have hv : v ∈ ABC := hABC <| Nat.lt_of_sub_eq_succ hdegv
   have hw : w ∈ ABC := by
     refine hABC <| (G.degree_pos_iff_exists_adj _).mpr ⟨v, ?_⟩

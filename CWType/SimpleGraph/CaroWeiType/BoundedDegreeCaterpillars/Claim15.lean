@@ -14,9 +14,9 @@ open SimpleGraph
 open Finset
 
 lemma Claim15 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    (hG : G.support.toFinset ⊆ ABC.toFinset) {û : Fin n} (hû : IsVstar G ABC û)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û : Fin n} (hû : IsVstar G ABC û)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨ 4 ≤ G.degree û := by
   cases Claim14 hG hû ih with
   | inl h => exact Or.inl h
@@ -39,8 +39,8 @@ lemma Claim15 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
       exact hABC
     refine Or.inl ?_
     have hABC {u v : Fin n} (huv : u ∈ G.neighborFinset v) : u ∈ ABC :=
-      ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr
-        <| G.mem_support.mpr ⟨_, Adj.symm <| G.mem_neighborFinset .. |>.mp <| huv⟩
+      ABC.mem_toFinset.mpr <| hG
+        <| G.mem_support.mpr ⟨_, Adj.symm <| G.mem_neighborFinset .. |>.mp huv⟩
     if hNvC : ∃ w ∈ G.neighborFinset û, ABC.C w ∧ G.degree w = 3 then
       obtain ⟨w, hw, hCw, hdw⟩ := hNvC
       refine Corollary1 hG (G.mem_neighborFinset .. |>.mp hw).symm ih ?_

@@ -10,12 +10,13 @@ open SimpleGraph
 open Finset
 
 lemma Claim3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    {ABC : Tripartition n} [ABC.Decidable] {v : Fin n} (hv : v ∈ ABC)
+    (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     ∑ w ∈ G.neighborFinset v, f G ABC w ≤ 1 - f G ABC v → Objective G ABC := by
   intro h
-  refine Corollary2 (singleton_nonempty v) hG (by simp [ABC.coe_mem_toFinset.mp hv])
+  refine Corollary2 (singleton_nonempty v) hG (by simp [ABC.mem_toFinset.mp hv])
     respects_singleton ih InducesLinearForest_singleton ?_
   calc ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f G ABC w
     _ = ∑ w ∈ G.neighborFinset v ∪ {v}, f G ABC w := by
@@ -36,9 +37,10 @@ lemma Claim3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       refine Eq.symm <| Nat.cast_inj.mpr <| card_singleton _
 
 lemma Corollary3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    {ABC : Tripartition n} [ABC.Decidable] {v : Fin n} (hv : v ∈ ABC)
+    (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∀ w ∈ G.neighborFinset v, f G ABC w ≤ (1 - f G ABC v) / (G.degree v : ℝ))
       → Objective G ABC := by
   intro h

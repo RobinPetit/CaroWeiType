@@ -419,7 +419,7 @@ theorem AlonKahnSeymour {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
         refine lt_of_le_of_lt' ?_ hδ
         rw [G.degree_eq _ hX]
         exact hdegv' _ hvX
-      refine cw_bound_mono (aks_bound k) G hvΔ hΔk X (Set.toFinset_subset.mpr hX) ?_ ?_ ?_
+      refine cw_bound_mono (aks_bound k) G hvΔ hΔk X hX ?_ ?_ ?_
       · intro d₁ d₂ hd₁ hd₂
         exact aks_gain_decreasing' k d₁ d₂ hd₁ hd₂
       · intro x hx

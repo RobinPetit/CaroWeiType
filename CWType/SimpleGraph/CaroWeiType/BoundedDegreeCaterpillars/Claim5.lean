@@ -11,22 +11,22 @@ open SimpleGraph
 open Finset
 
 lemma Claim5_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x = 0) → Objective G ABC := by
   intro ⟨x, hx, hdegx0⟩
   have hcard' : (ABC \ {x}).card < ABC.card := by
     refine ABC.sdiff_card ?_
     refine nonempty_iff_ne_empty.mp ⟨x, ?_⟩
-    exact mem_inter.mpr ⟨mem_singleton.mpr rfl, ABC.coe_mem_toFinset.mp hx⟩
+    exact mem_inter.mpr ⟨mem_singleton.mpr rfl, ABC.mem_toFinset.mp hx⟩
   obtain ⟨s', hs'1, hs'2, hs'3, hs'4⟩ :=
     ih (G.deleteIncidencesOf {x}) (ABC \ {x}) (hsupp_mono hG) hcard'
   refine ⟨s' ∪ {x}, ?_, ?_, ?_, ?_⟩
   · intro w hw
     rcases mem_union.mp hw with hw | hw
     · exact mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs'1 hw) |>.1
-    · exact (mem_singleton.mp hw) ▸ ABC.coe_mem_toFinset.mp hx
+    · exact (mem_singleton.mp hw) ▸ ABC.mem_toFinset.mp hx
   · refine G.IsDegenerateSet_union s' {x} ?_ (by simp [hdegx0])
     refine IsDegenerateSet_mono' G _ s' {x} ?_ hs'2
     ext y
@@ -40,7 +40,7 @@ lemma Claim5_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
   · calc eval G ABC
       _ = ∑ v ∈ ABC.toFinset, f G ABC v := rfl
       _ = ∑ v ∈ ABC.toFinset \ {x}, f G ABC v + f G ABC x := by
-        have hxABC : {x} ⊆ ABC.toFinset := by simp [ABC.coe_mem_toFinset.mp hx]
+        have hxABC : {x} ⊆ ABC.toFinset := by simp [ABC.mem_toFinset.mp hx]
         rw [← sum_sdiff hxABC]
         rw [sum_singleton (f G ABC ·) x]
       _ = ∑ v ∈ ABC.toFinset \ {x}, f (G.deleteIncidencesOf {x}) (ABC \ {x}) v + f G ABC x := by
@@ -68,7 +68,7 @@ lemma Claim5_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
         simp only [mem_singleton, not_true_eq_false] at hobj
 
 private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {x u : Fin n} (hu' : ∀ y, G.Adj x y → y = u)
+    {ABC : Tripartition n} [ABC.Decidable] {x u : Fin n} (hu' : ∀ y, G.Adj x y → y = u)
     (hABx : ABC.A x ∨ ABC.B x) (hCu : ¬ABC.C u) (hxu : G.Adj x u)
     (hdx : G.degree x = 1) {s : Finset (Fin n)} (hs : s ⊆ ((ABC \ {x}).demote u).toFinset)
     (hsresp : respects s (G.deleteIncidenceSet x) ((ABC \ {x}).demote u)) :
@@ -76,7 +76,7 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
   have hxnotins : x ∉ s := by
     intro this
     let hobj := hs this
-    simp only [← demote_toFinset_eq, ← Tripartition.coe_mem_toFinset] at hobj
+    simp only [← demote_toFinset_eq, ← Tripartition.mem_toFinset] at hobj
     exact ABC.sdiff_notMem {x} x (mem_singleton.mpr rfl) hobj |>.elim
   intro z hz
   simp only [union_singleton, mem_insert] at hz
@@ -144,9 +144,9 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
       · exact fun hC ↦ h₃ <| C_of_demote_ne _ ⟨hC, hznotinx⟩
 
 lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x = 1) → Objective G ABC := by
   intro ⟨x, hx, hdegx⟩
   obtain ⟨u, hu, hu'⟩ := degree_eq_one_iff_existsUnique_adj.mp hdegx
@@ -154,8 +154,7 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
     ext y
     simp only [mem_neighborFinset, mem_singleton]
     exact ⟨hu' y, fun heq ↦ heq ▸ hu⟩
-  have huABC : u ∈ ABC :=
-    ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨x, hu.symm⟩
+  have huABC : u ∈ ABC := ABC.mem_toFinset.mpr <| hG <| G.mem_support.mpr ⟨x, hu.symm⟩
   simp only at hu hu'
   have hx' : (ABC.A x ∨ ABC.B x) ∨ ABC.C x := by grind [ABC.mem_iff.mp hx]
   cases hx' with
@@ -187,25 +186,25 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
     -- {u, x} ⊆ A ∪ B as well
     obtain ⟨s, hs, hsf, hsresp, hscard⟩ := by
       refine ih (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) ?_ ?_
-      · simp_rw [← deleteIncidencesOf_singleton_eq_deleteIncidenceSet G x, ← demote_toFinset_eq _]
+      · simp_rw [← deleteIncidencesOf_singleton_eq_deleteIncidenceSet x, ← demote_toFinset_eq _]
         exact hsupp_mono hG
       · simp only [← Tripartition.card_demote_eq_card]
         refine Tripartition.sdiff_card ABC ?_
         refine nonempty_iff_ne_empty.mp ?_
-        exact ⟨x, by simp only [ABC.coe_mem_toFinset.mp hx, singleton_inter_of_mem, mem_singleton]⟩
+        exact ⟨x, by simp only [ABC.mem_toFinset.mp hx, singleton_inter_of_mem, mem_singleton]⟩
     have hs'ABC : s ∪ {x} ⊆ ABC.toFinset := by
       intro y
       simp only [union_singleton, mem_insert]
       intro hy
       rcases hy with hy | hy
-      · exact ABC.coe_mem_toFinset.mp (hy ▸ hx)
+      · exact ABC.mem_toFinset.mp (hy ▸ hx)
       · let hobj := hs hy
         simp only [← Tripartition.demote_toFinset_eq, Tripartition.sdiff_toFinset] at hobj
         exact mem_sdiff.mp hobj |>.1
     have hxnotins : x ∉ s := by
       intro this
       let hobj := hs this
-      simp only [← demote_toFinset_eq, ← Tripartition.coe_mem_toFinset] at hobj
+      simp only [← demote_toFinset_eq, ← Tripartition.mem_toFinset] at hobj
       have : x ∉ ABC \ {x} := ABC.sdiff_notMem {x} x <| mem_singleton.mpr rfl
       contradiction
     let hs'resp := _Claim5_1_respect hu' hABx hCu hu hdegx hs hsresp
@@ -244,7 +243,7 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
           simp only [add_left_inj]
           rw [← sum_singleton (f G ABC ·) u]
           refine Eq.symm <| sum_sdiff ?_
-          simp [hu.ne', ABC.coe_mem_toFinset.mp huABC]
+          simp [hu.ne', ABC.mem_toFinset.mp huABC]
         _ = ∑ v ∈ (ABC.toFinset \ {x}) \ {u}, f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) v
             + f G ABC u + 5 / 6 := by
           simp only [add_left_inj]
@@ -272,7 +271,7 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
             simp only [f, hA, hA', ↓reduceDIte, hB, hB', fB, hdegeq]
           else
             have hC : ABC.C v := by
-              rcases ABC.coe_mem_toFinset.mpr hv.1.1 with h | h | h
+              rcases ABC.mem_toFinset.mpr hv.1.1 with h | h | h
               · exact hA h |>.elim
               · exact hB h |>.elim
               · exact h
@@ -299,7 +298,7 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
           simp only [add_left_inj, sub_left_inj]
           rw [← sum_singleton (f _ _ ·) u]
           refine sum_sdiff ?_
-          simp only [singleton_subset_iff, this, ABC.coe_mem_toFinset.mp huABC, mem_sdiff, hu.ne',
+          simp only [singleton_subset_iff, this, ABC.mem_toFinset.mp huABC, mem_sdiff, hu.ne',
             mem_singleton, not_false_eq_true, and_true]
         _ = eval (G.deleteIncidenceSet x) ((ABC \ {x}).demote u)
             - f (G.deleteIncidenceSet x) ((ABC \ {x}).demote u) u + f G ABC u + 5 / 6 := by
@@ -366,9 +365,9 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
         _ = 0 := sub_self _
 
 lemma Claim5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x ≤ 1) → Objective G ABC := by
   intro ⟨x, hx, hdegx⟩
   if hdegx0 : G.degree x = 0 then

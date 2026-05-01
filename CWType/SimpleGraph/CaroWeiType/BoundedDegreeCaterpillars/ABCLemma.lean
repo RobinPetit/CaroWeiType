@@ -22,16 +22,16 @@ private lemma exists_argmin {α β : Type*} [LinearOrder β] {s : Finset α} (hs
   · exact hmin _ hy
 
 theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (hG : G.support.toFinset ⊆ ABC.toFinset) :
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) :
     Objective G ABC := by
   induction hcard : ABC.card using Nat.strong_induction_on generalizing G ABC with | h k ih
   if hk : k = 0 then
     refine ⟨∅, ?_, ?_, ?_, ?_⟩ <;>
     simp [respects, card_eq_zero.mp <| hk ▸ hcard, InducesForest, IsDegenerateSet]
   else
-  have ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC' :=
-    fun G' _ ABC' hsupp' hcardABC' ↦ ih ABC'.card (hcard ▸ hcardABC') G' ABC' hsupp' rfl
+  have ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC' :=
+    fun G' _ ABC' _ hsupp' hcardABC' ↦ ih ABC'.card (hcard ▸ hcardABC') G' ABC' hsupp' rfl
   let W := ({v | v ∈ ABC.toFinset ∧ 0 < γ G ABC v} : Finset _)
   if hW : W = ∅ then
     have H : ∀ v ∈ ABC.toFinset, γ G ABC v = 0 := by
@@ -52,22 +52,22 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
         exact Claim5 hG ih ⟨v, Or.inr <| Or.inr hv, hdv⟩
       else
         simp only [not_le] at hdv
-        have _ : γ G ABC v = 0 := H _ (ABC.coe_mem_toFinset.mp <| Or.inr <| Or.inr hv)
+        have _ : γ G ABC v = 0 := H _ (ABC.mem_toFinset.mp <| Or.inr <| Or.inr hv)
         let hobj := γ_eq_0_iff (Or.inr <| Or.inr hv) (Nat.one_le_of_lt hdv) |>.mp
-          <| H _ (ABC.coe_mem_toFinset.mp <| Or.inr <| Or.inr hv)
+          <| H _ (ABC.mem_toFinset.mp <| Or.inr <| Or.inr hv)
         simp only [hv, and_true, not_B_of_C, and_false, false_or] at hobj
         rcases hobj with hdv | hdv
         · obtain ⟨w, hvw⟩ := G.degree_pos_iff_exists_adj v |>.mp <| by lia
           if hdw : G.degree w ≤ 1 then
             refine Claim5 hG ih ⟨w, ?_, hdw⟩
-            refine ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr ?_
+            refine ABC.mem_toFinset.mpr <| hG ?_
             exact G.degree_pos_iff_mem_support _ |>.mp <| Adj.degree_pos_left hvw.symm
           else
             simp only [not_le] at hdw
             have hw : w ∈ ABC := by
-              refine ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr ?_
+              refine ABC.mem_toFinset.mpr <| hG ?_
               exact (degree_pos_iff_mem_support G w).mp <| Adj.degree_pos_left hvw.symm
-            have hγw : γ G ABC w = 0 := H _ <| ABC.coe_mem_toFinset.mp hw
+            have hγw : γ G ABC w = 0 := H _ <| ABC.mem_toFinset.mp hw
             let hobj := γ_eq_0_iff hw (Nat.one_le_of_lt hdw) |>.mp hγw
             rcases hobj with ⟨hdw, hw⟩ | ⟨hdw, hw⟩ | ⟨hdw, hw⟩
             · exact Corollary9 hG hw hdw ih ⟨v, hvw.symm, hv⟩
@@ -82,7 +82,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
           exact Or.inl <| Claim5 hG ih ⟨x, hx, hdx⟩
         else
           simp only [not_le] at hdx
-          let := γ_eq_0_iff hx (Nat.one_le_of_lt hdx) |>.mp <| H _ <| ABC.coe_mem_toFinset.mp hx
+          let := γ_eq_0_iff hx (Nat.one_le_of_lt hdx) |>.mp <| H _ <| ABC.mem_toFinset.mp hx
           grind
       rcases hW with hW | hW
       · exact hW
@@ -90,11 +90,11 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
           grind only
         else
           obtain ⟨v, hv⟩ := nonempty_def.mp <| nonempty_iff_ne_empty.mpr this
-          obtain ⟨hBv, hdv⟩ := hW v (ABC.coe_mem_toFinset.mpr hv)
+          obtain ⟨hBv, hdv⟩ := hW v (ABC.mem_toFinset.mpr hv)
           obtain ⟨x, y, z, H, _⟩ := neighborFinset_eq_deg3 (G.degree ·) hdv
           have : (ABC.B x ∧ G.degree x = 3) ∧ (ABC.B y ∧ G.degree y = 3) := by
             refine ⟨?_, ?_⟩ <;> {
-              refine hW _ <| ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr ?_
+              refine hW _ <| ABC.mem_toFinset.mpr <| hG ?_
               refine G.mem_support.mpr ⟨v, Adj.symm <| G.mem_neighborFinset .. |>.mp ?_⟩
               simp only [H, mem_insert, mem_singleton, true_or, or_true]
             }
@@ -116,9 +116,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC :
       refine fun v hv _ ↦ hû.2 _ ?_
       simp only [mem_filter, mem_univ, true_and, W]
       refine ⟨?_, lt_of_le_of_ne γ_nonneg (Ne.symm hv.2)⟩
-      refine hG <| Set.mem_toFinset.mpr ?_
-      refine G.degree_pos_iff_mem_support _ |>.mp ?_
-      refine Nat.zero_lt_of_ne_zero ?_
+      refine hG <| G.degree_pos_iff_mem_support _ |>.mp <| Nat.zero_lt_of_ne_zero ?_
       simp only [ne_eq] at hv
       exact γ_eq_zero_of_deg_eq_zero.mt hv.2
     sorry

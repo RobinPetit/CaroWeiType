@@ -10,38 +10,33 @@ open SimpleGraph
 open Finset
 
 lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v : Fin n} (hv : v ∈ ABC) (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    {ABC : Tripartition n} [ABC.Decidable] {v : Fin n} (hv : v ∈ ABC)
+    (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ ∑ w ∈ G.neighborFinset v, γ G ABC w → Objective G ABC := by
-  have hNv : G.neighborFinset v ⊆ ABC.toFinset := by
-    intro u hu
-    refine hG <| Set.mem_toFinset.mpr ?_
-    refine G.mem_support.mpr ⟨v, ?_⟩
-    exact G.mem_neighborFinset .. |>.mp <| mem_neighborFinset_symm hu
+  have hNv : G.neighborFinset v ⊆ ABC.toFinset :=
+    fun u hu ↦ hG <| G.mem_support.mpr ⟨v, Adj.symm <| G.mem_neighborFinset .. |>.mp <| hu⟩
   have hNv' : G.neighborFinset v ⊆ (ABC \ {v}).toFinset := by
     rw [sdiff_toFinset]
-    intro w hw
-    refine mem_sdiff.mpr ⟨hNv hw, ?_⟩
-    simp only [mem_singleton, ne_of_mem_neighborFinset hw,
-      not_false_eq_true]
+    exact fun w hw ↦ mem_sdiff.mpr ⟨hNv hw, notMem_singleton_of_mem_neighborFinset hw⟩
   intro h
   have hvABC : {v} ∩ ABC.toFinset ≠ ∅ := by
     refine nonempty_iff_ne_empty.mp ⟨v, ?_⟩
-    simp only [← coe_mem_toFinset, hv, singleton_inter_of_mem, mem_singleton]
+    simp only [← mem_toFinset, hv, singleton_inter_of_mem, mem_singleton]
   refine Claim0 hvABC hG ?_ ih
   calc eval G ABC
     _ = ∑ x ∈ (ABC \ {v}).toFinset, f G ABC x + f G ABC v := by
       rw [sdiff_toFinset, ← sum_singleton (f G ABC ·) _]
-      exact Eq.symm <| sum_sdiff <| singleton_subset_iff.mpr <| ABC.coe_mem_toFinset .. |>.mp hv
+      exact Eq.symm <| sum_sdiff <| singleton_subset_iff.mpr <| ABC.mem_toFinset .. |>.mp hv
     _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
       + ∑ x ∈ G.neighborFinset v, f G ABC x + f G ABC v := by
       simp only [add_left_inj]
       refine Eq.symm <| sum_sdiff ?_
       intro x hx
       have hxnev : x ≠ v := G.mem_neighborFinset .. |>.mp hx |>.ne'
-      refine Tripartition.coe_mem_toFinset .. |>.mp
-        <| (ABC.mem_sdiff_iff _).mpr ⟨ABC.coe_mem_toFinset.mpr <| hNv hx, ?_⟩
+      refine Tripartition.mem_toFinset .. |>.mp
+        <| (ABC.mem_sdiff_iff _).mpr ⟨ABC.mem_toFinset.mpr <| hNv hx, ?_⟩
       simp only [mem_singleton, hxnev, not_false_eq_true]
     _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
         + (∑ x ∈ G.neighborFinset v, f G ABC x + f G ABC v) := by
@@ -82,7 +77,7 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       if hwv : w ∈ ({v} : Set _) then
         simp only [Set.mem_singleton_iff] at hwv
         simp only [mem_neighborFinset, not_mem_neighborFinset_symm <| hwv ▸ hx.2, iff_false]
-        exact not_adj_symm <| deleteIncidencesOf_notadj _ (mem_singleton.mpr hwv)
+        exact not_adj_symm <| deleteIncidencesOf_notadj (mem_singleton.mpr hwv)
       else
         refine (deleteIncidencesOf_mem_neighborFinset_iff_of_notMem ?_  hx.1.2).symm
         simp only [mem_singleton] at hwv ⊢
@@ -102,12 +97,12 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       exact hobj
 
 lemma Corollary1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {v w : Fin n} (hG : G.support.toFinset ⊆ ABC.toFinset)
+    {ABC : Tripartition n} [ABC.Decidable] {v w : Fin n} (hG : G.support ⊆ ABC.toFinset)
     (hw : G.Adj v w)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ γ G ABC w → Objective G ABC := by
-  let hv := ABC.coe_mem_toFinset.mpr <| hG <| Set.mem_toFinset.mpr <| G.mem_support.mpr ⟨w, hw⟩
+  let hv := ABC.mem_toFinset.mpr <| hG <| G.mem_support.mpr ⟨w, hw⟩
   intro h
   refine Claim1 hv hG ih <| le_trans h ?_
   calc γ G ABC w

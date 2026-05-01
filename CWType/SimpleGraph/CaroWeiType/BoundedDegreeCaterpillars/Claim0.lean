@@ -9,17 +9,17 @@ open SimpleGraph
 open Finset
 
 lemma Claim0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {W : Finset (Fin n)} (hWABC' : W ∩ ABC.toFinset ≠ ∅)
-    (hG : G.support.toFinset ⊆ ABC.toFinset)
+    {ABC : Tripartition n} [ABC.Decidable] {W : Finset (Fin n)} (hWABC' : W ∩ ABC.toFinset ≠ ∅)
+    (hG : G.support ⊆ ABC.toFinset)
     (h : eval G ABC ≤ eval (G.deleteIncidencesOf W) (ABC \ W))
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   have h' : (ABC \ W).card < ABC.card := sdiff_card ABC hWABC'
   obtain ⟨s, ⟨hs1, hs2, hs3, hs4⟩⟩ := ih (G.deleteIncidencesOf W) (ABC \ W) (hsupp_mono hG) h'
   have hsW : s ∩ W = ∅ := by grind [sdiff_toFinset]
   refine ⟨s, ?_, ?_, ?_, ?_⟩
-  · simp only [Tripartition.toFinset, Tripartition.mem_iff] at hs1 ⊢
+  · simp only [Tripartition.toFinset] at hs1 ⊢
     exact subset_trans hs1 toFinset_mono
   · exact InducesForest_mono' hsW hs2
   · intro x hx

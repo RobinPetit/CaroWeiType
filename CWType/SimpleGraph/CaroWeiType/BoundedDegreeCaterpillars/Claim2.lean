@@ -14,11 +14,11 @@ private lemma hAiff {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartiti
   exact ⟨fun h ↦ by simp [Tripartition.sdiff, h, hw], fun h ↦ h.1⟩
 
 lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {F : Finset (Fin n)} (hFne : F.Nonempty)
+    {ABC : Tripartition n} [ABC.Decidable] {F : Finset (Fin n)} (hFne : F.Nonempty)
     (hF : F ⊆ ABC.toFinset) (hF' : respects F G ABC)
-    (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ eval G ABC - eval (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F)
                              (ABC \ G.closed_neighborFinset_of_Finset F) →
@@ -33,15 +33,11 @@ lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       (ABC \ (G.closed_neighborFinset_of_Finset F)) (hsupp_mono hG) (ABC.sdiff_card hcap)
   have hresp : respects (s' ∪ F) G ABC := by
     refine respects_union (respects_mono G ABC hs' hresp) hF' ?_
-    intro y hy z hz this
-    have _ : y ∈ G.closed_neighborFinset_of_Finset F := by
-      simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
-      refine Or.inr ⟨z, hz, this⟩
+    intro y hy z hz
     let hobj := hs' hy
-    simp only [Tripartition.toFinset, Tripartition.sdiff, Tripartition.mem_iff,
-      mem_filter, mem_univ, true_and] at hobj
-    have _ : y ∉ G.closed_neighborFinset_of_Finset F := and_or_3.mp hobj |>.2
-    contradiction
+    simp only [toFinset, toSet, sdiff, mem_iff, and_or_3, Set.mem_toFinset,
+      Set.mem_setOf_eq] at hobj
+    exact mem_closed_neighborFinset_of_adj hz |>.mt hobj.2
   refine ⟨s' ∪ F, fun _ _ ↦ by grind [Tripartition.toFinset_mono], ?_, hresp, ?_⟩
   · refine InducesForest_union_disjoint_neighborhoods ?_ h.1 ?_
     · exact InducesForest_mono' (by grind [sdiff_toFinset]) hlf
@@ -73,9 +69,9 @@ lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
         simp only [mem_inter, notMem_empty, iff_false, not_and]
         intro hx
         let hobj := hs' hx
-        simp [Tripartition.sdiff, Tripartition.toFinset] at hobj
-        have hfinal : x ∉ G.closed_neighborFinset_of_Finset F := by grind
-        exact fun hx ↦ hfinal <| closed_neighborFinset_contains_Finset hx
+        simp only [toFinset, toSet, sdiff, mem_iff, and_or_3, Set.mem_toFinset,
+          Set.mem_setOf_eq] at hobj
+        exact closed_neighborFinset_contains_Finset.mt hobj.2
 
 private lemma hdeg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {w : Fin n}
     {F : Finset (Fin n)} (hw : w ∈ G.N2_of_Finset F) :
@@ -97,7 +93,7 @@ private lemma hdeg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {w :
       simp only [closed_neighborFinset_of_Finset, mem_filter, mem_univ, true_and]
       exact Or.inr ⟨x, hx, hyx⟩
     simp only [mem_neighborFinset]
-    exact Adj.symm.mt <| deleteIncidencesOf_notadj G hy'
+    exact Adj.symm.mt <| deleteIncidencesOf_notadj hy'
 
 private lemma d_minues_one_plus_one {d : ℕ} (hd : 1 ≤ d) : (((d - 1) : ℕ) : ℝ) + 1 = d := by
   simp only [Nat.cast_one, sub_add_cancel, Nat.cast_sub hd]
@@ -196,12 +192,10 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     simp [hA, hB, hC]
 
 lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {F : Finset (Fin n)} (hFne : F.Nonempty)
-    (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (hF : F ⊆ ABC.toFinset)
-    (hF' : respects F G ABC)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    {ABC : Tripartition n} [ABC.Decidable] {F : Finset (Fin n)} (hFne : F.Nonempty)
+    (hG : G.support ⊆ ABC.toFinset) (hF : F ⊆ ABC.toFinset) (hF' : respects F G ABC)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset F, f G ABC v
         - ∑ w ∈ G.N2_of_Finset F, γ G ABC w →
@@ -226,9 +220,9 @@ lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       intro hw
       rcases hw with hw | hw
       · exact hF hw
-      · refine hG <| Set.mem_toFinset.mpr <| G.degree_pos_iff_mem_support w |>.mp ?_
+      · refine hG <| G.degree_pos_iff_mem_support w |>.mp (G.degree_pos_iff_mem_support _ |>.mpr ?_)
         obtain ⟨x, _, hx⟩ := hw
-        exact (degree_pos_iff_exists_adj G w).mpr ⟨x, hx⟩
+        exact ⟨x, hx⟩
     _ = (∑ v ∈ ABC.toFinset \ (G.closed_neighborFinset_of_Finset F), f G ABC v
         - ∑ v ∈ (ABC \ G.closed_neighborFinset_of_Finset F).toFinset,
           f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -312,7 +306,6 @@ lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
         mem_sdiff, not_or, not_exists, not_and, and_imp, forall_exists_index]
       intro hw H x hx y hy hwy hyx
       refine ⟨hG ?_, ⟨hw, H⟩⟩
-      simp only [Set.mem_toFinset]
       exact G.degree_pos_iff_mem_support w |>.mp hwy.degree_pos_left
     _ = ∑ w ∈ ABC.toFinset \ G.closed_neighborFinset_of_Finset F,
         -(f G ABC w - f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -322,12 +315,11 @@ lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       exact Eq.symm <| neg_sub ..
 
 lemma Corollary2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} {F : Finset (Fin n)} (hFne : F.Nonempty)
-    (hG : G.support.toFinset ⊆ ABC.toFinset)
-    (hF : F ⊆ ABC.toFinset)
+    {ABC : Tripartition n} [ABC.Decidable] {F : Finset (Fin n)} (hFne : F.Nonempty)
+    (hG : G.support ⊆ ABC.toFinset) (hF : F ⊆ ABC.toFinset)
     (hF' : respects F G ABC)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n),
-      G'.support.toFinset ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset F, f G ABC v →
         Objective G ABC := by
