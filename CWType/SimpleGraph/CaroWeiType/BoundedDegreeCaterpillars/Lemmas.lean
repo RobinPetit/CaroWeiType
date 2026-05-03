@@ -1212,6 +1212,13 @@ lemma ℓA3 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin 
     OfNat.ofNat_ne_one, Nat.cast_ofNat]
   linarith
 
+lemma ℓA4 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : G.degree v = 4) :
+    ℓ G ABC v = 1 / 15 := by
+  simp only [ℓ, hA, ↓reduceDIte, ↓reduceIte, fA, hv, Nat.reduceAdd, OfNat.ofNat_ne_zero,
+    OfNat.ofNat_ne_one, Nat.cast_ofNat]
+  linarith
+
 lemma ℓB1 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
     [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : G.degree v = 1) :
     ℓ G ABC v = 1 / 2 := by
@@ -1350,10 +1357,20 @@ lemma ℓ_le_1_over_15_of_3_le_degree_of_notA3 {n : ℕ} {G : SimpleGraph (Fin n
   else
     exact ℓ_le_1_over_15_of_4_le_degree (by lia)
 
-namespace Tripartition
+lemma Δf_le_ℓ_of_Δdeg_le_1 {n : ℕ} {G G' : SimpleGraph (Fin n)} {ABC ABC' : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] [Fintype (G'.neighborSet v)]
+    (hdv : G.degree v ≤ G'.degree v + 1)
+    (hv : ABC.A v ∧ ABC'.A v ∨ ABC.B v ∧ ABC'.B v ∨ ABC.C v ∧ ABC'.C v) :
+    f G' ABC' v - f G ABC v ≤ ℓ G' ABC' v :=  by
+  rcases hv with hA | hB | hC
+  · simp only [f, hA, ↓reduceDIte, ℓ]
+    linarith [fA_decreasing hdv]
+  · simp only [f, hB, not_A_of_B, ↓reduceDIte, ℓ]
+    linarith [fB_decreasing hdv]
+  · simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte, ℓ]
+    linarith [fC_decreasing hdv]
 
--- @[simp]
--- lemma mem_toFinset {n : ℕ} (ABC : Tripartition n) [ABC.Decidable]
+namespace Tripartition
 
 @[simp]
 lemma demote_finset_from_A {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hAv : ABC.A v)

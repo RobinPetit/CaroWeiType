@@ -100,7 +100,7 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFi
     subst heq
     simp only [IsEmpty.forall_iff, and_true, hCu]
     have hdeg : G.degree_in (s ∪ {x}) z ≤ (G.deleteIncidencesOf {x}).degree_in s z + #{x} := by
-      refine degree_in_deleteIncidenceSet' s {x} ?_ ?_
+      refine degree_in_deleteIncidencesOf' _ _ ?_ ?_
       · exact singleton_inter_eq_empty_iff.mpr hxnotins
       · simp only [mem_singleton]
         refine ne_of_mem_of_not_mem hz ?_
