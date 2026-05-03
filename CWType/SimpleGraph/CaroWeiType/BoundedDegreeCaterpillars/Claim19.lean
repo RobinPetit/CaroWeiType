@@ -562,7 +562,7 @@ private lemma eval_ok_of_hsumℓ {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyF
     _ = ∑ u ∈ {x, y}, ℓ G ABC u + ∑ u ∈ {s, t}, ℓ G ABC u := by grind
   grind [degree]
 
-lemma ok_of_hsumℓ {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma ok_of_hsumℓ {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v w x y s t : Fin n}
     (hvw : ¬G.Adj v w) (hBv : ABC.B v) (hdv : G.degree v = 3) (hBw : ABC.B w) (hdw : G.degree w = 3)
     (hNv : G.neighborFinset v = {û, x, y})
@@ -603,7 +603,7 @@ lemma ok_of_hsumℓ {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
   · exact _respects hdv hdw hBv hBw hNv hNw hF hFf hFresp
   · exact eval_ok_of_hsumℓ hG hvw hxy hvnew hv hw hBv hdv hBw hdw hNv hNw hNvw hFcard hsumℓ
 
-lemma ok_of_one_sixth_lt_ℓxy {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma ok_of_one_sixth_lt_ℓxy {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     {û v x y : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
     (hdx : 3 ≤ G.degree x) (hdy : 3 ≤ G.degree y) (hNv : G.neighborFinset v = {û, x, y})
@@ -654,7 +654,7 @@ lemma ok_of_one_sixth_lt_ℓxy {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFin
         add_le_add (ℓ_le_1_over_15_of_4_le_degree hdx) (ℓ_le_1_over_10_of_3_le_degree hdy)
       _ = 1 / 6 := by linarith
 
-lemma A3x_of_2_over_15_lt_ℓx_plus_ℓy {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma A3x_of_2_over_15_lt_ℓx_plus_ℓy {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {x y : Fin n} {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     (hdx : 3 ≤ G.degree x) (hdy : 3 ≤ G.degree y)
     (hfyx : f G ABC y ≤ f G ABC x)
@@ -678,7 +678,7 @@ lemma A3x_of_2_over_15_lt_ℓx_plus_ℓy {n : ℕ} {G : SimpleGraph (Fin n)} [G.
   · linarith [fB3 hB hdx]
   · linarith [fC3 hC hdx]
 
-lemma ok_of_A4_step1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma ok_of_A4_step1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v y q r : Fin n}
     (hû : IsVstar G ABC û) (hBv : ABC.B v) (hdv : G.degree v = 3)
     (hBy : ABC.B y) (hdy : G.degree y = 3) (hAû : ABC.A û) (hdû : G.degree û = 4)
@@ -708,7 +708,7 @@ lemma ok_of_A4_step1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
         <;> refine G.mem_neighborFinset .. |>.mp <| by grind
     · exact Or.inl <| Corollary9 hG hBy hdy ih ⟨q', G.mem_neighborFinset .. |>.mp (by grind), hCq'⟩
 
-lemma ok_of_A4_step2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma ok_of_A4_step2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v y q r : Fin n}
     (hNy : G.neighborFinset y = {v, q, r}) (hdNy : ∀ w ∈ G.neighborFinset y, 3 ≤ G.degree w)
     (hγNy : ∀ x ∈ ({q, r} : Finset _), 1 / 10 ≤ γ G ABC x) :
@@ -889,7 +889,7 @@ private lemma _hdeg {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     · exact notMem_singleton.mpr <| ne_of_mem_neighborFinset hu
     · exact le_fromEdgeSet_union' <| mem_sdiff.mp hu' |>.1
 
-lemma _eval_ok_of_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma _eval_ok_of_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ↑ABC.toFinset)
     {û v x y q r : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3) (hAû : ABC.A û)
     (hdû : G.degree û = 4) (hNv : G.neighborFinset v = {û, x, y}) (hxy : ¬G.Adj x y)
@@ -1038,7 +1038,7 @@ lemma _eval_ok_of_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
         · linarith only [ℓA4 hAr hdr]
   linarith
 
-lemma ok_of_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma ok_of_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û v w x y s t : Fin n}
     (hû : IsVstar G ABC û) (hBv : ABC.B v) (hdv : G.degree v = 3) (hdw : G.degree w = 3)
     (hdx : 3 ≤ G.degree x) (hdy : 3 ≤ G.degree y) (hAû : ABC.A û) (hdû : G.degree û = 4)

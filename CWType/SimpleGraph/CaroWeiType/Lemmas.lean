@@ -194,6 +194,11 @@ lemma singleton_inter_eq_empty_iff {s : Finset α} {x : α} :
     simp only [hx, not_false_eq_true, singleton_inter_of_notMem, notMem_empty]
 
 @[simp]
+lemma inter_singleton_eq_empty_iff {s : Finset α} {x : α} :
+    (s ∩ {x}) = ∅ ↔ x ∉ s := by
+  exact (inter_comm s {x}) ▸ singleton_inter_eq_empty_iff
+
+@[simp]
 lemma disjoint_of_sdiff {X Y Z : Finset α} (h : X ⊆ Y \ Z) :
     X ∩ Z = ∅ := by
   ext x
@@ -414,11 +419,6 @@ private noncomputable instance {α : Type*} {s t : Set α} [Fintype s] [Fintype 
     Fintype ((s ∪ t) : Set _) := by
   classical
   exact Set.fintypeUnion s t
-
--- private noncomputable instance {α : Type*} [Insert α (Set α)] {x : α} {s : Set α} [Fintype s] :
---     Fintype (Set.insert x s : Set _) := by
---   classical
---   exact Set.fintypeInsert x s
 
 variable {V : Type*}
 
