@@ -328,6 +328,21 @@ lemma objective_of_B3 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC
       exact le_trans (degree_in_mono' le_fromEdgeSet_union) (le_of_eq this)
   · exact _ok_eval hG hNv hdv hBv hscard hbound
 
+lemma objective_of_B3' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v x y z : Fin n} (hdv : G.degree v = 3)
+    (hBv : ABC.B v) (hNv : G.neighborFinset v = {x, y, z})
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
+    Objective G ABC ∨
+      (∑ u ∈ G.neighborFinset x \ ({v} ∪ G.neighborFinset v), γ G ABC u
+       < f G ABC x - 1 / 3 + ∑ u ∈ {y, z},
+        (f G ABC u - f ((fromEdgeSet (G.edgeSet ∪ {s(y, z)})).deleteIncidencesOf {x})
+        ((ABC \ {x}).promote v) u)) := by
+  if h : Objective G ABC then
+    exact Or.inl h
+  else
+    exact Or.inr <| not_le.mp <| objective_of_B3 hG hdv hBv hNv ih |>.mt h
+
 end Tripartition
 end ABC
 end CaroWeiType
