@@ -30,7 +30,7 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripar
     exact pairwise_ne_of_triplet (hNv ▸ hdv)
   obtain ⟨H₁, H₂, H₃⟩ := hneNv
   if hℓ : ℓ G ABC x + ℓ G ABC y > 1 / 6 then
-    exact Claim8 G ABC hG ih hBv hdv h₁'.symm h₂'.symm H₁ hyx hℓ
+    exact Claim8 hG ih hBv hdv h₁'.symm h₂'.symm H₁ hℓ
   else
     have hNv' : G.neighborFinset v = {z, x, y} := by grind
     refine objective_of_B3 hG hdv hBv hNv' ih ?_

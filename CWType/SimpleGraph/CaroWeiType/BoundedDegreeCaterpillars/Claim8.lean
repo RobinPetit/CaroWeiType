@@ -25,8 +25,8 @@ private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinit
   else
     exact Claim6 hG ih ⟨_, by grind, hAw⟩
 
-lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
-    (ABC : Tripartition n) [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+private lemma _Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
@@ -84,6 +84,44 @@ lemma Claim8 {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
         rcases hw with h | h <;> { subst h; simp [hx.symm, hy.symm] }
       · exact fun _ _ _ ↦ γ_nonneg
     grind
+
+lemma Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
+    {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
+    (hne : x ≠ y) :
+    ℓ G ABC x + ℓ G ABC y > 1 / 6 → Objective G ABC := by
+  if hyx : f G ABC y ≤ f G ABC x then
+    exact _Claim8 hG ih hBv hdegv hx hy hne hyx
+  else
+    rw [add_comm (ℓ G ABC x) (ℓ G ABC y)]
+    exact _Claim8 hG ih hBv hdegv hy hx hne.symm (le_of_lt <| not_le.mp hyx)
+
+lemma Corollary8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
+    {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
+    (hne : x ≠ y) :
+    Objective G ABC ∨ ℓ G ABC x + ℓ G ABC y ≤ 1 / 6 := by
+  if hℓ : ℓ G ABC x + ℓ G ABC y ≤ 1 / 6 then
+    exact Or.inr hℓ
+  else
+    exact Or.inl <| Claim8 hG ih hBv hdegv hx hy hne (not_le.mp hℓ)
+
+lemma Corollary8' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+      [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
+    {v x : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) :
+    Objective G ABC ∨ ℓ G ABC x ≤ 1 / 10 := by
+  if hℓx : ℓ G ABC x ≤ 1 / 10 then
+    exact Or.inr hℓx
+  else
+    have := ℓ_le_1_over_10_of_3_le_degree.mt hℓx
+    refine Or.inl <| solve_deg_le_2 hG ih hBv hdegv hx.symm ?_ (by linarith)
+    exact ABC.mem_toFinset.mpr <| mem_def.mpr <| hG <| G.mem_support.mpr ⟨v, hx⟩
 
 end Tripartition
 end ABC

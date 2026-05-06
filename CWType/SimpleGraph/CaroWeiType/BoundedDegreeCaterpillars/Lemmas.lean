@@ -194,6 +194,20 @@ lemma ℓ_eq_zero_of_notMem {n : ℕ} (G : SimpleGraph (Fin n))
   obtain ⟨hvA, hvB, hvC⟩ := hv
   simp only [ℓ, hvA, ↓reduceDIte, hvB, hvC]
 
+lemma f_congr {n : ℕ} {G G' : SimpleGraph (Fin n)} {ABC ABC' : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] [Fintype (G'.neighborSet v)]
+    (hdv : G.degree v = G'.degree v)
+    (hv : (ABC.A v → ABC'.A v) ∧ (ABC.B v → ABC'.B v)
+        ∧ (ABC.C v → ABC'.C v) ∧ (v ∉ ABC → v ∉ ABC')) :
+    f G ABC v = f G' ABC' v := by
+  if hvABC : v ∈ ABC then
+    rcases hvABC with hA | hB | hC
+    · simp only [f, hA, hv.1 hA, ↓reduceDIte, hdv]
+    · simp only [f, hB, hv.2.1 hB, not_A_of_B, ↓reduceDIte, hdv]
+    · simp only [f, hC, hv.2.2.1 hC, not_A_of_C, not_B_of_C, ↓reduceDIte, hdv]
+  else
+    rw [← f_eq_zero_of_notMem G hvABC, ← f_eq_zero_of_notMem G' <| by grind]
+
 lemma one_sixth_pos : (0 : ℝ) < 1 / 6 := by linarith
 
 lemma one_third_pos : (0 : ℝ) < 1 / 3 := by linarith

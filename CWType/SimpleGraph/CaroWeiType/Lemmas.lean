@@ -555,6 +555,14 @@ lemma mem_fromEdgeSet_union_neighborFinset_iff {v w : V} {s : Set (Sym2 V)}
   refine adj_fromEdgeSet_union_iff.trans ?_
   exact or_congr_left <| (mem_neighborFinset ..).symm
 
+lemma eq_fromEdgeSet_of_union_le_right {s : Set (Sym2 V)}
+    (h : fromEdgeSet s ≤ G) : fromEdgeSet (G.edgeSet ∪ s) = G := by
+  refine le_antisymm ?_ le_fromEdgeSet_union
+  intro v w hw
+  rcases adj_fromEdgeSet_union_iff.mp hw with hw | hw
+  · exact hw
+  · exact h (by simp only [fromEdgeSet_adj, hw, ne_eq, not_false_eq_true, and_self])
+
 lemma fromEdgeSet_union_neighborSet_eq {v : V} {s t : Set (Sym2 V)} :
     (fromEdgeSet (s ∪ t) |>.neighborSet v)
       = (fromEdgeSet s |>.neighborSet v) ∪ (fromEdgeSet t |>.neighborSet v) := by
@@ -852,6 +860,21 @@ lemma deleteIncidencesOf_adj_of_notMem_of_notMem_of_adj
   intro w hw
   refine ⟨?_, ?_⟩ <;> refine ne_of_mem_of_not_mem hw (by simp only [hu, hv, not_false_eq_true])
 
+lemma deleteIncidencesOf_degree_le' {s : Finset V} {v : V} (hvs : v ∉ s)
+    [Fintype ((G.deleteIncidencesOf s).neighborSet v)] [Fintype (G.neighborSet v)] :
+    G.degree v ≤ (G.deleteIncidencesOf s).degree v + #s := by
+  classical
+  suffices G.neighborFinset v ⊆ ((G.deleteIncidencesOf s).neighborFinset v ∪ s) by
+    simp only [degree]
+    refine le_trans (card_le_card this) (card_union_le ..)
+  intro u
+  simp only [mem_neighborFinset, mem_union]
+  intro hvu
+  if hus : u ∈ s then
+    exact Or.inr hus
+  else
+    exact Or.inl <| deleteIncidencesOf_adj_of_notMem_of_notMem_of_adj hvs hus hvu
+
 lemma adj_of_deleteIncidencesOf_adj
     {u v : V} {s : Finset V} (huv : (G.deleteIncidencesOf s).Adj u v) :
     G.Adj u v :=
@@ -884,6 +907,31 @@ lemma mem_neighborFinset_deleteIncidencesOf_iff_of_notMem
     u ∈ G.neighborFinset v ↔ u ∈ (G.deleteIncidencesOf s).neighborFinset v :=
   ⟨mem_neighborFinset_deleteIncidencesOf_of_notMem_of_notMem_of_mem_neighborFinset hu hv,
     mem_neighborFinset_of_deleteIncidencesOf_mem_neighborFinset⟩
+
+lemma neighborFinset_eq_delelteIncidencesOf_of_empty_inter_neighborFinset [DecidableEq V]
+    {u : V} {s : Finset V} [Fintype (G.neighborSet u)]
+    [Fintype ((G.deleteIncidencesOf s).neighborSet u)]
+    (hu : G.neighborFinset u ∩ s = ∅) (hus : u ∉ s) :
+    (G.deleteIncidencesOf s).neighborFinset u = G.neighborFinset u := by
+  ext v
+  refine ⟨?_, ?_⟩
+  · exact mem_neighborFinset_of_deleteIncidencesOf_mem_neighborFinset
+  · intro hv
+    refine (mem_neighborFinset_deleteIncidencesOf_iff_of_notMem ?_ hus).mp hv
+    exact notMem_of_mem_of_empty_inter hv hu
+
+lemma deleteIncidencesOf_degree_lt {s : Finset V} {v w : V}
+    (hvw : G.Adj v w) (hvs : w ∈ s)
+    [Fintype ((G.deleteIncidencesOf s).neighborSet v)] [Fintype (G.neighborSet v)] :
+    (G.deleteIncidencesOf s).degree v < G.degree v := by
+  refine card_lt_card ?_
+  refine (ssubset_iff_of_subset ?_).mpr ?_
+  · intro
+    simp only [mem_neighborFinset]
+    exact fun hu ↦ adj_of_deleteIncidencesOf_adj hu
+  · refine ⟨w, ?_, ?_⟩
+    · exact G.mem_neighborFinset .. |>.mpr hvw
+    · exact not_iff_not.mpr (mem_neighborFinset ..) |>.mpr <| deleteIncidencesOf_notAdj' hvs
 
 lemma deleteIncidencesOf_notadj {s : Finset V} {x y : V} (hx : x ∈ s) :
     ¬(G.deleteIncidencesOf s).Adj x y := by
