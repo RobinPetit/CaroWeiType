@@ -1177,6 +1177,19 @@ lemma γ_eq_0_iff {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v 
     · exact γC3 hCv hdv
     · exact γC2 hCv hdv
 
+lemma f_le_1_over_3_of_γ_eq_0 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
+    [Fintype (G.neighborSet v)] (hdv : 1 ≤ G.degree v) (hγ : γ G ABC v = 0) :
+    f G ABC v ≤ 1 / 3 := by
+  if hv : v ∉ ABC then
+    rw [← f_eq_zero_of_notMem G hv]
+    exact zero_le_one_third
+  else
+    simp only [not_not] at hv
+    rcases γ_eq_0_iff hv hdv |>.mp hγ with ⟨hdv, hBv⟩ | ⟨hdv, hCv⟩ | ⟨hdv, hCv⟩
+    · linarith [fB3 hBv hdv]
+    · linarith [fC3 hCv hdv]
+    · linarith [fC2 hCv hdv]
+
 lemma γ_eq_zero_of_deg_eq_zero {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n} {v : Fin n}
     [Fintype (G.neighborSet v)] (hdv : G.degree v = 0) : γ G ABC v = 0 := by
   simp only [γ, fA, hdv, zero_tsub, ↓reduceIte, sub_self, fB, fC, dite_eq_ite, ite_self]
@@ -1897,6 +1910,29 @@ lemma f_le_two_ninths_of_γ_lt_one_thirtieth {n : ℕ} {G : SimpleGraph (Fin n)}
       grind
   else
     linarith [f_eq_zero_of_notMem G hvABC]
+
+lemma A4_of_13_lt_f_of_γ_lt_16 {n : ℕ} {G : SimpleGraph (Fin n)} {ABC : Tripartition n}
+    {v : Fin n} [Fintype (G.neighborSet v)] (hv : 1 ≤ G.degree v) (h : v ∈ ABC)
+    (hf : 1 / 3 < f G ABC v) (hγ : γ G ABC v < 1 / 6) :
+    ABC.A v ∧ G.degree v = 4 := by
+  have hf' := f_le_two_fifths_of_γ_lt_one_sixth hv hγ
+  rcases h with hA | hB | hC
+  · have : 4 ≤ G.degree v := by grind [γA1, γA2, γA3]
+    rcases lt_or_eq_of_le' this with hdv | hdv
+    · simp only [f, hA, ↓reduceDIte] at hf
+      have := lt_of_lt_of_le hf (fA_decreasing hdv)
+      grind
+    · exact ⟨hA, hdv⟩
+  · have hfB : fB 2 = 1 / 3 := by grind
+    simp only [← hfB, f, hB, not_A_of_B, ↓reduceDIte] at hf
+    have := fB_decreasing' hf
+    have hdv : G.degree v = 1 := by grind
+    simp only [γB1 hB hdv] at hγ
+    linarith
+  · have hfC : fC 1 = 1 / 6 := by grind
+    simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte] at hf
+    have := lt_of_lt_of_le hf (fC_decreasing hv)
+    linarith
 
 lemma f_le_two_sevenths_of_γ_lt_one_fifteenth_of_γ_ne_zero {n : ℕ} {G : SimpleGraph (Fin n)}
     {ABC : Tripartition n} {v : Fin n} [Fintype (G.neighborSet v)]
