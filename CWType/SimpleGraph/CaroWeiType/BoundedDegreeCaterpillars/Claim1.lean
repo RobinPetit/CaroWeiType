@@ -2,17 +2,17 @@ import CWType.SimpleGraph.CaroWeiType.Forests.Lemmas
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Lemmas
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim0
 
+open SimpleGraph
+open Finset
+
 namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-open SimpleGraph
-open Finset
-
-lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] {v : Fin n} (hv : v ∈ ABC)
     (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ ∑ w ∈ G.neighborFinset v, γ G ABC w → Objective G ABC := by
   have hNv : G.neighborFinset v ⊆ ABC.toFinset :=
@@ -96,10 +96,10 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
       rw [this] at hobj
       exact hobj
 
-lemma Corollary1 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Corollary1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] {v w : Fin n} (hG : G.support ⊆ ABC.toFinset)
     (hw : G.Adj v w)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ γ G ABC w → Objective G ABC := by
   let hv := ABC.mem_toFinset.mpr <| hG <| G.mem_support.mpr ⟨w, hw⟩

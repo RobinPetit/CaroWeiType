@@ -1,10 +1,12 @@
+import Mathlib.Data.Finset.Card
+
 import CWType.SimpleGraph.CaroWeiType.Basic
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.ABC
 
+open Finset
+
 namespace CaroWeiType
 namespace ABC
-
-open Finset
 
 open SimpleGraph
 
@@ -1417,7 +1419,7 @@ lemma demote_finset_from_C {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hCv : A
 @[simp]
 lemma demote_from_A {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hAv : ABC.A v) :
     (ABC.demote v).B v := by
-  exact demote_finset_from_A ABC hAv (mem_singleton.mpr rfl)
+  exact demote_finset_from_A ABC hAv (Finset.mem_singleton.mpr rfl)
 
 @[simp]
 lemma demote_from_A' {n : ℕ} (ABC : Tripartition n) {v : Fin n} (hAv : ABC.A v) :
@@ -1729,7 +1731,7 @@ lemma sdiff_toFinset {n : ℕ} (ABC : Tripartition n) [ABC.Decidable] {s : Finse
     Set.toFinset_setOf, mem_sdiff, mem_filter, mem_univ, true_and]
 
 lemma linear_forest_of_forest_respects {n : ℕ} {s : Finset (Fin n)} {G : SimpleGraph (Fin n)}
-    [G.LocallyFinite] {ABC : Tripartition n} [ABC.Decidable] (hs : s ⊆ ABC.toFinset) :
+    [DecidableRel G.Adj] {ABC : Tripartition n} [ABC.Decidable] (hs : s ⊆ ABC.toFinset) :
     G.InducesForest s → respects s G ABC → G.InducesLinearForest s := by
   intro hf hresp
   refine ⟨hf, ?_⟩
@@ -1801,7 +1803,7 @@ lemma respects_union {n : ℕ} {s t : Finset (Fin n)} {G : SimpleGraph (Fin n)} 
     obtain ⟨hs1, hs2, hs3⟩ := ht w hw
     refine ⟨?_, ?_, ?_⟩ <;> { intro _; grind only }
 
-lemma respects_mono {n : ℕ} {s t : Finset (Fin n)} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
+lemma respects_mono {n : ℕ} {s t : Finset (Fin n)} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) [ABC.Decidable] (hs : s ⊆ (ABC \ t).toFinset)
     (hresp : respects s (G.deleteIncidencesOf t) (ABC \ t)) :
     respects s G ABC := by

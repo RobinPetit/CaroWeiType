@@ -1,14 +1,14 @@
 import CWType.SimpleGraph.CaroWeiType.Forests.Lemmas
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Lemmas
 
+open SimpleGraph
+open Finset
+
 namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-open SimpleGraph
-open Finset
-
-private lemma _ok_eval {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+private lemma _ok_eval {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     [ABC.Decidable] {s : Finset (Fin n)} (hG : G.support ⊆ ABC.toFinset)
     {v x y z : Fin n} (hNv : G.neighborFinset v = {x, y, z})
     (hdv : G.degree v = 3) (hBv : ABC.B v)
@@ -243,10 +243,10 @@ private lemma _ok_eval {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {AB
       exact Eq.symm <| sum_sub_distrib ..
   exact hbound
 
-lemma objective_of_B3 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+lemma objective_of_B3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v x y z : Fin n} (hdv : G.degree v = 3)
     (hBv : ABC.B v) (hNv : G.neighborFinset v = {x, y, z})
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     (hbound : f G ABC x - 1 / 3 + ∑ u ∈ {y, z},
         (f G ABC u - f ((fromEdgeSet (G.edgeSet ∪ {s(y, z)})).deleteIncidencesOf {x})
@@ -328,10 +328,10 @@ lemma objective_of_B3 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC
       exact le_trans (degree_in_mono' le_fromEdgeSet_union) (le_of_eq this)
   · exact _ok_eval hG hNv hdv hBv hscard hbound
 
-lemma objective_of_B3' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+lemma objective_of_B3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v x y z : Fin n} (hdv : G.degree v = 3)
     (hBv : ABC.B v) (hNv : G.neighborFinset v = {x, y, z})
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨
       (∑ u ∈ G.neighborFinset x \ ({v} ∪ G.neighborFinset v), γ G ABC u

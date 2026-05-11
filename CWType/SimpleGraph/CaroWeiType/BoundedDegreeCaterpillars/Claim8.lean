@@ -5,16 +5,16 @@ import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim5
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim6
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim7
 
+open SimpleGraph
+open Finset
+
 namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-open SimpleGraph
-open Finset
-
-private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v w : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3) (hvw : G.Adj v w)
     (hw : w ∈ ABC) (hdw : G.degree w ≤ 2) : Objective G ABC := by
@@ -25,9 +25,9 @@ private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinit
   else
     exact Claim6 hG ih ⟨_, by grind, hAw⟩
 
-private lemma _Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma _Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
     (hne : x ≠ y) (hyx : f G ABC y ≤ f G ABC x) :
@@ -85,9 +85,9 @@ private lemma _Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
       · exact fun _ _ _ ↦ γ_nonneg
     grind
 
-lemma Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
     (hne : x ≠ y) :
@@ -98,9 +98,9 @@ lemma Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
     rw [add_comm (ℓ G ABC x) (ℓ G ABC y)]
     exact _Claim8 hG ih hBv hdegv hy hx hne.symm (le_of_lt <| not_le.mp hyx)
 
-lemma Corollary8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Corollary8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
     (hne : x ≠ y) :
@@ -110,9 +110,9 @@ lemma Corollary8 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
   else
     exact Or.inl <| Claim8 hG ih hBv hdegv hx hy hne (not_le.mp hℓ)
 
-lemma Corollary8' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Corollary8' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     {v x : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) :
     Objective G ABC ∨ ℓ G ABC x ≤ 1 / 10 := by

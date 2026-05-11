@@ -3,25 +3,25 @@ import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Lemmas
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim1
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim4
 
+open SimpleGraph
+open Finset
+
 namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-open SimpleGraph
-open Finset
-
 @[reducible]
-private def _op_g {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] (v x y : Fin n) :
+private def _op_g {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (v x y : Fin n) :
     SimpleGraph (Fin n) :=
   (fromEdgeSet <| G.edgeSet ∪ {s(x, y)}).deleteIncidencesOf {v}
 
-private lemma _op_g_Nv {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {v x y : Fin n} :
+private lemma _op_g_Nv {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {v x y : Fin n} :
     (_op_g G v x y).neighborFinset v = ∅ := by
   ext u
   simp only [deleteIncidencesOf_singleton_eq_deleteIncidenceSet, mem_neighborFinset,
     notMem_empty, deleteIncidenceSet_notAdj]
 
-private lemma _op_g_Nxy {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {v w x y z : Fin n}
+private lemma _op_g_Nxy {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {v w x y z : Fin n}
     (hNv : G.neighborFinset v = {x, y, z}) (hw : w ∈ ({x, y} : Finset _)) :
     (_op_g G v x y).neighborFinset w = (G.neighborFinset w ∪ {x, y}) \ {v, w} := by
   ext u
@@ -51,7 +51,7 @@ private lemma _op_g_Nxy {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {v
     · exact le_fromEdgeSet_union' hu
     · refine mem_fromEdgeSet_union_neighborFinset_iff.mpr <| Or.inr <| by grind
 
-private lemma _op_g_Nx {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {v x y z : Fin n}
+private lemma _op_g_Nx {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {v x y z : Fin n}
     (hNv : G.neighborFinset v = {x, y, z}) (hxy : x ≠ y) :
     (_op_g G v x y).neighborFinset x = (G.neighborFinset x ∪ {y}) \ {v} := by
   rw [_op_g_Nxy G hNv (mem_insert_self x _)]
@@ -65,7 +65,7 @@ private lemma _op_g_Nx {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {v 
   · intro ⟨h, huv⟩
     exact ⟨Or.inr h, huv, by grind only [Adj.ne]⟩
 
-private lemma _op_g_degx {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {v x y z : Fin n}
+private lemma _op_g_degx {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {v x y z : Fin n}
     (hNv : G.neighborFinset v = {x, y, z}) (hxy : x ≠ y) :
     (_op_g G v x y).degree x ≤ G.degree x := by
   let hobj := congrArg Finset.card <| _op_g_Nx G hNv hxy
@@ -82,7 +82,7 @@ private lemma _op_g_degx {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {
       grind only [= card_sdiff_of_subset, usr card_sdiff_add_card_inter, = card_singleton]
     _ ≤ #(G.neighborFinset x) := by lia
 
-private lemma _op_g_Ny {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {v x y z : Fin n}
+private lemma _op_g_Ny {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {v x y z : Fin n}
     (hNv : G.neighborFinset v = {x, y, z}) (hxy : x ≠ y) :
     (_op_g G v x y).neighborFinset y = (G.neighborFinset y ∪ {x}) \ {v} := by
   have hy : y ∈ ({x, y} : Finset _) := by
@@ -98,7 +98,7 @@ private lemma _op_g_Ny {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {v 
   · intro ⟨h, huv⟩
     refine ⟨by grind only, huv, by grind only [Adj.ne]⟩
 
-private lemma _op_g_degy {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] {v x y z : Fin n}
+private lemma _op_g_degy {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] {v x y z : Fin n}
     (hNv : G.neighborFinset v = {x, y, z}) (hxy : x ≠ y) :
     (_op_g G v x y).degree y ≤ G.degree y := by
   let hobj := congrArg Finset.card <| _op_g_Ny G hNv hxy
@@ -149,7 +149,7 @@ private lemma _op_t_C {n : ℕ} (ABC : Tripartition n) {v w x y z : Fin n} (hwv 
     simp only [mem_insert, mem_singleton, true_or, or_true]
   }
 
-private lemma _degG_eq_degG'_out_Nv {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma _degG_eq_degG'_out_Nv {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {u v x y z : Fin n} (hu : u ∉ ({v, x, y, z} : Finset _))
     (hNv : G.neighborFinset v = {x, y, z}) :
     G.degree u = (_op_g G v x y).degree u := by
@@ -172,7 +172,7 @@ private lemma _degG_eq_degG'_out_Nv {n : ℕ} {G : SimpleGraph (Fin n)} [G.Local
     · have := eq_or_eq_of_eq_Sym2 hw.1
       grind only [= mem_sdiff, = mem_insert]
 
-private lemma _degGz_eq_degG'z_plusone {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma _degGz_eq_degG'z_plusone {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {v x y z : Fin n} (hNv : G.neighborFinset v = {x, y, z})
     (hxnez : x ≠ z) (hynez : y ≠ z) :
     G.degree z = (_op_g G v x y).degree z + 1 := by
@@ -204,7 +204,7 @@ private lemma _degGz_eq_degG'z_plusone {n : ℕ} {G : SimpleGraph (Fin n)} [G.Lo
           Prod.swap_prod_mk, ne_eq, Ne.symm hxnez, Ne.symm hynez, false_and, false_or] at hu
     · refine mem_neighborFinset_symm <| (mem_singleton.mp huv) ▸ (by simp [hNv])
 
-private lemma _eval_ok {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] (ABC : Tripartition n)
+private lemma _eval_ok {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     [ABC.Decidable] {v x y z : Fin n} (hG : G.support ⊆ ABC.toFinset)
     (hAv : ABC.A v) (hBx : ABC.B x) (hBy : ABC.B y) (hCz : ¬ABC.C z)
     (hNv : G.neighborFinset v = {x, y, z})
@@ -356,7 +356,7 @@ private lemma _eval_ok {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] (AB
   rw [H]
   exact Claim4 (mem_def.mpr Hz) (ge_of_eq <| _degGz_eq_degG'z_plusone hNv hxnez hynez)
 
-lemma _forest {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+lemma _forest {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     {v x y z : Fin n} {s : Finset (Fin n)}
     (hNv : G.neighborFinset v = {x, y, z}) (hdv : G.degree v = 3) (hBx : ABC.B x) (hBy : ABC.B y)
     (hsf : (_op_g G v x y).InducesForest s) (hxy_not_both_in_s : ¬{x, y} ⊆ s) (hvnotins : v ∉ s)
@@ -424,7 +424,7 @@ lemma _forest {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripa
     · exact notMem_singleton.mpr <| ne_of_mem_of_not_mem hw.2 hvt
     · exact le_fromEdgeSet_union hw.1
 
-private lemma _respects {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma _respects {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] {s : Finset (Fin n)} {v x y z : Fin n} (hAv : ABC.A v)
     (hdv : #(G.neighborFinset v) = 3) (hNv : G.neighborFinset v = {x, y, z})
     (hBx : ABC.B x) (hBy : ABC.B y) (hCz : ¬ABC.C z) (hvz : G.Adj v z)
@@ -519,12 +519,12 @@ private lemma _respects {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
         have hC' : (_op_t ABC v x y z).C w := C_of_demote_finset_notin _ ⟨h, Hw⟩
         exact le_antisymm (le_trans hdegree_in (le_of_eq <| hsresp w hw |>.2.2 hC')) (zero_le _)
 
-lemma Claim11 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+lemma Claim11 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     {v : Fin n} (hAv : ABC.A v) (hdv : G.degree v = 3)
     {x y z : Fin n} (hNv : G.neighborFinset v = {x, y, z}) (hBx : ABC.B x) (hBy : ABC.B y)
     (hdx : G.degree x = 3) (hdy : G.degree y = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   rw [degree] at hdv

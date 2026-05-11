@@ -1,12 +1,10 @@
-import Mathlib.Combinatorics.SimpleGraph.Basic
-
 import CWType.SimpleGraph.CaroWeiType.Basic
 import CWType.SimpleGraph.CaroWeiType.Forests.Basic
 
+open Finset
+
 namespace CaroWeiType
 namespace ABC
-
-open Finset
 
 @[ext]
 structure Tripartition (n : ℕ) where
@@ -159,11 +157,13 @@ noncomputable def eval {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     (ABC : Tripartition n) [ABC.Decidable] : ℝ :=
   ∑ v ∈ ABC.toFinset, f G ABC v
 
+open Finset
+
 @[simp, reducible]
-def Objective {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
+def Objective {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) [ABC.Decidable] : Prop :=
   ∃ s : Finset (Fin n),
-    s ⊆ ABC.toFinset ∧ G.InducesForest s ∧ ABC.respects s G ∧ eval G ABC ≤ #s
+    s ⊆ ABC.toFinset ∧ G.InducesForest s ∧ ABC.respects s G ∧ eval G ABC ≤ s.card
 
 @[simp, reducible]
 noncomputable def key {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]

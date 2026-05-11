@@ -93,30 +93,9 @@ See the [LICENSE](https://github.com/RobinPetit/graphs-in-lean/blob/main/LICENSE
 
 Complete characterization of CW-type lower bounds for induced bounded-degree caterpillars
 
-- [ ] ABC Lemma
-  - [x] Claim 0
-  - [x] Claim 1
-  - [x] Claim 2
-  - [x] Claim 3
-  - [x] Claim 4
-  - [x] Claim 5
-  - [x] Claim 6
-  - [x] Claim 7
-  - [x] Claim 8
-  - [x] Claim 9
-  - [x] Claim 10
-  - [x] Claim 11
-  - [x] Claim 12
-  - [x] Claim 13
-  - [x] define `vstar`
-  - [x] Claim 14
-  - [x] Claim 15
-  - [x] Claim 16
-  - [x] Claim 17
-  - [x] Claim 18
-  - [x] Claim 19
-  - [x] Claim 20
-  - [ ] Finish
+- [x] ABC Lemma
+- [ ] Bound ok
+- [x] Bound extremal
 
 ## Done
 

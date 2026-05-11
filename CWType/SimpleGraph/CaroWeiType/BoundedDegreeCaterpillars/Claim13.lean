@@ -6,14 +6,14 @@ import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim3
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim5
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim9
 
+open SimpleGraph
+open Finset
+
 namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-open SimpleGraph
-open Finset
-
-private lemma _neighborhood_3 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma _neighborhood_3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {v w : Fin n} (hvw : G.Adj v w) (hdv : G.degree v = 3)
     (f : Fin n → ℝ) :
     ∃ u₁ u₂ : Fin n, G.neighborFinset v = {w, u₁, u₂} ∧ f u₁ ≤ f u₂ := by
@@ -25,11 +25,11 @@ private lemma _neighborhood_3 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFini
   · exact ⟨z, x, ⟨by grind, hfzy.trans hfyx⟩⟩
   · exact ⟨y, x, ⟨by grind, hfyx⟩⟩
 
-private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     {v w : Fin n} (hCv : ABC.C v) (hCw : ABC.C w) (hvw : G.Adj v w)
     (hdv : G.degree v = 3) (hdw : G.degree w = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (Objective G ABC) ∨
       (∃ u₁ u₂ : Fin n,
@@ -148,10 +148,10 @@ private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFin
         refine Or.inl <| Claim5 hG ih ⟨u₁, by simp only [mem_iff, hCu₁, or_true], ?_⟩
         exact Nat.le_of_not_lt hdegu₁
 
-lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripartition n}
+lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v w : Fin n} (hvw : G.Adj v w)
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   cases (_neighborhood_3' hG hCv hCw hvw hdv hdw ih) with
@@ -295,7 +295,7 @@ lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {ABC : Tripa
       simp only [inter_subset_right, S]
     refine le_trans ?_ hsumS
     have hsumS : #S * (1 / (21 : ℝ)) ≤ ∑ z ∈ S, γ G ABC z := by
-      rw [← sum_const' S (fun _ _ ↦ rfl)]
+      rw [← sum_const' (fun _ _ ↦ rfl)]
       exact sum_le_sum (fun _ ↦ hγz)
     refine le_trans ?_ hsumS
     simp only [one_div, inv_pos, Nat.ofNat_pos, le_mul_iff_one_le_left, Nat.one_le_cast]

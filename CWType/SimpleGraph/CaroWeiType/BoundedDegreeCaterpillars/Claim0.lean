@@ -1,18 +1,18 @@
 import CWType.SimpleGraph.CaroWeiType.Forests.Lemmas
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Lemmas
 
+open SimpleGraph
+open Finset
+
 namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-open SimpleGraph
-open Finset
-
-lemma Claim0 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Claim0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] {W : Finset (Fin n)} (hWABC' : W ∩ ABC.toFinset ≠ ∅)
     (hG : G.support ⊆ ABC.toFinset)
     (h : eval G ABC ≤ eval (G.deleteIncidencesOf W) (ABC \ W))
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   have h' : (ABC \ W).card < ABC.card := sdiff_card ABC hWABC'

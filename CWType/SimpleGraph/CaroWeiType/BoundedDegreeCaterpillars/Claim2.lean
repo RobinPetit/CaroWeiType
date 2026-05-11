@@ -1,23 +1,23 @@
 import CWType.SimpleGraph.CaroWeiType.Forests.Lemmas
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Lemmas
 
+open SimpleGraph
+open Finset
+
 namespace CaroWeiType
 namespace ABC
 namespace Tripartition
-
-open SimpleGraph
-open Finset
 
 private lemma hAiff {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
     {G : SimpleGraph (Fin n)} [G.LocallyFinite] (hw : w ∉ G.closed_neighborFinset_of_Finset F) :
     ABC.A w ↔ (ABC \ G.closed_neighborFinset_of_Finset F).A w := by
   exact ⟨fun h ↦ by simp [Tripartition.sdiff, h, hw], fun h ↦ h.1⟩
 
-lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] {F : Finset (Fin n)} (hFne : F.Nonempty)
     (hF : F ⊆ ABC.toFinset) (hF' : respects F G ABC)
     (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ eval G ABC - eval (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F)
@@ -73,7 +73,7 @@ lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
           Set.mem_setOf_eq] at hobj
         exact closed_neighborFinset_contains_Finset.mt hobj.2
 
-private lemma hdeg {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite] {w : Fin n}
+private lemma hdeg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {w : Fin n}
     {F : Finset (Fin n)} (hw : w ∈ G.N2_of_Finset F) :
     (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F)).degree w + 1 ≤ G.degree w := by
   refine Order.add_one_le_iff.mpr ?_
@@ -94,7 +94,7 @@ private lemma cast_add_one {m n : ℕ} (h : m + 1 ≤ n) : (m : ℝ) + 1 ≤ (n 
   exact h
 
 private lemma _ok_A {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
-    {G : SimpleGraph (Fin n)} [G.LocallyFinite] (hA : ABC.A w) (hdw : 1 ≤ G.degree w)
+    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hA : ABC.A w) (hdw : 1 ≤ G.degree w)
     (hw : w ∈ G.N2_of_Finset F) (hwNF : w ∉ G.closed_neighborFinset_of_Finset F) :
     γ G ABC w ≤
       f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -112,7 +112,7 @@ private lemma _ok_A {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartiti
   · exact div_le_div_of_nonneg_left zero_le_two add_one_pos <| cast_add_one <| hdeg hw
 
 private lemma _ok_B {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
-    {G : SimpleGraph (Fin n)} [G.LocallyFinite] (hB : ABC.B w) (hdw : 1 ≤ G.degree w)
+    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hB : ABC.B w) (hdw : 1 ≤ G.degree w)
     (hw : w ∈ G.N2_of_Finset F) (hwNF : w ∉ G.closed_neighborFinset_of_Finset F) :
     γ G ABC w ≤
       f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -139,7 +139,7 @@ private lemma _ok_B {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartiti
   · exact div_le_div_of_nonneg_left zero_le_four_thirds add_one_pos <| cast_add_one <| hdeg hw
 
 private lemma _ok_C {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
-    {G : SimpleGraph (Fin n)} [G.LocallyFinite] (hC : ABC.C w) (hdw : 1 ≤ G.degree w)
+    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hC : ABC.C w) (hdw : 1 ≤ G.degree w)
     (hw : w ∈ G.N2_of_Finset F) (hwNF : w ∉ G.closed_neighborFinset_of_Finset F) :
     γ G ABC w ≤
       f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -161,7 +161,7 @@ private lemma _ok_C {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartiti
       <| @le_trans _ _ _ 4 _ (by linarith) (Nat.cast_le.mpr <| by lia)
   · exact div_le_div_of_nonneg_left zero_le_two_thirds add_one_pos <| cast_add_one <| hdeg hw
 
-private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
+private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     {ABC : Tripartition n} (F : Finset (Fin n)) :
     ∑ w ∈ G.N2_of_Finset F, γ G ABC w ≤ ∑ w ∈ G.N2_of_Finset F,
         (f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -181,10 +181,10 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
   else
     simp [hA, hB, hC]
 
-lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] {F : Finset (Fin n)} (hFne : F.Nonempty)
     (hG : G.support ⊆ ABC.toFinset) (hF : F ⊆ ABC.toFinset) (hF' : respects F G ABC)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset F, f G ABC v
@@ -281,11 +281,11 @@ lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
       intro w hw
       exact Eq.symm <| neg_sub ..
 
-lemma Corollary2 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Corollary2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] {F : Finset (Fin n)} (hFne : F.Nonempty)
     (hG : G.support ⊆ ABC.toFinset) (hF : F ⊆ ABC.toFinset)
     (hF' : respects F G ABC)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset F, f G ABC v →

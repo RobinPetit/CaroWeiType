@@ -1,12 +1,13 @@
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.ABC
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claims
 
+open Finset
+open SimpleGraph
+
 namespace CaroWeiType
 namespace ABC
 
 open Tripartition
-open Finset
-open SimpleGraph
 
 private lemma exists_argmin {α β : Type*} [LinearOrder β] {s : Finset α} (hs : s.Nonempty)
     (f : α → β) : ∃ x ∈ s, ∀ y ∈ s, f x ≤ f y := by
@@ -21,10 +22,10 @@ private lemma exists_argmin {α β : Type*} [LinearOrder β] {s : Finset α} (hs
   · simp only [hy, le_refl]
   · exact hmin _ hy
 
-private lemma _ok_if_no_nonneg_gain {n k : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma _ok_if_no_nonneg_gain {n k : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     (hcard : ABC.card = k) (hk : ¬k = 0) (hW : ({v | v ∈ ABC ∧ 0 < γ G ABC v} : Finset _) = ∅)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   have H : ∀ v ∈ ABC, γ G ABC v = 0 := by
@@ -98,7 +99,7 @@ private lemma _ok_if_no_nonneg_gain {n k : ℕ} {G : SimpleGraph (Fin n)} [G.Loc
         · refine G.mem_neighborFinset .. |>.mp
             <| by simp only [H, mem_insert, mem_singleton, true_or, or_true]
 
-theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] (ABC : Tripartition n)
+theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) :
     Objective G ABC := by
   induction hcard : ABC.card using Nat.strong_induction_on generalizing G ABC with | h k ih
@@ -106,7 +107,7 @@ theorem ABCLemma {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite] (ABC : Tr
     refine ⟨∅, ?_, ?_, ?_, ?_⟩ <;>
     simp [respects, card_eq_zero.mp <| hk ▸ hcard, InducesForest, IsDegenerateSet]
   else
-  have ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+  have ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC' :=
     fun G' _ ABC' _ hsupp' hcardABC' ↦ ih ABC'.card (hcard ▸ hcardABC') G' ABC' hsupp' rfl
   let W := ({v | v ∈ ABC ∧ 0 < γ G ABC v} : Finset _)

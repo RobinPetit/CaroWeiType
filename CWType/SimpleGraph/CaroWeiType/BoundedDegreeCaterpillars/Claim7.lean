@@ -4,14 +4,14 @@ import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim1
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim5
 import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.Claim6
 
+open SimpleGraph
+open Finset
+
 namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-open SimpleGraph
-open Finset
-
-private lemma Claim7_calc {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
+private lemma Claim7_calc {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
     (ABC : Tripartition n) [ABC.Decidable] {v x y z : Fin n} (hNv : G.neighborFinset v = {x, y, z})
     (hBv : ABC.B v) (hAx : ABC.A x) (hy : y ∈ ABC) (hz : z ∈ ABC)
     (hdegv : G.degree v = 3) (hdegx : G.degree x = 2)
@@ -111,7 +111,7 @@ private lemma Claim7_calc {n : ℕ} (G : SimpleGraph (Fin n)) [G.LocallyFinite]
     forall_eq, and_imp]
   exact fun _ h _ _ _ _ ↦ Ne.symm h
 
-private lemma _Claim7_resp {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+private lemma _Claim7_resp {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] {v w y z : Fin n} (hBv : ABC.B v) (hAw : ABC.A w)
     (hNv : G.neighborFinset v = {w, y, z}) (hdegw : G.degree w = 2)
     {s : Finset (Fin n)} (hs : s ⊆ (ABC \ {v, y, z}).toFinset)
@@ -177,9 +177,9 @@ private lemma _Claim7_resp {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
       · exact fun h ↦ h₂ ⟨h, hu'⟩
       · exact fun h ↦ h₃ ⟨h, hu'⟩
 
-lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ v w, (G.degree v = 3 ∧ ABC.B v ∧ G.degree w = 2 ∧ ABC.A w ∧ G.Adj v w))
       → Objective G ABC := by
@@ -286,10 +286,10 @@ lemma Claim7 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
           let hobj := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs h) |>.2
           simp at hobj
 
-lemma Corollary7 {n : ℕ} {G : SimpleGraph (Fin n)} [G.LocallyFinite]
+lemma Corollary7 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [G'.LocallyFinite] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨ ∀ w ∈ G.neighborFinset v, 3 ≤ G.degree w := by
   if h : ∀ w ∈ G.neighborFinset v, 3 ≤ G.degree w then
