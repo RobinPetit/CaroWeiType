@@ -9,10 +9,11 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] {v : Fin n} (hv : v ∈ ABC)
-    (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+lemma Claim1 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V} [ABC.Decidable]
+    {v : V} (hv : v ∈ ABC) (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ ∑ w ∈ G.neighborFinset v, γ G ABC w → Objective G ABC := by
   have hNv : G.neighborFinset v ⊆ ABC.toFinset :=
@@ -96,10 +97,9 @@ lemma Claim1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       rw [this] at hobj
       exact hobj
 
-lemma Corollary1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] {v w : Fin n} (hG : G.support ⊆ ABC.toFinset)
-    (hw : G.Adj v w)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+lemma Corollary1 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V} [ABC.Decidable]
+    {v w : V} (hG : G.support ⊆ ABC.toFinset) (hw : G.Adj v w)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     f G ABC v ≤ γ G ABC w → Objective G ABC := by
   let hv := ABC.mem_toFinset.mpr <| hG <| G.mem_support.mpr ⟨w, hw⟩

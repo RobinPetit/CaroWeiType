@@ -13,10 +13,12 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-private lemma _neighborhood_3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {v w : Fin n} (hvw : G.Adj v w) (hdv : G.degree v = 3)
-    (f : Fin n → ℝ) :
-    ∃ u₁ u₂ : Fin n, G.neighborFinset v = {w, u₁, u₂} ∧ f u₁ ≤ f u₂ := by
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+private lemma _neighborhood_3 {G : SimpleGraph V} [DecidableRel G.Adj]
+    {v w : V} (hvw : G.Adj v w) (hdv : G.degree v = 3)
+    (f : V → ℝ) :
+    ∃ u₁ u₂ : V, G.neighborFinset v = {w, u₁, u₂} ∧ f u₁ ≤ f u₂ := by
   obtain ⟨x, y, z, hNv, hfzy, hfyx⟩ := neighborFinset_eq_deg3 f hdv
   haveI := hNv ▸ G.mem_neighborFinset .. |>.mpr hvw
   simp only [mem_insert, mem_singleton] at this
@@ -25,14 +27,14 @@ private lemma _neighborhood_3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel 
   · exact ⟨z, x, ⟨by grind, hfzy.trans hfyx⟩⟩
   · exact ⟨y, x, ⟨by grind, hfyx⟩⟩
 
-private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    {v w : Fin n} (hCv : ABC.C v) (hCw : ABC.C w) (hvw : G.Adj v w)
+private lemma _neighborhood_3' {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    {v w : V} (hCv : ABC.C v) (hCw : ABC.C w) (hvw : G.Adj v w)
     (hdv : G.degree v = 3) (hdw : G.degree w = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (Objective G ABC) ∨
-      (∃ u₁ u₂ : Fin n,
+      (∃ u₁ u₂ : V,
         G.neighborFinset v = {w, u₁, u₂}
           ∧ ABC.A u₁ ∧ G.degree u₁ = 4 ∧ ABC.A u₂ ∧ G.degree u₂ = 6) := by
   obtain ⟨u₂, u₁, hNv, hfus⟩ := _neighborhood_3 hvw hdv (f G ABC ·)
@@ -69,7 +71,7 @@ private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
       have hu₁ : u₁ ∈ ABC := ABC.mem_toFinset.mpr <| hG <| G.mem_support.mpr ⟨v, hu₁v⟩
       rcases hu₁ with hAu₁ | hBu₁ | hCu₁
       · have hdu₁ : G.degree u₁ = 4 := by
-          let hdegu₁ := @fA_le_13_of_5_le_deg _ G _ _ _ hAu₁ |>.mt <| not_le.mpr hfu₁
+          let hdegu₁ := @fA_le_13_of_5_le_deg _ _ G _ _ _ hAu₁ |>.mt <| not_le.mpr hfu₁
           have _ : 0 < G.degree u₁ := G.degree_pos_iff_exists_adj _ |>.mpr ⟨v, hu₁v⟩
           grind only [γA1, γA2, γA3]
         if hγu₂ : 1 / 15 ≤ γ G ABC u₂ then
@@ -140,18 +142,18 @@ private lemma _neighborhood_3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel
               exact Nat.lt_of_succ_le <| fC_decreasing' h
             refine Or.inl <| Claim5 hG ih ⟨u₂, ?_, Nat.le_of_lt_succ hdu₂⟩
             simp only [mem_iff, hCu₂, or_true, not_A_of_C, not_B_of_C]
-      · let hdegu₁ := @fB_le_13_if_2_le_deg _ G _ _ _ hBu₁ |>.mt <| not_le.mpr hfu₁
+      · let hdegu₁ := @fB_le_13_if_2_le_deg _ _ G _ _ _ hBu₁ |>.mt <| not_le.mpr hfu₁
         refine Or.inl <| Claim5 hG ih ⟨u₁, by simp only [mem_iff, hBu₁, or_true, true_or], ?_⟩
         exact Nat.le_of_not_lt hdegu₁
       · let hdegu₁ :=
-          @fC_le_16_if_2_le_deg _ G _ _ _ hCu₁ |>.mt <| not_le.mpr <| lt_trans (by linarith) hfu₁
+          @fC_le_16_if_2_le_deg _ _ G _ _ _ hCu₁ |>.mt <| not_le.mpr <| lt_trans (by linarith) hfu₁
         refine Or.inl <| Claim5 hG ih ⟨u₁, by simp only [mem_iff, hCu₁, or_true], ?_⟩
         exact Nat.le_of_not_lt hdegu₁
 
-lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v w : Fin n} (hvw : G.Adj v w)
+lemma Claim13 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v w : V} (hvw : G.Adj v w)
     (hCv : ABC.C v) (hdv : G.degree v = 3) (hCw : ABC.C w) (hdw : G.degree w = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   cases (_neighborhood_3' hG hCv hCw hvw hdv hdw ih) with
@@ -272,7 +274,7 @@ lemma Claim13 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     have hNw' : G.closed_neighborFinset_of_Finset {w} = {v, w, s, t} := by
       simp only [closed_neighborFinset_of_singleton_eq]
       grind
-    have hγz {z : Fin n} (hz : z ∈ S) : 1 / 21 ≤ γ G ABC z := by
+    have hγz {z : V} (hz : z ∈ S) : 1 / 21 ≤ γ G ABC z := by
       simp only [mem_inter, mem_insert, mem_singleton, S] at hz
       rcases hz.1 with hz | hz
       · subst hz

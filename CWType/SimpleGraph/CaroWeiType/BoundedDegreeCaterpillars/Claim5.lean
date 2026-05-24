@@ -10,9 +10,11 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-lemma Claim5_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+lemma Claim5_0 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x = 0) → Objective G ABC := by
   intro ⟨x, hx, hdegx0⟩
@@ -67,10 +69,10 @@ lemma Claim5_0 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
         let hobj := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs'1 hmem) |>.2
         simp only [mem_singleton, not_true_eq_false] at hobj
 
-private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] {x u : Fin n} (hu' : ∀ y, G.Adj x y → y = u)
+private lemma _Claim5_1_respect {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] {x u : V} (hu' : ∀ y, G.Adj x y → y = u)
     (hABx : ABC.A x ∨ ABC.B x) (hCu : ¬ABC.C u) (hxu : G.Adj x u)
-    (hdx : G.degree x = 1) {s : Finset (Fin n)} (hs : s ⊆ ((ABC \ {x}).demote u).toFinset)
+    (hdx : G.degree x = 1) {s : Finset V} (hs : s ⊆ ((ABC \ {x}).demote u).toFinset)
     (hsresp : respects s (G.deleteIncidencesOf {x}) ((ABC \ {x}).demote u)) :
     respects (s ∪ {x}) G ABC  := by
   have hxnotins : x ∉ s := by
@@ -151,9 +153,9 @@ private lemma _Claim5_1_respect {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRe
       · exact fun hB ↦ h₂ <| B_of_demote_ne _ heq ⟨hB, hznotinx⟩
       · exact fun hC ↦ h₃ <| C_of_demote_ne _ ⟨hC, hznotinx⟩
 
-lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim5_1 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x = 1) → Objective G ABC := by
   intro ⟨x, hx, hdegx⟩
@@ -380,9 +382,9 @@ lemma Claim5_1 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
           exact le_refl _
         _ = 0 := sub_self _
 
-lemma Claim5 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Claim5 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ x ∈ ABC, G.degree x ≤ 1) → Objective G ABC := by
   intro ⟨x, hx, hdegx⟩

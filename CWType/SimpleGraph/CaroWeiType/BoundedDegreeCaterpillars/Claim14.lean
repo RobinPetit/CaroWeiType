@@ -15,8 +15,10 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-private lemma exists_adj {n : ℕ} {G : SimpleGraph (Fin n)} {u v : Fin n} (w : G.Walk u v)
-    (P : Fin n → Prop) (hu : P u) (hv : ¬P v) : ∃ u₁ u₂ : Fin n, G.Adj u₁ u₂ ∧ P u₁ ∧ ¬P u₂ := by
+variable {V : Type}
+
+private lemma exists_adj {G : SimpleGraph V} {u v : V} (w : G.Walk u v)
+    (P : V → Prop) (hu : P u) (hv : ¬P v) : ∃ u₁ u₂ : V, G.Adj u₁ u₂ ∧ P u₁ ∧ ¬P u₂ := by
   induction w with
   | nil => exact hv hu |>.elim
   | @cons u v w huv' w' ih => ?_
@@ -25,9 +27,12 @@ private lemma exists_adj {n : ℕ} {G : SimpleGraph (Fin n)} {u v : Fin n} (w : 
   else
     exact ⟨u, v, huv', hu, hPv⟩
 
-private lemma one_le_degree_of_nonsingleton_component {n : ℕ} {G : SimpleGraph (Fin n)}
+variable [Fintype V]
+
+private lemma one_le_degree_of_nonsingleton_component {G : SimpleGraph V}
     [DecidableRel G.Adj] (C : G.ConnectedComponent) [Fintype C.supp] (hC : 1 < #C.supp.toFinset) :
     ∀ x ∈ C.supp.toFinset, 1 ≤ G.degree x := by
+  classical
   intro x hx
   obtain ⟨y, hy⟩ := by
     refine Finset_get_one (C.supp.toFinset \ {x}) ?_
@@ -45,8 +50,10 @@ private lemma one_le_degree_of_nonsingleton_component {n : ℕ} {G : SimpleGraph
     exact Set.mem_toFinset.mp <| mem_sdiff.mp hy |>.1
   exact one_le_degree_of_walk_begin hxney (Nonempty.some hxy)
 
-private lemma split_eval_on_component {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable]
+variable [DecidableEq V]
+
+private lemma split_eval_on_component {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable]
     (hG : G.support ⊆ ABC.toFinset)
     (C : G.ConnectedComponent) [Fintype C.supp]
     (hC : 1 < #C.supp.toFinset) :
@@ -90,8 +97,8 @@ private lemma split_eval_on_component {n : ℕ} {G : SimpleGraph (Fin n)} [Decid
   · intro heq
     simp_all only [Set.toFinset_card, ConnectedComponent.mem_supp_iff]
 
-lemma respects_union_path {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] {û : Fin n} {s : Finset (Fin n)}
+lemma respects_union_path {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] {û : V} {s : Finset V}
     [Fintype ((G.connectedComponentMk û).supp)]
     (hs : s ⊆ (ABC \ (G.connectedComponentMk û).supp.toFinset).toFinset)
     (hsresp : respects s (G.deleteIncidencesOf (G.connectedComponentMk û).supp.toFinset)
@@ -99,7 +106,7 @@ lemma respects_union_path {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Ad
     (hC : ∀ z ∈ (G.connectedComponentMk û).supp, ABC.A z ∧ G.degree z = 2) :
     respects (s ∪ (G.connectedComponentMk û).supp.toFinset \ {û}) G ABC := by
   intro w hw
-  have not_reachable_of_mem_s {u : Fin n} (hu : u ∈ s) : ¬G.Reachable u û := by
+  have not_reachable_of_mem_s {u : V} (hu : u ∈ s) : ¬G.Reachable u û := by
     refine not_iff_not.mpr ConnectedComponent.eq |>.mp ?_
     suffices u ∉ (G.connectedComponentMk û).supp by
       exact this
@@ -151,10 +158,10 @@ lemma respects_union_path {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Ad
 lemma _compute_final {x : ℝ} : 3 ≤ x ↔ x * (2 / 3) ≤ x - 1 := by
   grind
 
-lemma _eval_ok {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma _eval_ok {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    {û : Fin n} (hdû : G.degree û = 2) [Fintype (G.connectedComponentMk û)]
-    {s : Finset (Fin n)} (hs : s ⊆ (ABC \ (G.connectedComponentMk û).supp.toFinset).toFinset)
+    {û : V} (hdû : G.degree û = 2) [Fintype (G.connectedComponentMk û)]
+    {s : Finset V} (hs : s ⊆ (ABC \ (G.connectedComponentMk û).supp.toFinset).toFinset)
     (hC : ∀ x ∈ (G.connectedComponentMk û).supp, ABC.A x ∧ G.degree x = 2)
     (hscard : eval (G.deleteIncidencesOf (G.connectedComponentMk û).supp.toFinset)
       (ABC \ (G.connectedComponentMk û).supp.toFinset) ≤ #s) :
@@ -209,10 +216,10 @@ lemma _eval_ok {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
   simp only [hdû, Nat.reduceAdd]
 
 private lemma ok_of_γ_eq_0
-    {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} [ABC.Decidable]
-    {û : Fin n} (hG : G.support ⊆ ABC.toFinset) (hû : IsVstar G ABC û)
+    {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V} [ABC.Decidable]
+    {û : V} (hG : G.support ⊆ ABC.toFinset) (hû : IsVstar G ABC û)
     (hAû : ABC.A û) (hdû : G.degree û = 2)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     (hdeg1 : ∀ x ∈ ABC, 1 < G.degree x)
     (hv : ∃ v ∈ (G.connectedComponentMk û).supp, γ G ABC v = 0) :
@@ -265,13 +272,13 @@ private lemma ok_of_γ_eq_0
     · exact Claim6 hG ih ⟨v₁, h.1, not_A_of_C h.2⟩
 
 private lemma ok_of_γ_ne_0
-    {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n} [ABC.Decidable]
-    {û : Fin n} (hG : G.support ⊆ ABC.toFinset) (hû : IsVstar G ABC û)
+    {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V} [ABC.Decidable]
+    {û : V} (hG : G.support ⊆ ABC.toFinset) (hû : IsVstar G ABC û)
     (hAû : ABC.A û) (hdû : G.degree û = 2)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     (hdeg1 : ∀ x ∈ ABC, 1 < G.degree x)
-    (hB2 : ∀ (x : Fin n), ABC.B x → ¬G.degree x = 2)
+    (hB2 : ∀ (x : V), ABC.B x → ¬G.degree x = 2)
     (hv : ∀ v ∈ (G.connectedComponentMk û).supp, γ G ABC v ≠ 0) :
     Objective G ABC := by
   have hC : ∀ z ∈ (G.connectedComponentMk û).supp, ABC.A z ∧ G.degree z = 2 := by
@@ -375,10 +382,10 @@ private lemma ok_of_γ_ne_0
   · exact respects_union_path hs hsresp hC
   · exact _eval_ok hG hdû hs hC hscard
 
-lemma Claim14' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û : Fin n} (hû : IsVstar G ABC û)
+lemma Claim14' {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û : V} (hû : IsVstar G ABC û)
     (hAû : ABC.A û) (hdû : G.degree û = 2)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC := by
   let C := G.connectedComponentMk û
@@ -397,9 +404,9 @@ lemma Claim14' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : T
       simp only [not_exists, not_and] at hv
       exact ok_of_γ_ne_0 hG hû hAû hdû ih hdeg1 hB2 hv
 
-lemma Claim14 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û : Fin n} (hû : IsVstar G ABC û)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+lemma Claim14 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û : V} (hû : IsVstar G ABC û)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨
       (¬(ABC.A û ∧ G.degree û = 2) ∧ 3 ≤ G.degree û ∧ f G ABC û = G.degree û * γ G ABC û ∧

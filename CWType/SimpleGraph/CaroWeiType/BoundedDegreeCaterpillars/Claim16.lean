@@ -13,10 +13,12 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-lemma Claim16 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+lemma Claim16 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    {û v : Fin n} (hû : IsVstar G ABC û) (hCv : ABC.C v) (hdv : G.degree v = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    {û v : V} (hû : IsVstar G ABC û) (hCv : ABC.C v) (hdv : G.degree v = 3)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨
       (¬(ABC.A û ∧ G.degree û = 4) ∧
@@ -62,10 +64,10 @@ lemma Claim16 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
     else
       grind
 
-lemma Corollary16 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Corollary16 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    {û v : Fin n} (hû : IsVstar G ABC û) (hCv : ABC.C v) (hdv : G.degree v = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    {û v : V} (hû : IsVstar G ABC û) (hCv : ABC.C v) (hdv : G.degree v = 3)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨ (f G ABC û ≤ 2 / 7 ∧ γ G ABC û ≤ 1 / 21) := by
   match Claim15 hG hû ih, Claim16 hG hû hCv hdv ih with

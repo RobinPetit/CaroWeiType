@@ -11,9 +11,11 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+lemma Claim6 {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ v, G.degree v = 2 ∧ ¬ABC.A v) → Objective G ABC := by
   intro h
@@ -36,7 +38,7 @@ lemma Claim6 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     refine Adj.symm <| G.mem_neighborFinset .. |>.mp ?_
     grind
   have hBCv : ABC.B v ∨ ABC.C v := by grind [ABC.mem_iff.mp hv]
-  have sum_Nv_eq {φ : Fin n → ℝ} : ∑ x ∈ {u, w}, φ x = φ u + φ w := by
+  have sum_Nv_eq {φ : V → ℝ} : ∑ x ∈ {u, w}, φ x = φ u + φ w := by
     refine sum_pair ?_
     intro heq; subst heq
     simp only [mem_singleton, insert_eq_of_mem] at huw

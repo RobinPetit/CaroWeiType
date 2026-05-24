@@ -8,16 +8,18 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-private lemma hAiff {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
-    {G : SimpleGraph (Fin n)} [G.LocallyFinite] (hw : w ∉ G.closed_neighborFinset_of_Finset F) :
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+private lemma hAiff {w : V} {F : Finset V} {ABC : Tripartition V}
+    {G : SimpleGraph V} [G.LocallyFinite] (hw : w ∉ G.closed_neighborFinset_of_Finset F) :
     ABC.A w ↔ (ABC \ G.closed_neighborFinset_of_Finset F).A w := by
   exact ⟨fun h ↦ by simp [Tripartition.sdiff, h, hw], fun h ↦ h.1⟩
 
-lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] {F : Finset (Fin n)} (hFne : F.Nonempty)
+lemma Claim2 {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] {F : Finset V} (hFne : F.Nonempty)
     (hF : F ⊆ ABC.toFinset) (hF' : respects F G ABC)
     (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ eval G ABC - eval (G.deleteIncidencesOf <| G.closed_neighborFinset_of_Finset F)
@@ -73,8 +75,8 @@ lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
           Set.mem_setOf_eq] at hobj
         exact closed_neighborFinset_contains_Finset.mt hobj.2
 
-private lemma hdeg {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {w : Fin n}
-    {F : Finset (Fin n)} (hw : w ∈ G.N2_of_Finset F) :
+private lemma hdeg {G : SimpleGraph V} [DecidableRel G.Adj] {w : V}
+    {F : Finset V} (hw : w ∈ G.N2_of_Finset F) :
     (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F)).degree w + 1 ≤ G.degree w := by
   refine Order.add_one_le_iff.mpr ?_
   refine Finset.card_lt_card <| Finset.ssubset_iff_subset_ne.mpr ⟨?_, ?_⟩
@@ -93,8 +95,8 @@ private lemma cast_add_one {m n : ℕ} (h : m + 1 ≤ n) : (m : ℝ) + 1 ≤ (n 
   rw [← Nat.cast_one, ← Nat.cast_add, Nat.cast_le]
   exact h
 
-private lemma _ok_A {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
-    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hA : ABC.A w) (hdw : 1 ≤ G.degree w)
+private lemma _ok_A {w : V} {F : Finset V} {ABC : Tripartition V}
+    {G : SimpleGraph V} [DecidableRel G.Adj] (hA : ABC.A w) (hdw : 1 ≤ G.degree w)
     (hw : w ∈ G.N2_of_Finset F) (hwNF : w ∉ G.closed_neighborFinset_of_Finset F) :
     γ G ABC w ≤
       f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -111,8 +113,8 @@ private lemma _ok_A {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartiti
     exact Nat.ofNat_le_cast.mpr <| by lia
   · exact div_le_div_of_nonneg_left zero_le_two add_one_pos <| cast_add_one <| hdeg hw
 
-private lemma _ok_B {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
-    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hB : ABC.B w) (hdw : 1 ≤ G.degree w)
+private lemma _ok_B {w : V} {F : Finset V} {ABC : Tripartition V}
+    {G : SimpleGraph V} [DecidableRel G.Adj] (hB : ABC.B w) (hdw : 1 ≤ G.degree w)
     (hw : w ∈ G.N2_of_Finset F) (hwNF : w ∉ G.closed_neighborFinset_of_Finset F) :
     γ G ABC w ≤
       f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -138,8 +140,8 @@ private lemma _ok_B {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartiti
     lia
   · exact div_le_div_of_nonneg_left zero_le_four_thirds add_one_pos <| cast_add_one <| hdeg hw
 
-private lemma _ok_C {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartition n}
-    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] (hC : ABC.C w) (hdw : 1 ≤ G.degree w)
+private lemma _ok_C {w : V} {F : Finset V} {ABC : Tripartition V}
+    {G : SimpleGraph V} [DecidableRel G.Adj] (hC : ABC.C w) (hdw : 1 ≤ G.degree w)
     (hw : w ∈ G.N2_of_Finset F) (hwNF : w ∉ G.closed_neighborFinset_of_Finset F) :
     γ G ABC w ≤
       f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
@@ -161,8 +163,8 @@ private lemma _ok_C {n : ℕ} {w : Fin n} {F : Finset (Fin n)} {ABC : Tripartiti
       <| @le_trans _ _ _ 4 _ (by linarith) (Nat.cast_le.mpr <| by lia)
   · exact div_le_div_of_nonneg_left zero_le_two_thirds add_one_pos <| cast_add_one <| hdeg hw
 
-private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    {ABC : Tripartition n} (F : Finset (Fin n)) :
+private lemma _γ_on_N2 (G : SimpleGraph V) [DecidableRel G.Adj] {ABC : Tripartition V}
+    (F : Finset V) :
     ∑ w ∈ G.N2_of_Finset F, γ G ABC w ≤ ∑ w ∈ G.N2_of_Finset F,
         (f (G.deleteIncidencesOf (G.closed_neighborFinset_of_Finset F))
           (ABC \ G.closed_neighborFinset_of_Finset F) w - f G ABC w) := by
@@ -181,10 +183,10 @@ private lemma _γ_on_N2 {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
   else
     simp [hA, hB, hC]
 
-lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] {F : Finset (Fin n)} (hFne : F.Nonempty)
-    (hG : G.support ⊆ ABC.toFinset) (hF : F ⊆ ABC.toFinset) (hF' : respects F G ABC)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+lemma Claim2' {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V} [ABC.Decidable]
+    {F : Finset V} (hFne : F.Nonempty) (hG : G.support ⊆ ABC.toFinset)
+    (hF : F ⊆ ABC.toFinset) (hF' : respects F G ABC)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset F, f G ABC v
@@ -281,11 +283,11 @@ lemma Claim2' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       intro w hw
       exact Eq.symm <| neg_sub ..
 
-lemma Corollary2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] {F : Finset (Fin n)} (hFne : F.Nonempty)
+lemma Corollary2 {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] {F : Finset V} (hFne : F.Nonempty)
     (hG : G.support ⊆ ABC.toFinset) (hF : F ⊆ ABC.toFinset)
     (hF' : respects F G ABC)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     G.InducesLinearForest F →
       #F ≥ ∑ v ∈ G.closed_neighborFinset_of_Finset F, f G ABC v →

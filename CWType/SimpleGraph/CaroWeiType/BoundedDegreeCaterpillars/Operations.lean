@@ -8,9 +8,11 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-private lemma _ok_eval {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    [ABC.Decidable] {s : Finset (Fin n)} (hG : G.support ⊆ ABC.toFinset)
-    {v x y z : Fin n} (hNv : G.neighborFinset v = {x, y, z})
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+private lemma _ok_eval {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
+    [ABC.Decidable] {s : Finset V} (hG : G.support ⊆ ABC.toFinset)
+    {v x y z : V} (hNv : G.neighborFinset v = {x, y, z})
     (hdv : G.degree v = 3) (hBv : ABC.B v)
     (hscard : eval ((fromEdgeSet (G.edgeSet ∪ {s(y, z)})).deleteIncidencesOf {x})
         ((ABC \ {x}).promote v) ≤ #s)
@@ -243,10 +245,10 @@ private lemma _ok_eval {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] 
       exact Eq.symm <| sum_sub_distrib ..
   exact hbound
 
-lemma objective_of_B3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v x y z : Fin n} (hdv : G.degree v = 3)
+lemma objective_of_B3 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v x y z : V} (hdv : G.degree v = 3)
     (hBv : ABC.B v) (hNv : G.neighborFinset v = {x, y, z})
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
     (hbound : f G ABC x - 1 / 3 + ∑ u ∈ {y, z},
         (f G ABC u - f ((fromEdgeSet (G.edgeSet ∪ {s(y, z)})).deleteIncidencesOf {x})
@@ -328,10 +330,10 @@ lemma objective_of_B3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {
       exact le_trans (degree_in_mono' le_fromEdgeSet_union) (le_of_eq this)
   · exact _ok_eval hG hNv hdv hBv hscard hbound
 
-lemma objective_of_B3' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v x y z : Fin n} (hdv : G.degree v = 3)
+lemma objective_of_B3' {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {v x y z : V} (hdv : G.degree v = 3)
     (hBv : ABC.B v) (hNv : G.neighborFinset v = {x, y, z})
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨
       (∑ u ∈ G.neighborFinset x \ ({v} ∪ G.neighborFinset v), γ G ABC u

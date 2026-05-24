@@ -300,22 +300,22 @@ private lemma _lb_bounded_by_extremal (f : ℕ → ℝ) {k : ℕ} (hk : 2 ≤ k)
       rw [this] at hfs
       linarith
 
-private def _ABC {n k : ℕ} (hk : 2 ≤ k) (X : Finset (Fin n))
-    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] :
-    ABC.Tripartition n where
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+private def _ABC {k : ℕ} (hk : 2 ≤ k) (X : Finset V) (G : SimpleGraph V) [DecidableRel G.Adj] :
+    ABC.Tripartition V where
   A := fun x ↦ x ∈ (X \ G.Λ) ∧ G.degree_in G.Λ x ≤ k - 2
   B := fun x ↦ x ∈ (X \ G.Λ) ∧ G.degree_in G.Λ x = k - 1
   C := fun x ↦ x ∈ (X \ G.Λ) ∧ G.degree_in G.Λ x = k
   sound := by grind
 
-instance {n k : ℕ} (hk : 2 ≤ k) (X : Finset (Fin n))
-    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] :
+instance {k : ℕ} (hk : 2 ≤ k) (X : Finset V) (G : SimpleGraph V) [DecidableRel G.Adj] :
     (_ABC hk X G).Decidable := by
   simp only [_ABC]
   refine { A := ?_, B := ?_, C := ?_ } <;> infer_instance
 
-private lemma ABC'_inter_Λ_empty {n k : ℕ} (hk : 2 ≤ k) {X : Finset (Fin n)}
-    {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] :
+private lemma ABC'_inter_Λ_empty {k : ℕ} (hk : 2 ≤ k) {X : Finset V}
+    {G : SimpleGraph V} [DecidableRel G.Adj] :
     (_ABC hk X G).toFinset ∩ G.Λ = ∅ := by
   ext x
   simp only [mem_inter, notMem_empty, iff_false, not_and]
@@ -347,7 +347,7 @@ private lemma _TMP {n : ℕ} (h : 1 ≤ n) :
   lia
 
 private lemma _φ_closed_Nv_le_f_Nv_of_deg0 {k : ℕ} (hk : 2 ≤ k) {ε : ℝ} (hε : 0 ≤ ε)
-    {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {x : Fin n} (X : Finset (Fin n))
+    {G : SimpleGraph V} [DecidableRel G.Adj] {x : V} (X : Finset V)
     (hx : x ∈ (_ABC hk X G).toFinset) (hdx : G.degree x = 0) :
     φ k ε (G.degree x) - #(G.neighborFinset x ∩ G.Λ) * ε
       ≤ ABC.f (G.deleteIncidencesOf G.Λ) (_ABC hk X G) x := by
@@ -357,7 +357,7 @@ private lemma _φ_closed_Nv_le_f_Nv_of_deg0 {k : ℕ} (hk : 2 ≤ k) {ε : ℝ} 
   exact sub_le_self _ <| Left.mul_nonneg (Nat.cast_nonneg' _) hε
 
 private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_deg_le_k {k : ℕ} (hk : 2 ≤ k) {ε : ℝ} (hε : 0 ≤ ε)
-    {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {x : Fin n} (X : Finset (Fin n))
+    {G : SimpleGraph V} [DecidableRel G.Adj] {x : V} (X : Finset V)
     (hx : x ∈ (_ABC hk X G).toFinset) (hdx : 2 ≤ G.degree x) (hdx' : G.degree x ≤ k) :
     φ k ε (G.degree x) - #(G.neighborFinset x ∩ G.Λ) * ε
       ≤ ABC.f (G.deleteIncidencesOf G.Λ) (_ABC hk X G) x := by
@@ -405,8 +405,7 @@ private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_deg_le_k {k : ℕ} (hk : 2 �
 
 private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_kp1_le_deg_of_min_right_of_B_or_C
     {k : ℕ} (hk : 2 ≤ k) {ε : ℝ} (hε : 0 ≤ ε)
-    {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {x : Fin n} (X : Finset (Fin n))
+    {G : SimpleGraph V} [DecidableRel G.Adj] {x : V} (X : Finset V)
     (hdx : 2 ≤ G.degree x) (hdx' : ¬G.degree x ≤ k)
     (hle : (2 / 3) / (G.degree x + 1 : ℝ) ≤ ε)
     (hBorC : (_ABC hk X G).B x ∨ (_ABC hk X G).C x) :
@@ -513,8 +512,7 @@ private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_kp1_le_deg_of_min_right_of_B_
 
 private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_kp1_le_deg_of_min_left_of_B_or_C
     {k : ℕ} (hk : 2 ≤ k) {ε : ℝ} (hε' : ε ≤ 2 / ((k + 1) * (k + 2 : ℝ)))
-    {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {x : Fin n} (X : Finset (Fin n))
+    {G : SimpleGraph V} [DecidableRel G.Adj] {x : V} (X : Finset V)
     (hdx : 2 ≤ G.degree x) (hdx' : ¬G.degree x ≤ k)
     -- (hle : (k + 1 : ℝ) * ε < 2 / (↑(G.degree x) + 1))
     (hle : ε < (2 / 3) / (↑(G.degree x) + 1))
@@ -590,7 +588,7 @@ private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_kp1_le_deg_of_min_left_of_B_o
 
 private lemma _φ_closed_Nv_le_f_Nv {k : ℕ} (hk : 2 ≤ k)
     {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 2 / ((k + 1) * (k + 2 : ℝ)))
-    {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {x : Fin n} (X : Finset (Fin n))
+    {G : SimpleGraph V} [DecidableRel G.Adj] {x : V} (X : Finset V)
     (hx : x ∈ (_ABC hk X G).toFinset) :
     φ k ε (G.degree x) - #(G.neighborFinset x ∩ G.Λ) * ε
       ≤ ABC.f (G.deleteIncidencesOf G.Λ) (_ABC hk X G) x := by
@@ -631,9 +629,9 @@ private lemma _φ_closed_Nv_le_f_Nv {k : ℕ} (hk : 2 ≤ k)
         refine _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_kp1_le_deg_of_min_left_of_B_or_C
           hk hε' X hdx2 hdx_le_k (not_le.mp hdvε) hBorC
 
-private lemma _f_is_lb_of_degree_in_Λ_le_k {n k : ℕ} (hk : 2 ≤ k)
+private lemma _f_is_lb_of_degree_in_Λ_le_k {k : ℕ} (hk : 2 ≤ k)
     {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 2 / ((k + 1) * (k + 2 : ℝ)))
-    (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (X : Finset (Fin n))
+    (G : SimpleGraph V) [DecidableRel G.Adj] (X : Finset V)
     (hX : G.support ⊆ X) (h : ¬∃ v ∈ X, k + 1 ≤ G.degree_in G.Λ v)
     (hΛ : ¬∃ x y, G.degree x = 1 ∧ G.degree y = 1 ∧ G.Adj x y) :
     ∃ s ⊆ X, G.InducesCaterpillar s
@@ -701,7 +699,7 @@ private lemma _f_is_lb_of_degree_in_Λ_le_k {n k : ℕ} (hk : 2 ≤ k)
       refine fun x hx ↦ hX <| degree_pos_iff_mem_support .. |>.mp ?_
       exact Nat.lt_of_sub_eq_succ (hdΛ.mp hx)
     rw [hX']
-    let g : Fin n → Finset (Fin n) := by
+    let g : V → Finset V := by
       intro u
       if u ∈ (_ABC hk X G).toFinset then
         exact {u} ∪ (G.neighborFinset u ∩ G.Λ)
@@ -801,7 +799,7 @@ private lemma _f_is_lb_of_degree_in_Λ_le_k {n k : ℕ} (hk : 2 ≤ k)
     suffices ∑ x ∈ (_ABC hk X G).toFinset, ∑ y ∈ G.neighborFinset x ∩ G.Λ, (1 : ℝ) = #G.Λ by
       clear * - this hscapΛ
       rw [card_union, hscapΛ, card_empty, tsub_zero, Nat.cast_add, ← this]
-    let g : Fin n → Finset (Fin n) := by
+    let g : V → Finset V := by
       intro x
       if x ∈ (_ABC hk X G).toFinset then
         exact G.neighborFinset x ∩ G.Λ
@@ -852,9 +850,7 @@ private lemma _f_is_lb_of_degree_in_Λ_le_k {n k : ℕ} (hk : 2 ≤ k)
 
 private lemma _f_is_lb {k : ℕ} (hk : 2 ≤ k)
     {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 2 / ((k + 1) * (k + 2 : ℝ)))
-    -- {V : Type} [Fintype V] [DecidableEq V] (G : SimpleGraph V) [DecidableRel G.Adj] (X : Finset V)
-    {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (X : Finset (Fin n))
-    (hX : G.support ⊆ X) :
+    (G : SimpleGraph V) [DecidableRel G.Adj] (X : Finset V) (hX : G.support ⊆ X) :
     ∃ s ⊆ X, G.InducesCaterpillar s
       ∧ (∀ v ∈ s, G.degree_in s v ≤ k) ∧ ∑ v ∈ X, φ k ε (G.degree v) ≤ ↑(#s) := by
   if h : ∃ v ∈ X, k + 1 ≤ G.degree_in G.Λ v then
@@ -973,7 +969,7 @@ private lemma _f_is_lb {k : ℕ} (hk : 2 ≤ k)
       exact hdv
   else if hΛ : ∃ x y, G.degree x = 1 ∧ G.degree y = 1 ∧ G.Adj x y then
     obtain ⟨x, y, hx, hy, hxy⟩ := hΛ
-    have hnotadj {u w : Fin n} (hu : u ∈ ({x, y} : Finset _)) (hw : w ∉ ({x, y} : Finset _)) :
+    have hnotadj {u w : V} (hu : u ∈ ({x, y} : Finset _)) (hw : w ∉ ({x, y} : Finset _)) :
         ¬G.Adj u w := by
       clear * - hu hw hx hy hxy
       refine not_iff_not.mpr (G.mem_neighborFinset ..) |>.mp ?_
@@ -1052,7 +1048,10 @@ private lemma f_is_lb {k : ℕ} {f : ℕ → ℝ} (hk : 2 ≤ k)
     {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 2 / ((k + 1) * (k + 2 : ℝ))) (hf : f ≤ φ k ε) :
     IsCaroWeiTypeLowerBound f (GraphParameter.BoundedDegreeCaterpillar k) := by
   intro V _ _ G
-  sorry
+  obtain ⟨s, hs, hscat, hsdeg, hscard⟩ := by
+    refine _f_is_lb hk hε hε' G.graph univ ?_
+    simp only [coe_univ, Set.subset_univ]
+  exact ⟨s, ⟨hscat, hsdeg⟩, le_trans (sum_le_sum fun v _ ↦ hf _) hscard⟩
 
 theorem BoundedDegreeCaterpillar_LowerBound_iff (f : ℕ → ℝ) :
     ∀ k : ℕ, 2 ≤ k →

@@ -36,12 +36,14 @@ lemma InducesLinearForestIsUnionStable {V : Type*} [DecidableEq V] [Fintype V] :
     simp only [mem_inter, mem_neighborFinset, mem_union, and_congr_right_iff, or_iff_right_iff_imp]
     exact fun hxy hy ↦ h y hy x hx hxy.symm |>.elim
 
-lemma InducesLinearForest_singleton {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {v : Fin n} : G.InducesLinearForest {v} := by
+lemma InducesLinearForest_singleton {V : Type*} [Fintype V] [DecidableEq V]
+    {G : SimpleGraph V} [DecidableRel G.Adj] {v : V} :
+    G.InducesLinearForest {v} := by
   simp [InducesLinearForest, InducesForest_singleton]
 
-lemma InducesLinearForest_pair {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {v w : Fin n} : G.InducesLinearForest {v, w} := by
+lemma InducesLinearForest_pair {V : Type*} [Fintype V] [DecidableEq V]
+    {G : SimpleGraph V} [DecidableRel G.Adj] {v w : V} :
+    G.InducesLinearForest {v, w} := by
   simp only [InducesLinearForest, InducesForest_pair, mem_insert, mem_singleton, degree_in,
     forall_eq_or_imp, mem_neighborFinset, SimpleGraph.irrefl, not_false_eq_true,
     inter_insert_of_notMem, forall_eq, true_and]
@@ -69,14 +71,15 @@ lemma InducesForest_graph_mono' {V : Type*} [DecidableEq V] [Fintype V] {G : Sim
     G.InducesForest s₁ := by
   exact IsDegenerateSet_mono' G 1 s₁ s₂ hs h
 
-lemma InducesForest_union_leaf {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj]
-    (s : Finset (Fin n)) (hs : G.InducesForest s) {v : Fin n} (hv : G.degree_in s v ≤ 1) :
+lemma InducesForest_union_leaf {V : Type} [Fintype V] [DecidableEq V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] (s : Finset V) (hs : G.InducesForest s)
+    {v : V} (hv : G.degree_in s v ≤ 1) :
     G.InducesForest (s ∪ {v}) := by
   simp only [InducesForest] at hs ⊢
   exact G.IsDegenerateSet_union_singleton s hs hv
 
-lemma InducesForest_union_disjoint_neighborhoods {n : ℕ} {G : SimpleGraph (Fin n)}
-    [DecidableRel G.Adj] {s₁ s₂ : Finset (Fin n)} (hs₁ : G.InducesForest s₁)
+lemma InducesForest_union_disjoint_neighborhoods {V : Type*} [Fintype V] [DecidableEq V]
+    {G : SimpleGraph V} [DecidableRel G.Adj] {s₁ s₂ : Finset V} (hs₁ : G.InducesForest s₁)
     (hs₂ : G.InducesForest s₂) (h : ∀ x ∈ s₁, ∀ y ∈ s₂, ¬G.Adj x y) :
     G.InducesForest (s₁ ∪ s₂) := by
   intro t ht htne

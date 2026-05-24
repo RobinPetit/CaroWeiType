@@ -13,9 +13,11 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-lemma Claim15 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û : Fin n} (hû : IsVstar G ABC û)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+lemma Claim15 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
+    [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset) {û : V} (hû : IsVstar G ABC û)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     Objective G ABC ∨ 4 ≤ G.degree û := by
   cases Claim14 hG hû ih with
@@ -38,7 +40,7 @@ lemma Claim15 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
       simp only [mem_iff, hneBC3, or_self, or_false] at hABC
       exact hABC
     refine Or.inl ?_
-    have hABC {u v : Fin n} (huv : u ∈ G.neighborFinset v) : u ∈ ABC :=
+    have hABC {u v : V} (huv : u ∈ G.neighborFinset v) : u ∈ ABC :=
       ABC.mem_toFinset.mpr <| hG
         <| G.mem_support.mpr ⟨_, Adj.symm <| G.mem_neighborFinset .. |>.mp huv⟩
     if hNvC : ∃ w ∈ G.neighborFinset û, ABC.C w ∧ G.degree w = 3 then
@@ -53,7 +55,7 @@ lemma Claim15 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         simp only [mem_iff, hAw, hNvC _ hw |>.mt <| not_not_intro hdw, or_false, false_or] at hobj
         exact hobj
       obtain ⟨x, y, z, hxyz, hγzy, hγyx⟩ := neighborFinset_eq_deg3 (γ G ABC ·) hdw
-      have hγ {u : Fin n} (hu : u ∈ G.neighborFinset w) (hγu : γ G ABC u = 0) :
+      have hγ {u : V} (hu : u ∈ G.neighborFinset w) (hγu : γ G ABC u = 0) :
           Objective G ABC ∨ ABC.B u ∧ G.degree u = 3 := by
         let hobj := γ_eq_0_iff (hABC hu) (one_le_degree_of_mem_neighborFinset' hu) |>.mp hγu
         rcases hobj with h | h | h

@@ -12,11 +12,13 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+private lemma solve_deg_le_2 {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
-    {v w : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3) (hvw : G.Adj v w)
+    {v w : V} (hBv : ABC.B v) (hdv : G.degree v = 3) (hvw : G.Adj v w)
     (hw : w ∈ ABC) (hdw : G.degree w ≤ 2) : Objective G ABC := by
   if hdw : G.degree w ≤ 1 then
     exact Claim5 hG ih ⟨_, hw, hdw⟩
@@ -25,11 +27,11 @@ private lemma solve_deg_le_2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G
   else
     exact Claim6 hG ih ⟨_, by grind, hAw⟩
 
-private lemma _Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+private lemma _Claim8 {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
-    {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
+    {v x y : V} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
     (hne : x ≠ y) (hyx : f G ABC y ≤ f G ABC x) :
     ℓ G ABC x + ℓ G ABC y > 1 / 6 → Objective G ABC := by
   intro h
@@ -85,11 +87,11 @@ private lemma _Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
       · exact fun _ _ _ ↦ γ_nonneg
     grind
 
-lemma Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+lemma Claim8 {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
-    {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
+    {v x y : V} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
     (hne : x ≠ y) :
     ℓ G ABC x + ℓ G ABC y > 1 / 6 → Objective G ABC := by
   if hyx : f G ABC y ≤ f G ABC x then
@@ -98,11 +100,11 @@ lemma Claim8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     rw [add_comm (ℓ G ABC x) (ℓ G ABC y)]
     exact _Claim8 hG ih hBv hdegv hy hx hne.symm (le_of_lt <| not_le.mp hyx)
 
-lemma Corollary8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+lemma Corollary8 {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
-    {v x y : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
+    {v x y : V} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) (hy : G.Adj y v)
     (hne : x ≠ y) :
     Objective G ABC ∨ ℓ G ABC x + ℓ G ABC y ≤ 1 / 6 := by
   if hℓ : ℓ G ABC x + ℓ G ABC y ≤ 1 / 6 then
@@ -110,11 +112,11 @@ lemma Corollary8 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
   else
     exact Or.inl <| Claim8 hG ih hBv hdegv hx hy hne (not_le.mp hℓ)
 
-lemma Corollary8' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {ABC : Tripartition n} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+lemma Corollary8' {G : SimpleGraph V} [DecidableRel G.Adj]
+    {ABC : Tripartition V} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC')
-    {v x : Fin n} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) :
+    {v x : V} (hBv : ABC.B v) (hdegv : G.degree v = 3) (hx : G.Adj x v) :
     Objective G ABC ∨ ℓ G ABC x ≤ 1 / 10 := by
   if hℓx : ℓ G ABC x ≤ 1 / 10 then
     exact Or.inr hℓx

@@ -11,10 +11,12 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+variable {V : Type} [Fintype V] [DecidableEq V]
+
+lemma Claim9 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    {v : V} (hBv : ABC.B v) (hdv : G.degree v = 3)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ w, G.Adj v w ∧ f G ABC w ≤ 1 / 6) → Objective G ABC := by
   intro ⟨w, hvw, hfw⟩
@@ -68,10 +70,10 @@ lemma Claim9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
       _ ≤ 0 := by grind [degree]
     exact sum_nonneg fun _ _ ↦ γ_nonneg
 
-lemma Corollary9 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
+lemma Corollary9 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
     [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
-    {v : Fin n} (hBv : ABC.B v) (hdv : G.degree v = 3)
-    (ih : ∀ (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] (ABC' : Tripartition n)
+    {v : V} (hBv : ABC.B v) (hdv : G.degree v = 3)
+    (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (ABC' : Tripartition V)
       [ABC'.Decidable], G'.support ⊆ ABC'.toFinset → ABC'.card < ABC.card → Objective G' ABC') :
     (∃ w, G.Adj v w ∧ ABC.C w) → Objective G ABC := by
   intro ⟨w, hvw, hCw⟩

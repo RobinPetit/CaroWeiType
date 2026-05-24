@@ -8,8 +8,10 @@ namespace CaroWeiType
 namespace ABC
 namespace Tripartition
 
-private lemma f_le_16_of_deg_ge_3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
-    {v : Fin n} : 3 ≤ G.degree v → (2 / 3) / (G.degree v + 1 : ℝ) ≤ 1 / 6 := by
+variable {V : Type} [Fintype V]
+
+private lemma f_le_16_of_deg_ge_3 {G : SimpleGraph V} [DecidableRel G.Adj]
+    {v : V} : 3 ≤ G.degree v → (2 / 3) / (G.degree v + 1 : ℝ) ≤ 1 / 6 := by
   intro h
   calc (2 / 3) / (G.degree v + 1 : ℝ)
     _ ≤ (2 / 3) / (4 : ℝ) := by
@@ -18,8 +20,8 @@ private lemma f_le_16_of_deg_ge_3 {n : ℕ} {G : SimpleGraph (Fin n)} [Decidable
       refine Nat.cast_le.mpr <| by lia
     _ ≤ 1 / 6 := by linarith
 
-lemma Claim4_A {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} {s : Finset _} (hv : v ∈ s)
+lemma Claim4_A (G : SimpleGraph V) [DecidableRel G.Adj] (ABC : Tripartition V)
+    (G' : SimpleGraph V) [DecidableRel G'.Adj] {v : V} {s : Finset _} (hv : v ∈ s)
     (hAv : ABC.A v) (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote_finset s) v ≤ 1 / (6 : ℝ) := by
   simp only [f, hAv, ↓reduceDIte, not_A_of_B, tsub_le_iff_right, ABC.demote_finset_from_A hAv hv]
@@ -52,8 +54,8 @@ lemma Claim4_A {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
         simp only [add_le_add_iff_right]
         exact f_le_16_of_deg_ge_3 <| by lia
 
-lemma Claim4_B {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} {s : Finset _} (hv : v ∈ s)
+lemma Claim4_B (G : SimpleGraph V) [DecidableRel G.Adj] (ABC : Tripartition V)
+    (G' : SimpleGraph V) [DecidableRel G'.Adj] {v : V} {s : Finset _} (hv : v ∈ s)
     (hBv : ABC.B v) (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote_finset s) v ≤ 1 / (6 : ℝ) := by
   simp only [f, hBv, not_A_of_B, ↓reduceDIte, ABC.demote_finset_from_B hBv hv, not_A_of_C,
@@ -78,8 +80,8 @@ lemma Claim4_B {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
         simp only [add_le_add_iff_right]
         exact f_le_16_of_deg_ge_3 (by lia)
 
-lemma Claim4_C {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : Tripartition n)
-    (G' : SimpleGraph (Fin n)) [DecidableRel G'.Adj] {v : Fin n} {s : Finset _}
+lemma Claim4_C (G : SimpleGraph V) [DecidableRel G.Adj] (ABC : Tripartition V)
+    (G' : SimpleGraph V) [DecidableRel G'.Adj] {v : V} {s : Finset _}
     (hCv : ABC.C v) (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote_finset s) v ≤ 1 / (6 : ℝ) := by
   simp only [f, hCv, not_A_of_C, ↓reduceDIte, not_B_of_C, ABC.demote_finset_from_C hCv]
@@ -89,8 +91,8 @@ lemma Claim4_C {n : ℕ} (G : SimpleGraph (Fin n)) [DecidableRel G.Adj] (ABC : T
   refine le_trans H1 ?_
   grind
 
-lemma Claim4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    {G' : SimpleGraph (Fin n)} [DecidableRel G'.Adj] {v : Fin n} {s : Finset _} (hv : v ∈ s)
+lemma Claim4 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
+    {G' : SimpleGraph V} [DecidableRel G'.Adj] {v : V} {s : Finset _} (hv : v ∈ s)
     (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote_finset s) v ≤ 1 / (6 : ℝ) := by
   if hA : ABC.A v then
@@ -110,8 +112,8 @@ lemma Claim4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tri
     split_ifs
     any_goals grind
 
-lemma Claim4' {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tripartition n}
-    {G' : SimpleGraph (Fin n)} [DecidableRel G'.Adj] {v : Fin n}
+lemma Claim4' {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
+    {G' : SimpleGraph V} [DecidableRel G'.Adj] {v : V}
     (h : G.degree v ≥ G'.degree v + 1) :
     f G ABC v - f G' (ABC.demote v) v ≤ 1 / (6 : ℝ) := by
   exact Claim4 (mem_singleton.mpr rfl) h
