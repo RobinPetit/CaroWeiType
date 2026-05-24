@@ -74,6 +74,14 @@ lemma add_one_add_one_pos {n : ℕ} : 0 < n + (1 : ℝ) + 1 := by
   exact add_one_pos
 
 @[simp]
+lemma add_one_nonneg {n : ℕ} : 0 ≤ n + (1 : ℝ) :=
+  le_of_lt add_one_pos
+
+@[simp]
+lemma add_one_add_one_nonneg {n : ℕ} : 0 ≤ n + (1 : ℝ) + 1 :=
+  le_of_lt add_one_add_one_pos
+
+@[simp]
 lemma add_two_pos {n : ℕ} : 0 < n + (2 : ℝ) := by
   rw [← one_add_one_eq_two, ← add_assoc]
   exact add_one_add_one_pos
@@ -93,6 +101,10 @@ lemma not_p_of_p_imp_false {p : Prop} : (p → False) → ¬p :=
   fun h hp ↦ h hp
 
 variable {α : Type*}
+
+lemma le_trans₃ [Preorder α] {a b c d : α} (hab : a ≤ b) (hbc : b ≤ c) (hcd : c ≤ d) :
+    a ≤ d :=
+  le_trans (le_trans hab hbc) hcd
 
 lemma eq_or_eq_of_eq_Sym2 {a b x y : α} (h : s(a, b) = s(x, y)) :
     a = x ∨ a = y := by grind
@@ -167,6 +179,32 @@ theorem Finset_get_two (s : Finset α) (h : 2 ≤ s.card) :
   · exact hf₁ _ (Nat.zero_lt_of_lt h)
   · exact hf₁ _ (Nat.lt_of_succ_le h)
   · refine hf₂ 0 1 (Nat.zero_lt_of_lt h) (Nat.lt_of_succ_le h) (by simp)
+
+theorem Finset_two_le_card_iff (s : Finset α) :
+    2 ≤ s.card ↔ ∃ x y, x ∈ s ∧ y ∈ s ∧ x ≠ y := by
+  classical
+  constructor
+  · exact Finset_get_two s
+  · intro ⟨x, y, hxs, hys, hxy⟩
+    rw [← card_pair hxy]
+    refine card_le_card (by grind)
+
+theorem Finset_three_le_card_iff (s : Finset α) :
+    3 ≤ s.card ↔ ∃ x y z, x ∈ s ∧ y ∈ s ∧ z ∈ s ∧ x ≠ y ∧ x ≠ z ∧ y ≠ z := by
+  classical
+  constructor
+  · intro hs
+    obtain ⟨x, hx⟩ := Finset_get_one s (Nat.one_le_of_lt hs)
+    obtain ⟨y, z, hy, hz, hyz⟩ := by
+      refine Finset_two_le_card_iff (s \ {x}) |>.mp ?_
+      rw [card_sdiff, singleton_inter_of_mem hx, card_singleton]
+      lia
+    refine ⟨x, y, z, hx, mem_sdiff.mp hy |>.1, mem_sdiff.mp hz |>.1, ?_, ?_, hyz⟩
+    · exact Ne.symm <| notMem_singleton.mp <| mem_sdiff.mp hy |>.2
+    · exact Ne.symm <| notMem_singleton.mp <| mem_sdiff.mp hz |>.2
+  · intro ⟨x, y, z, hxs, hys, hzs, hxy, hxz, hyz⟩
+    suffices {x, y, z} ⊆ s by exact le_of_eq_of_le (by grind) (card_le_card this)
+    grind
 
 variable [DecidableEq α]
 
@@ -475,6 +513,13 @@ noncomputable instance [G.LocallyFinite] {s : Set (Sym2 V)} [Fintype s] :
     fromEdgeSet (G.edgeSet ∪ s) |>.LocallyFinite := by
   rw [fromEdgeSet_union, fromEdgeSet_edgeSet]
   infer_instance
+
+lemma neighborFinset_eq_of_deg_eq_one_of_adj {v w : V} [Fintype (G.neighborSet v)]
+    (hdv : G.degree v = 1) (hvw : G.Adj v w) : G.neighborFinset v = {w} := by
+  refine Eq.symm <| eq_of_subset_and_eq_card ?_ hdv.symm
+  intro u
+  simp only [mem_singleton, mem_neighborFinset]
+  exact fun heq ↦ heq ▸ hvw
 
 lemma mem_of_subset_of_degree_pos {s : Finset V} {v : V}
     [Fintype (G.neighborSet v)] (h : G.support ⊆ s) (hv : 0 < G.degree v) :
@@ -989,6 +1034,14 @@ lemma deleteIncidencesOf_support_subset {s : Finset V} :
   · exact (mem_support G).mpr ⟨v, adj_of_deleteIncidencesOf_adj hv⟩
   · exact deleteIncidencesOf_notadj |>.mt <| not_not.mpr hv
 
+theorem deleteIncidencesOf_support [DecidableEq V] {X s : Finset V} (hX : G.support ⊆ X) :
+    (G.deleteIncidencesOf s).support ⊆ ((X \ s) : Finset V) := by
+  refine subset_trans deleteIncidencesOf_support_subset ?_
+  intro w hw
+  refine mem_def.mp <| mem_sdiff.mpr ⟨?_, ?_⟩
+  · exact mem_def.mpr <| hX <| (Set.mem_diff _).mp hw |>.1
+  · exact Set.mem_diff _ |>.mp hw |>.2
+
 lemma deleteIncidencesOf_neighborFinset_eq [DecidableEq V] {v : V} {s : Finset V} (hvs : v ∉ s)
     [Fintype (G.neighborSet v)] [Fintype ((G.deleteIncidencesOf s).neighborSet v)] :
     (G.deleteIncidencesOf s).neighborFinset v = (G.neighborFinset v \ s) := by
@@ -1010,14 +1063,6 @@ lemma deleteIncidencesOf_le_mono {V : Type*} {G₁ G₂ : SimpleGraph V} {s : Fi
   intro h₁uv h hne
   simp only [hle h₁uv, forall_const, true_and, hne, not_false_eq_true, and_true]
   exact fun _ hw ↦  h _ |>.1 hw |>.2 h₁uv
-
-lemma deleteIncidencesOf_support {v : V} :
-    (G.deleteIncidencesOf {v}).support ⊆ G.support \ {v} := by
-  intro u hu
-  obtain ⟨w, huw⟩ := mem_support _ |>.mp hu
-  refine ⟨G.mem_support.mpr ⟨w, adj_of_deleteIncidencesOf_adj huw⟩, ?_⟩
-  refine not_iff_not.mpr Set.mem_singleton_iff |>.mpr ?_
-  exact notMem_singleton.mp <| deleteIncidencesOf_notAdj.mt <| not_not.mpr huw
 
 end SimpleGraph
 
@@ -1378,6 +1423,17 @@ lemma degree_in_union_le [DecidableEq V] {u : V} {s t : Finset V} [Fintype (G.ne
     exact le_trans (card_le_card this) <| card_union_le ..
   rw [inter_union_distrib_right]
   exact inter_subset_inter subset_union_left (subset_refl _)
+
+lemma degree_in_union_of_empty_inter [DecidableEq V] {u : V} {s t : Finset V} (hcap : s ∩ t = ∅)
+    [Fintype (G.neighborSet u)] :
+    G.degree_in (s ∪ t) u = G.degree_in s u + G.degree_in t u := by
+  simp only [degree_in]
+  rw [← card_union_of_disjoint (disjoint_iff_inter_eq_empty.mpr <| by grind)]
+  refine congrArg Finset.card <| inter_union_distrib_left ..
+
+private lemma TMP [DecidableEq V] {s s' t : Finset V} :
+    s' ∩ (s ∪ t) = (s' ∩ s) ∪ (s' ∩ t) := by
+  exact inter_union_distrib_left s' s t
 
 lemma degree_in_subpair_le_one_of_mem [DecidableEq V] {u : V} {s : Finset V}
     [Fintype (G.neighborSet u)] (hu : u ∈ s) (hs : #s ≤ 2) :

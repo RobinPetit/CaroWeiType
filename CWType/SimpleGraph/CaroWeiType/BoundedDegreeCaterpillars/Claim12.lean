@@ -85,7 +85,7 @@ lemma Claim12 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
         refine ABC.mem_toFinset.mp <| hABC <| by simp only [mem_insert, mem_singleton, true_or]
       refine ⟨s, ?_, ?_, ?_, ?_⟩
       · exact subset_trans (ABC.sdiff_toFinset ▸ hs) sdiff_subset
-      · refine InducesForest_mono' ?_ hsforest
+      · refine InducesForest_graph_mono' ?_ hsforest
         simp only [sdiff_toFinset] at hs
         exact disjoint_of_sdiff hs
       · exact respects_mono G ABC hs hsrespect

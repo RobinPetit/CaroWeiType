@@ -330,7 +330,7 @@ private lemma ok_of_γ_ne_0
     · let w := Nonempty.some (ConnectedComponent.exact hu).symm
       exact hG <| G.degree_pos_iff_mem_support _ |>.mp (one_le_degree_of_walk_end (Ne.symm huneû) w)
   · refine InducesForest_union_disjoint_neighborhoods ?_ ?_ ?_
-    · refine InducesForest_mono' ?_ hsforest
+    · refine InducesForest_graph_mono' ?_ hsforest
       ext u
       simp only [mem_inter, Set.mem_toFinset, notMem_empty, iff_false, not_and]
       exact fun hu ↦ not_iff_not.mpr Set.mem_toFinset |>.mp

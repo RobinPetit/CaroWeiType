@@ -5,6 +5,30 @@ import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.ABC
 
 open Finset
 
+lemma one_sixth_pos : (0 : ℝ) < 1 / 6 := by linarith
+
+lemma one_third_pos : (0 : ℝ) < 1 / 3 := by linarith
+
+lemma two_thirds_pos : (0 : ℝ) < 2 / 3 := by linarith
+
+lemma four_thirds_pos : (0 : ℝ) < 4 / 3 := by linarith
+
+lemma zero_le_one_sixth : (0 : ℝ) ≤ 1 / 6 := by linarith
+
+lemma zero_le_one_third : (0 : ℝ) ≤ 1 / 3 := by linarith
+
+lemma zero_le_two_thirds : (0 : ℝ) ≤ 2 / 3 := by linarith
+
+lemma zero_le_five_sixths : (0 : ℝ) ≤ 5 / 6 := by linarith
+
+lemma zero_le_four_thirds : (0 : ℝ) ≤ 4 / 3 := by linarith
+
+lemma two_thirds_le_five_sixths : (2 : ℝ) / 3 ≤ 5 / 6 := by linarith
+
+lemma two_thirds_le_one : (2 : ℝ) / 3 ≤ 1 := by linarith
+
+lemma four_thirds_le_two : (4 : ℝ) / 3 ≤ 2 := by linarith
+
 namespace CaroWeiType
 namespace ABC
 
@@ -209,30 +233,6 @@ lemma f_congr {n : ℕ} {G G' : SimpleGraph (Fin n)} {ABC ABC' : Tripartition n}
     · simp only [f, hC, hv.2.2.1 hC, not_A_of_C, not_B_of_C, ↓reduceDIte, hdv]
   else
     rw [← f_eq_zero_of_notMem G hvABC, ← f_eq_zero_of_notMem G' <| by grind]
-
-lemma one_sixth_pos : (0 : ℝ) < 1 / 6 := by linarith
-
-lemma one_third_pos : (0 : ℝ) < 1 / 3 := by linarith
-
-lemma two_thirds_pos : (0 : ℝ) < 2 / 3 := by linarith
-
-lemma four_thirds_pos : (0 : ℝ) < 4 / 3 := by linarith
-
-lemma zero_le_one_sixth : (0 : ℝ) ≤ 1 / 6 := by linarith
-
-lemma zero_le_one_third : (0 : ℝ) ≤ 1 / 3 := by linarith
-
-lemma zero_le_two_thirds : (0 : ℝ) ≤ 2 / 3 := by linarith
-
-lemma zero_le_five_sixths : (0 : ℝ) ≤ 5 / 6 := by linarith
-
-lemma zero_le_four_thirds : (0 : ℝ) ≤ 4 / 3 := by linarith
-
-lemma two_thirds_le_five_sixths : (2 : ℝ) / 3 ≤ 5 / 6 := by linarith
-
-lemma two_thirds_le_one : (2 : ℝ) / 3 ≤ 1 := by linarith
-
-lemma four_thirds_le_two : (4 : ℝ) / 3 ≤ 2 := by linarith
 
 lemma fB_le_fA {d : ℕ} : fB d ≤ fA d := by
   if hd : d = 0 then

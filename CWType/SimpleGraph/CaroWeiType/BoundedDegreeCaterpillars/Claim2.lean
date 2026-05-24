@@ -40,7 +40,7 @@ lemma Claim2 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
     exact mem_closed_neighborFinset_of_adj hz |>.mt hobj.2
   refine ⟨s' ∪ F, fun _ _ ↦ by grind [Tripartition.toFinset_mono], ?_, hresp, ?_⟩
   · refine InducesForest_union_disjoint_neighborhoods ?_ h.1 ?_
-    · exact InducesForest_mono' (by grind [sdiff_toFinset]) hlf
+    · exact InducesForest_graph_mono' (by grind [sdiff_toFinset]) hlf
     · intro x hx y hy
       let hobj := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs' hx) |>.2
       simp only [closed_neighborFinset_of_Finset, mem_union, mem_biUnion, mem_neighborFinset,

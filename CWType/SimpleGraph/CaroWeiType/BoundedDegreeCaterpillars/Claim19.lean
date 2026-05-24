@@ -1126,8 +1126,8 @@ private lemma ok_of_A4 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj]
           have hobj := hs hu
           simp only [← promote_toFinset_eq, sdiff_toFinset, mem_sdiff] at hobj
           exact hobj.1
-        · exact InducesForest_mono le_fromEdgeSet_union
-            (InducesForest_mono' (inter_singleton_of_notMem hvs) hsf)
+        · exact InducesForest_graph_mono le_fromEdgeSet_union
+            (InducesForest_graph_mono' (inter_singleton_of_notMem hvs) hsf)
         · exact _respects_of_A4 hBy hdy hNy hs hsf hsresp
         · exact _eval_ok_of_A4 hG hBv hdv hAû hdû hNv hxy hyû hAx hdx hBy hdy hNy hA34q' hscard
 

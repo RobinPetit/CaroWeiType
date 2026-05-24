@@ -324,8 +324,8 @@ lemma Claim10 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {ABC : Tr
       · simp only [_op_t, ← demote_finset_toFinset_eq, sdiff_toFinset] at hs
         exact mem_sdiff.mp (hs hu) |>.1
     · refine G.InducesForest_union_leaf s ?_ hdegsv
-      refine @InducesForest_mono' _ _ _ _ {v} (by simp [hvnotins]) ?_
-      refine InducesForest_mono ?_ hsf
+      refine @InducesForest_graph_mono' _ _ _ _ _ _ {v} (by simp [hvnotins]) ?_
+      refine InducesForest_graph_mono ?_ hsf
       refine deleteIncidencesOf_le_mono G.le_fromEdgeSet_union
     · intro u hu
       simp only [union_singleton, mem_insert] at hu

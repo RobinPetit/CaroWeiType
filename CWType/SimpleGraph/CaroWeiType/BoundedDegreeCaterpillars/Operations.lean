@@ -285,7 +285,7 @@ lemma objective_of_B3 {n : ℕ} {G : SimpleGraph (Fin n)} [DecidableRel G.Adj] {
     have := hs hu
     simp only [← promote_toFinset_eq, toFinset_eq, mem_sdiff, mem_singleton] at this
     exact this.1
-  · refine InducesForest_mono le_fromEdgeSet_union (InducesForest_mono' ?_ hsf)
+  · refine InducesForest_graph_mono le_fromEdgeSet_union (InducesForest_graph_mono' ?_ hsf)
     exact inter_singleton_of_notMem hxs
   · intro u hu
     have hux : u ∉ ({x} : Finset _) := notMem_singleton.mpr <| ne_of_mem_of_not_mem hu hxs

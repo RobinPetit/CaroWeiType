@@ -57,6 +57,11 @@ instance instDecidableRel_deleteIncidencesOf {V : Type*} {W : Finset V} [Decidab
 
 end SimpleGraph
 
+def IsNonAdjacentUnionStableProp {V : Type*} [DecidableEq V]
+    (π : (G : SimpleGraph V) → [DecidableRel G.Adj] → Finset V → Prop) : Prop :=
+  ∀ G : SimpleGraph V, ∀ [DecidableRel G.Adj], ∀ s s' : Finset V,
+    (s ∩ s' = ∅) → (∀ x ∈ s, ∀ y ∈ s', ¬G.Adj x y) → π G s → π G s' → π G (s ∪ s')
+
 namespace CaroWeiType
 
 open Finset
