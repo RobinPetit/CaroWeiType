@@ -925,7 +925,7 @@ private lemma _f_is_lb {k : ℕ} (hk : 2 ≤ k)
         intro u hu
         refine mem_def.mpr <| hX <| G.mem_support.mpr ⟨v, ?_⟩
         refine Adj.symm <| mem_neighborFinset .. |>.mp hu
-      rw [sum_sdiff_singleton hv hNv]
+      rw [sum_sdiff_singleton' hv hNv]
       have {a b c : ℝ} (h : b + c ≤ 0) : a + b + c ≤ a := by grind
       refine this ?_
       calc _

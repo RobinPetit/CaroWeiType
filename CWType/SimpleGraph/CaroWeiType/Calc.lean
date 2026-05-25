@@ -33,51 +33,63 @@ end Finset
 open SimpleGraph
 open Finset
 
-lemma sum_sdiff_singleton {V : Type*} [DecidableEq V] [Fintype V] {G : SimpleGraph V}
-    [DecidableRel G.Adj] {f : ℕ → ℝ} {X : Finset V}
-    {v : V} (hv : v ∈ X) (hNv : G.neighborFinset v ⊆ X) :
-    ∑ w ∈ X, f (G.degree w)
-      = ∑ w ∈ X \ {v}, f ((G.deleteIncidencesOf {v}).degree w)
-        + ∑ w ∈ G.neighborFinset v, (f (G.degree w) - f ((G.deleteIncidencesOf {v}).degree w))
-        + f (G.degree v) := by
+lemma sum_sdiff_singleton {V : Type*} [DecidableEq V] [Fintype V] (G : SimpleGraph V)
+    [DecidableRel G.Adj]
+    (f : (H : SimpleGraph V) → (w : V) → [Fintype (H.neighborSet w)] → ℝ) {X : Finset V}
+    {v : V} (hv : v ∈ X) (hNv : G.neighborFinset v ⊆ X)
+    (H : ∀ w ∈ X \ G.closed_neighborFinset_of_Finset {v}, f G w = f (G.deleteIncidencesOf {v}) w) :
+    ∑ w ∈ X, f G w
+      = ∑ w ∈ X \ {v}, f (G.deleteIncidencesOf {v}) w
+        + ∑ w ∈ G.neighborFinset v, (f G w - f (G.deleteIncidencesOf {v}) w)
+        + f G v := by
   calc _
-    _ = ∑ w ∈ X \ G.closed_neighborFinset_of_Finset {v}, f (G.degree w)
-        + ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f (G.degree w) := by
+    _ = ∑ w ∈ X \ G.closed_neighborFinset_of_Finset {v}, f G w
+        + ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f G w := by
       refine Eq.symm (sum_sdiff ?_)
       intro w hw
       have := mem_closed_neighborFinset_iff.mp hw
       grind [mem_neighborFinset]
-    _ = ∑ w ∈ X \ G.closed_neighborFinset_of_Finset {v}, f ((G.deleteIncidencesOf {v}).degree w)
-        + ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f (G.degree w) := by
+    _ = ∑ w ∈ X \ G.closed_neighborFinset_of_Finset {v}, f (G.deleteIncidencesOf {v}) w
+        + ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f G w := by
       simp only [add_left_inj]
-      refine sum_congr rfl fun w hw ↦ ?_
-      refine congrArg (f ∘ Finset.card) ?_
-      refine Eq.symm <| neighborFinset_eq_delelteIncidencesOf_of_empty_inter_neighborFinset ?_ ?_
-      · simp only [inter_singleton_eq_empty_iff]
-        refine not_mem_neighborFinset_symm <| notMem_mono ?_ (mem_sdiff.mp hw |>.2)
-        intro u hu
-        refine mem_closed_neighborFinset_iff.mpr <| Or.inr ⟨v, mem_singleton.mpr rfl, ?_⟩
-        exact mem_neighborFinset .. |>.mp hu
-      · exact notMem_mono G.closed_neighborFinset_contains_Finset (mem_sdiff.mp hw |>.2)
-    _ = (∑ w ∈ X \ G.closed_neighborFinset_of_Finset {v}, f ((G.deleteIncidencesOf {v}).degree w)
-        + ∑ w ∈ G.neighborFinset v, f ((G.deleteIncidencesOf {v}).degree w))
-        - ∑ w ∈ G.neighborFinset v, f ((G.deleteIncidencesOf {v}).degree w)
-        + ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f (G.degree w) := by
+      refine sum_congr rfl H
+    _ = (∑ w ∈ X \ G.closed_neighborFinset_of_Finset {v}, f (G.deleteIncidencesOf {v}) w
+        + ∑ w ∈ G.neighborFinset v, f (G.deleteIncidencesOf {v}) w)
+        - ∑ w ∈ G.neighborFinset v, f (G.deleteIncidencesOf {v}) w
+        + ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f G w := by
       linarith
-    _ = ∑ w ∈ X \ {v}, f ((G.deleteIncidencesOf {v}).degree w)
-        - ∑ w ∈ G.neighborFinset v, f ((G.deleteIncidencesOf {v}).degree w)
-        + ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f (G.degree w) := by
+    _ = ∑ w ∈ X \ {v}, f (G.deleteIncidencesOf {v}) w
+        - ∑ w ∈ G.neighborFinset v, f (G.deleteIncidencesOf {v}) w
+        + ∑ w ∈ G.closed_neighborFinset_of_Finset {v}, f G w := by
       simp only [add_left_inj, sub_left_inj]
       rw [closed_neighborFinset_of_singleton_eq]
       refine sum_disjoint_union ?_ (by grind)
       grind [ne_of_mem_neighborFinset]
-    _ = ∑ w ∈ X \ {v}, f ((G.deleteIncidencesOf {v}).degree w)
-        - ∑ w ∈ G.neighborFinset v, f ((G.deleteIncidencesOf {v}).degree w)
-        + (∑ w ∈ G.neighborFinset v, f (G.degree w) + f (G.degree v)) := by
+    _ = ∑ w ∈ X \ {v}, f (G.deleteIncidencesOf {v}) w
+        - ∑ w ∈ G.neighborFinset v, f (G.deleteIncidencesOf {v}) w
+        + (∑ w ∈ G.neighborFinset v, f G w + f G v) := by
       rw [closed_neighborFinset_of_singleton_eq]
       simp only [union_singleton, mem_neighborFinset, SimpleGraph.irrefl, not_false_eq_true,
         sum_insert, add_right_inj]
       rw [add_comm]
   simp only [sum_sub_distrib]
   grind
+
+lemma sum_sdiff_singleton' {V : Type*} [DecidableEq V] [Fintype V] {G : SimpleGraph V}
+    [DecidableRel G.Adj] {f : ℕ → ℝ} {X : Finset V}
+    {v : V} (hv : v ∈ X) (hNv : G.neighborFinset v ⊆ X) :
+    ∑ w ∈ X, f (G.degree w)
+      = ∑ w ∈ X \ {v}, f ((G.deleteIncidencesOf {v}).degree w)
+        + ∑ w ∈ G.neighborFinset v, (f (G.degree w) - f ((G.deleteIncidencesOf {v}).degree w))
+        + f (G.degree v) := by
+  refine sum_sdiff_singleton G (fun G v _ ↦ f <| G.degree v) hv hNv ?_
+  intro w hw
+  refine congrArg (f ∘ Finset.card) ?_
+  refine Eq.symm <| neighborFinset_eq_delelteIncidencesOf_of_empty_inter_neighborFinset ?_ ?_
+  · simp only [inter_singleton_eq_empty_iff]
+    refine not_mem_neighborFinset_symm <| notMem_mono ?_ (mem_sdiff.mp hw |>.2)
+    intro u hu
+    refine mem_closed_neighborFinset_iff.mpr <| Or.inr ⟨v, mem_singleton.mpr rfl, ?_⟩
+    exact mem_neighborFinset .. |>.mp hu
+  · exact notMem_mono G.closed_neighborFinset_contains_Finset (mem_sdiff.mp hw |>.2)
 

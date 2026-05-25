@@ -23,79 +23,33 @@ lemma Claim1 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V} [AB
     exact fun w hw ↦ mem_sdiff.mpr ⟨hNv hw, notMem_singleton_of_mem_neighborFinset hw⟩
   intro h
   have hvABC : {v} ∩ ABC.toFinset ≠ ∅ := by
-    refine nonempty_iff_ne_empty.mp ⟨v, ?_⟩
-    simp only [← mem_toFinset, hv, singleton_inter_of_mem, mem_singleton]
+    rw [singleton_inter_of_mem <| ABC.mem_toFinset.mp hv]
+    exact singleton_ne_empty v
   refine Claim0 hvABC hG ?_ ih
-  calc eval G ABC
-    _ = ∑ x ∈ (ABC \ {v}).toFinset, f G ABC x + f G ABC v := by
-      rw [sdiff_toFinset, ← sum_singleton (f G ABC ·) _]
-      exact Eq.symm <| sum_sdiff <| singleton_subset_iff.mpr <| ABC.mem_toFinset .. |>.mp hv
-    _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
-      + ∑ x ∈ G.neighborFinset v, f G ABC x + f G ABC v := by
-      simp only [add_left_inj]
-      refine Eq.symm <| sum_sdiff ?_
-      intro x hx
-      have hxnev : x ≠ v := G.mem_neighborFinset .. |>.mp hx |>.ne'
-      refine Tripartition.mem_toFinset .. |>.mp
-        <| (ABC.mem_sdiff_iff _).mpr ⟨ABC.mem_toFinset.mpr <| hNv hx, ?_⟩
-      simp only [mem_singleton, hxnev, not_false_eq_true]
-    _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
-        + (∑ x ∈ G.neighborFinset v, f G ABC x + f G ABC v) := by
-      lia
-    _ ≤ ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
-        + (∑ x ∈ G.neighborFinset v, f G ABC x
-        + ∑ x ∈ G.neighborFinset v, γ G ABC x) := by
-      exact add_le_add_right (add_le_add_right h _) _
-    _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
-        + ∑ x ∈ G.neighborFinset v, (f G ABC x + γ G ABC x) := by
-      simp only [add_right_inj]
-      exact Eq.symm <| sum_add_distrib
-    _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G ABC x
-        + ∑ x ∈ G.neighborFinset v, f (G.deleteIncidencesOf {v}) (ABC \ {v}) x := by
-      simp only [add_right_inj]
-      refine sum_congr rfl ?_
-      intro x hx
-      exact Eq.symm <| f_deleteIncidencesOf_singleton ABC G (G.mem_neighborFinset .. |>.mp hx)
-    _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v, f G (ABC \ {v}) x
-        + ∑ x ∈ G.neighborFinset v, f (G.deleteIncidencesOf {v}) (ABC \ {v}) x := by
-      simp only [add_left_inj]
-      refine sum_congr rfl ?_
-      intro x hx
-      refine Eq.symm <|  f_eq_in_sdiff G ABC ?_
-      simp only [sdiff_toFinset, mem_sdiff, mem_neighborFinset] at hx
-      exact hx.1.2
-    _ = ∑ x ∈ (ABC \ {v}).toFinset \ G.neighborFinset v,
-          f (G.deleteIncidencesOf {v}) (ABC \ {v}) x
-        + ∑ x ∈ G.neighborFinset v, f (G.deleteIncidencesOf {v}) (ABC \ {v}) x := by
-      simp only [add_left_inj]
-      refine sum_congr rfl ?_
-      intro x hx
-      suffices (G.deleteIncidencesOf {v}).degree x = G.degree x by
-        simp only [f, sdiff, fA, fB, one_div, fC, sdiff.eq_1, dite_eq_ite, this]
-      refine congrArg Finset.card ?_
-      ext w
-      simp only [mem_sdiff, sdiff_toFinset] at hx
-      if hwv : w ∈ ({v} : Set _) then
-        simp only [Set.mem_singleton_iff] at hwv
-        simp only [mem_neighborFinset, not_mem_neighborFinset_symm <| hwv ▸ hx.2, iff_false]
-        exact not_adj_symm <| deleteIncidencesOf_notadj (mem_singleton.mpr hwv)
-      else
-        refine (mem_neighborFinset_deleteIncidencesOf_iff_of_notMem ?_  hx.1.2).symm
-        simp only [mem_singleton] at hwv ⊢
-        exact hwv
-    _ = ∑ x ∈ (ABC \ {v}).toFinset, f (G.deleteIncidencesOf {v}) (ABC \ {v}) x := by
-      rw [add_comm]
-      have hobj := sum_inter_add_sum_diff (ABC \ {v}).toFinset (G.neighborFinset v)
-        (f (G.deleteIncidencesOf {v}) (ABC \ {v}) ·)
-      have this : (ABC \ {v}).toFinset ∩ G.neighborFinset v = G.neighborFinset v := by
-        refine inter_eq_right.mpr ?_
-        intro w hw
-        simp only [sdiff_toFinset]
-        refine mem_sdiff.mpr ⟨hNv hw, ?_⟩
-        simp only [mem_singleton, ne_of_mem_neighborFinset hw,
-          not_false_eq_true]
-      rw [this] at hobj
-      exact hobj
+  simp only [eval]
+  refine le_of_eq_of_le (sum_sdiff_singleton_eval (ABC.mem_toFinset.mp hv) hNv) ?_
+  rw [ABC.sdiff_toFinset]
+  suffices ∑ w ∈ G.neighborFinset v,
+      (f G ABC w - f (G.deleteIncidencesOf {v}) (ABC \ {v}) w) + f G ABC v ≤ 0 by
+    grind
+  refine le_neg_iff_add_nonpos_left.mp (h.trans ?_)
+  rw [← sum_neg_distrib _]
+  refine sum_le_sum fun w hw ↦ ?_
+  simp only [neg_sub]
+  refine le_of_eq ?_
+  suffices (G.deleteIncidencesOf {v}).degree w = G.degree w - 1 by
+    have hw' : w ∉ ({v} : Finset _) := notMem_singleton_of_mem_neighborFinset hw
+    have hw : w ∈ ABC.toFinset :=
+      mem_def.mpr <| hG <| G.mem_support.mpr ⟨v, Adj.symm <| mem_neighborFinset .. |>.mp hw⟩
+    rcases ABC.mem_toFinset.mpr hw with hA | hB | hC
+    · have hA' : (ABC \ {v}).A w := ⟨hA, hw'⟩
+      simp only [γ, f, hA, hA', ↓reduceDIte, this]
+    · have hB' : (ABC \ {v}).B w := ⟨hB, hw'⟩
+      simp only [γ, f, hB, hB', not_A_of_B, ↓reduceDIte, this]
+    · have hC' : (ABC \ {v}).C w := ⟨hC, hw'⟩
+      simp only [γ, f, hC, hC', not_A_of_C, not_B_of_C, ↓reduceDIte, this]
+  refine Nat.eq_sub_of_add_eq <| Eq.symm ?_
+  exact degree_deleteIncidencesOf_neighbor_singleton G <| mem_neighborFinset .. |>.mp hw
 
 lemma Corollary1 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V} [ABC.Decidable]
     {v w : V} (hG : G.support ⊆ ABC.toFinset) (hw : G.Adj v w)

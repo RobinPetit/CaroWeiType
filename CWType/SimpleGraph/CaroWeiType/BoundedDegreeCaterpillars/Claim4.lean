@@ -27,18 +27,13 @@ lemma Claim4_A (G : SimpleGraph V) [DecidableRel G.Adj] (ABC : Tripartition V)
   simp only [f, hAv, ↓reduceDIte, not_A_of_B, tsub_le_iff_right, ABC.demote_finset_from_A hAv hv]
   refine le_trans (fA_decreasing h) ?_
   simp only [fA, fB]
-  have : 2 / (G'.degree v + 1 + 1 : ℝ) ≤ 1 := by
-    ring_nf
-    calc ((2 : ℝ) + G'.degree v)⁻¹ * 2
-      _ ≤ (2 : ℝ)⁻¹ * 2 := by
-        refine mul_le_mul_iff_of_pos_right two_pos |>.mpr
-          <| inv_anti₀ two_pos <| by simp only [le_add_iff_nonneg_right, Nat.cast_nonneg]
-      _ = 1 := inv_mul_cancel₀ <| NeZero.ne _
+  have : 2 / (G'.degree v + 1 + 1 : ℝ) ≤ 1 :=
+    (div_le_one₀ add_one_add_one_pos).mpr two_le_add_one_add_one
   split_ifs
   any_goals grind
   · calc 2 / ((((G'.degree v + 1) : ℕ) : ℝ) + 1)
       _ = 2 / (4 : ℝ) := by
-        refine congrArg (fun x ↦ 2 / x) ?_
+        refine congrArg _ ?_
         rename_i h
         rw [h]
         lia

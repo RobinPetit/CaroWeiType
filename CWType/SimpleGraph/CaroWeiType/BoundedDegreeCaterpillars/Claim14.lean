@@ -155,7 +155,7 @@ lemma respects_union_path {G : SimpleGraph V} [DecidableRel G.Adj]
         (hsresp w hw |>.2.2 ⟨hCw, mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs hw) |>.2⟩)
     · exact not_A_of_C hCw (hC w <| Set.mem_toFinset.mp <| mem_sdiff.mp hw |>.1).1 |>.elim
 
-lemma _compute_final {x : ℝ} : 3 ≤ x ↔ x * (2 / 3) ≤ x - 1 := by
+private lemma _compute_final {x : ℝ} : 3 ≤ x ↔ x * (2 / 3) ≤ x - 1 := by
   grind
 
 lemma _eval_ok {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}

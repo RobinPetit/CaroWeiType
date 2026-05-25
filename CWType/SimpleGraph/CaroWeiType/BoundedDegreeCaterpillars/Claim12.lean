@@ -67,8 +67,9 @@ lemma Claim12 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
                 simp [hA] at hx hy
                 lia
               }
-            _ = 2 / 5 := by grind only
-            _ < 1 / 2 := by linarith
+            _ < 1 / 2 := by
+              simp only [fA, four_ne_zero, Nat.add_one_add_one_ne_one, ↓reduceIte]
+              linarith
         · simp only [f, hB, not_A_of_B, ↓reduceDIte]
           calc fB (G.degree z)
             _ ≤ fB 2 := fB_decreasing <| Nat.succ_le_of_lt <| by grind

@@ -28,8 +28,7 @@ lemma Corollary2' {G : SimpleGraph V} [DecidableRel G.Adj]
     rcases h with h | h
     · exact ⟨_, h ▸ hv.symm⟩
     · exact ⟨_, h ▸ hw.symm⟩
-  refine Corollary2 pair_nonempty hG hF (respects_pair_of_Bs hBv hBw) ih
-    InducesLinearForest_pair ?_
+  refine Corollary2 pair_nonempty hG hF (respects_pair_of_Bs hBv hBw) ih InducesLinearForest_pair ?_
   refine le_of_le_of_eq hcard ?_
   rw [← Nat.cast_two, Nat.cast_inj]
   exact Eq.symm <| card_pair hvnew

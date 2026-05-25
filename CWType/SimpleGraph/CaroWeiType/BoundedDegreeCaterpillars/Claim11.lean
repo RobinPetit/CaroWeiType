@@ -19,9 +19,8 @@ private def _op_g (G : SimpleGraph V) [DecidableRel G.Adj] (v x y : V) :
 
 private lemma _op_g_Nv (G : SimpleGraph V) [DecidableRel G.Adj] {v x y : V} :
     (_op_g G v x y).neighborFinset v = ∅ := by
-  ext u
-  simp only [deleteIncidencesOf_singleton_eq_deleteIncidenceSet, mem_neighborFinset,
-    notMem_empty, deleteIncidenceSet_notAdj]
+  simp only [_op_g]
+  exact deleteIncidencesOf_neighborFinset_empty (mem_singleton.mpr rfl)
 
 private lemma _op_g_Nxy (G : SimpleGraph V) [DecidableRel G.Adj] {v w x y z : V}
     (hNv : G.neighborFinset v = {x, y, z}) (hw : w ∈ ({x, y} : Finset _)) :
@@ -29,17 +28,13 @@ private lemma _op_g_Nxy (G : SimpleGraph V) [DecidableRel G.Adj] {v w x y z : V}
   ext u
   constructor
   · intro hu
-    have hunev : ¬u = v := by
-      intro heq
-      have hobj := (_op_g_Nv G) ▸ heq ▸ mem_neighborFinset_symm hu
-      exact (List.mem_nil_iff w).mp hobj
+    have hunev : ¬u = v :=
+      ne_of_mem_of_not_mem hu (not_mem_neighborFinset_symm <| _op_g_Nv G ▸ notMem_empty w)
     refine mem_sdiff.mpr ⟨?_, ?_⟩
     · have := mem_neighborFinset_of_deleteIncidencesOf_mem_neighborFinset hu
       rcases mem_fromEdgeSet_union_neighborFinset_iff.mp this with hu | hu
       · exact mem_union_left _ hu
-      · refine mem_union_right _ ?_
-        simp only [Set.mem_singleton_iff, ne_eq, mem_insert, mem_singleton] at hu ⊢
-        exact eq_or_eq_of_eq_Sym2' hu.1
+      · exact mem_union_right _ (by grind)
     · simp only [mem_insert, mem_singleton, not_or, ne_of_mem_neighborFinset hu,
         not_false_eq_true, and_true, hunev]
   · intro hu
@@ -51,7 +46,7 @@ private lemma _op_g_Nxy (G : SimpleGraph V) [DecidableRel G.Adj] {v w x y z : V}
       (notMem_singleton.mpr Huv) (notMem_singleton.mpr Hwv) ?_
     rcases mem_union.mp <| mem_sdiff.mp hu |>.1 with hu | hu
     · exact le_fromEdgeSet_union' hu
-    · refine mem_fromEdgeSet_union_neighborFinset_iff.mpr <| Or.inr <| by grind
+    · exact mem_fromEdgeSet_union_neighborFinset_iff.mpr <| Or.inr <| by grind
 
 private lemma _op_g_Nx (G : SimpleGraph V) [DecidableRel G.Adj] {v x y z : V}
     (hNv : G.neighborFinset v = {x, y, z}) (hxy : x ≠ y) :
@@ -82,7 +77,7 @@ private lemma _op_g_degx (G : SimpleGraph V) [DecidableRel G.Adj] {v x y z : V}
       have hcup : #(G.neighborFinset x ∪ {y}) ≤ (#(G.neighborFinset x) + 1) := by
         exact card_union_le ..
       grind only [= card_sdiff_of_subset, usr card_sdiff_add_card_inter, = card_singleton]
-    _ ≤ #(G.neighborFinset x) := by lia
+    _ = #(G.neighborFinset x) := Nat.add_sub_self_right ..
 
 private lemma _op_g_Ny (G : SimpleGraph V) [DecidableRel G.Adj] {v x y z : V}
     (hNv : G.neighborFinset v = {x, y, z}) (hxy : x ≠ y) :
@@ -116,7 +111,7 @@ private lemma _op_g_degy (G : SimpleGraph V) [DecidableRel G.Adj] {v x y z : V}
       have hcup : #(G.neighborFinset y ∪ {x}) ≤ (#(G.neighborFinset y) + 1) := by
         exact card_union_le ..
       grind only [= card_sdiff_of_subset, usr card_sdiff_add_card_inter, = card_singleton]
-    _ ≤ #(G.neighborFinset y) := by lia
+    _ = #(G.neighborFinset y) := Nat.add_sub_self_right ..
 
 @[reducible]
 private def _op_t (ABC : Tripartition V) (v x y z : V) : Tripartition V :=
@@ -368,6 +363,7 @@ lemma _forest {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
   obtain ⟨hxney, hxnez, hynez⟩ := pairwise_ne_of_triplet (hNv ▸ hdv)
   obtain ⟨hvx, hvy, hvz⟩ : G.Adj v x ∧ G.Adj v y ∧ G.Adj v z := by
     refine ⟨?_, ?_, ?_⟩ <;> exact G.mem_neighborFinset .. |>.mp <| by simp [hNv]
+  simp only [_op_g] at hsf
   intro t ht htne
   if hvt : v ∈ t then
     if hinter : {x, y} ∩ t = ∅ then

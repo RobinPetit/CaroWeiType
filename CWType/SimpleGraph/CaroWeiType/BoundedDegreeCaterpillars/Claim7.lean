@@ -239,43 +239,12 @@ lemma Claim7 {G : SimpleGraph V} [DecidableRel G.Adj]
       · exact h ▸ hv
       · exact ABC.mem_toFinset.mpr <| mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs h) |>.1
     have hresp : respects (s ∪ {v}) G ABC := _Claim7_resp hBv hAw hNv hdegw hs hsresp
+    rw [sdiff_toFinset] at hs
     refine ⟨s ∪ {v}, h₁, ?_, hresp, ?_⟩
-    · intro t ht htne
-      if hvt : v ∈ t then
-        refine ⟨v, hvt, ?_⟩
-        refine le_trans ?_ (le_of_eq <| card_singleton w)
-        refine card_le_card ?_
-        intro u hu
-        simp only [mem_inter, mem_neighborFinset, mem_singleton] at hu ⊢
-        let hin := hNv ▸ G.mem_neighborFinset .. |>.mpr hu.1
-        by_contra
-        simp only [mem_insert, this, mem_singleton, false_or] at hin
-        rcases hin with hu' | hu' <;> {
-          subst hu'
-          rcases mem_union.mp (ht hu.2) with h' | h'
-          · grind [mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs h') |>.2]
-          · grind [G.irrefl]
-        }
-      else
-        have hts : t ⊆ s := by
-          intro a ha
-          rcases mem_union.mp (ht ha) with ha' | ha'
-          · exact ha'
-          · simp only [mem_singleton] at ha'
-            exact hvt (ha' ▸ ha) |>.elim
-        obtain ⟨x', hx't, hx'⟩ := hsf t hts htne
-        refine ⟨x', hx't, ?_⟩
-        refine le_trans ?_ hx'
-        refine card_le_card ?_
-        intro u hu
-        simp only [mem_inter, mem_neighborFinset] at hu
-        simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, mem_inter,
-          mem_neighborFinset, mem_insert, mem_singleton, inf_adj, hu.1, iInf_adj, deleteEdges_adj,
-          Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, true_and, not_or, ne_eq, hu.1.ne,
-          not_false_eq_true, and_true, forall_eq_or_imp, forall_eq, hu.2]
-        let h'x' := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs (hts hx't)) |>.2
-        let h'u := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs (hts hu.2)) |>.2
-        grind
+    · refine InducesForest_union_leaf G s ?_ ?_
+      · refine InducesForest_graph_mono' (by grind) hsf
+      · rw [← card_singleton w]
+        exact card_le_card <| by grind
     · calc eval G ABC
         _ ≤ eval (G.deleteIncidencesOf {v, y, z}) (ABC \ {v, y, z}) + 1 :=
           Claim7_calc G ABC hNv hBv hAw hy hz hdegv hdegw hfy (hzy.trans hfy)
@@ -285,7 +254,7 @@ lemma Claim7 {G : SimpleGraph V} [DecidableRel G.Adj]
           rw [← Nat.cast_one, ← card_singleton v, ← Nat.cast_add]
           refine Nat.cast_inj.mpr ?_
           refine Eq.symm (card_union_of_disjoint <| disjoint_singleton_right.mpr <| fun h ↦ ?_)
-          let hobj := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs h) |>.2
+          let hobj := mem_sdiff.mp (hs h) |>.2
           simp at hobj
 
 lemma Corollary7 {G : SimpleGraph V} [DecidableRel G.Adj]

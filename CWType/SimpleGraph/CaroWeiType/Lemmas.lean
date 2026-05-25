@@ -59,34 +59,30 @@ lemma avg_gain (d : ℕ) (hd_pos : 0 < d) :
 
 lemma cast_five : ((5 : ℕ) : ℝ) = (5 : ℝ) := rfl
 
-@[simp]
 lemma le_add_one {x : ℝ} : x ≤ x + 1 :=
   le_of_lt <| lt_add_one _
 
-@[simp]
 lemma add_one_pos {n : ℕ} : 0 < n + (1 : ℝ) := by
   rw [← Nat.cast_one, ← Nat.cast_add, Nat.cast_pos]
   exact Nat.zero_lt_succ _
 
-@[simp]
-lemma add_one_add_one_pos {n : ℕ} : 0 < n + (1 : ℝ) + 1 := by
-  rw [← Nat.cast_add_one n]
-  exact add_one_pos
+lemma two_le_add_one_add_one {n : ℕ} : 2 ≤ n + (1 : ℝ) + 1 := by
+  rw [← Nat.cast_two, ← Nat.cast_one, ← Nat.cast_add, ← Nat.cast_add, Nat.cast_le]
+  simp only [le_add_iff_nonneg_left, zero_le]
 
-@[simp]
+lemma add_one_add_one_pos {n : ℕ} : 0 < n + (1 : ℝ) + 1 :=
+  lt_of_lt_of_le zero_lt_two two_le_add_one_add_one
+
 lemma add_one_nonneg {n : ℕ} : 0 ≤ n + (1 : ℝ) :=
   le_of_lt add_one_pos
 
-@[simp]
 lemma add_one_add_one_nonneg {n : ℕ} : 0 ≤ n + (1 : ℝ) + 1 :=
   le_of_lt add_one_add_one_pos
 
-@[simp]
 lemma add_two_pos {n : ℕ} : 0 < n + (2 : ℝ) := by
   rw [← one_add_one_eq_two, ← add_assoc]
   exact add_one_add_one_pos
 
-@[simp]
 lemma one_add_pos {n : ℕ} : 0 < (1 : ℝ) + n := by
   rw [← Nat.cast_one, ← Nat.cast_add, Nat.cast_pos]
   exact Nat.pos_of_neZero _
@@ -731,6 +727,13 @@ theorem deleteIncidencesOf_notAdj' {v w : V} {s : Finset V} (hv : v ∈ s) :
     ¬(G.deleteIncidencesOf s).Adj w v :=
   not_adj_symm <| deleteIncidencesOf_notAdj hv
 
+theorem deleteIncidencesOf_neighborFinset_empty {v : V} {s : Finset V} (hv : v ∈ s)
+    [Fintype ↑((G.deleteIncidencesOf s).neighborSet v)] :
+    (G.deleteIncidencesOf s).neighborFinset v = ∅ := by
+  ext u
+  simp only [mem_neighborFinset, notMem_empty, iff_false]
+  exact deleteIncidencesOf_notAdj hv
+
 theorem deleteIncidenceSet_degree {v w : V} [Fintype (G.neighborSet v)] [Fintype (G.neighborSet w)]
     (hw : w ∈ G.neighborFinset v) [Fintype ((G.deleteIncidenceSet v).neighborSet w)] :
     (G.deleteIncidenceSet v).degree w = G.degree w - 1 := by
@@ -874,7 +877,6 @@ lemma deleteIncidencesOf_le {s : Finset V} :
     deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and, not_or, ne_eq, and_imp]
   intro hvw
   simp only [hvw, forall_const, true_and, hvw.ne, not_false_eq_true, and_true, implies_true]
-
 lemma deleteIncidencesOf_degree_le {s : Finset V} {v : V}
     [Fintype ((G.deleteIncidencesOf s).neighborSet v)] [Fintype (G.neighborSet v)] :
     (G.deleteIncidencesOf s).degree v ≤ G.degree v :=
@@ -1025,6 +1027,15 @@ lemma notMem_of_mem_support_deleteIncidencesOf {s : Finset V}
     {v : V} (h : v ∈ (G.deleteIncidencesOf s).support) : v ∉ s := by
   obtain ⟨_, hw⟩ := mem_support _ |>.mp h
   exact notMem_of_adj_deleteIncidencesOf hw
+
+lemma deleteIncidencesOf_le_of_le {s : Finset V} {G' : SimpleGraph V}
+    (hle : G ≤ G') :
+    G.deleteIncidencesOf s ≤ G'.deleteIncidencesOf s := by
+  intro v w hvw
+  refine deleteIncidencesOf_adj_of_notMem_of_notMem_of_adj ?_ ?_ ?_
+  · exact notMem_of_adj_deleteIncidencesOf hvw
+  · exact notMem_of_adj_deleteIncidencesOf' hvw
+  · exact hle <| adj_of_deleteIncidencesOf_adj hvw
 
 lemma deleteIncidencesOf_support_subset {s : Finset V} :
     (G.deleteIncidencesOf s).support ⊆ G.support \ s := by

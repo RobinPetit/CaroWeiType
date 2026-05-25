@@ -1616,6 +1616,17 @@ lemma promote_toFinset_eq [DecidableEq V] (ABC : Tripartition V) [ABC.Decidable]
   simp only [← mem_toFinset]
   exact ⟨mem_promote_of_mem ABC, mem_of_mem_promote ABC⟩
 
+lemma f_eq_of_demote_finset_of_notMem (G : SimpleGraph V) (ABC : Tripartition V) [ABC.Decidable]
+    {x : V} {s : Finset V} (h : x ∉ s) [Fintype (G.neighborSet x)] :
+    f G ABC x = f G (ABC.demote_finset s) x := by
+  refine f_congr rfl ⟨(⟨·, h⟩), (Or.inl ⟨·, h⟩), Or.inl, ?_⟩
+  grind [mem_iff, demote_finset]
+
+lemma f_eq_of_demote_of_ne (G : SimpleGraph V) (ABC : Tripartition V) [ABC.Decidable]
+    {x y : V} (hne : x ≠ y) [Fintype (G.neighborSet x)] :
+    f G ABC x = f G (ABC.demote y) x :=
+  f_eq_of_demote_finset_of_notMem _ _ (notMem_singleton.mpr hne)
+
 lemma sdiff_empty (ABC : Tripartition V) : (ABC \ ∅) = ABC := by
   ext <;> simp only [sdiff, notMem_empty, not_false_eq_true, and_true]
 
