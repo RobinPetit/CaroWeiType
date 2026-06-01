@@ -204,9 +204,9 @@ lemma IsDegenerateSet_of_graph_iso {k : ℕ} {V : Type u} {V' : Type v}
 namespace GraphParameter
 
 def DegenerateSet (k : ℕ) : GraphParameter where
-  toFun := fun G s ↦ G.graph.IsDegenerateSet k s
+  toFun :=  fun G _ s ↦ G.IsDegenerateSet k s
   invariant := by
-    intro V V' _ _ _ _ G G' φ s
+    intro V V' _ _ _ _ G _ G' _ φ s
     constructor
     · exact fun hs ↦ IsDegenerateSet_of_graph_iso φ s hs
     · intro hs'
@@ -552,9 +552,9 @@ theorem AlonKahnSeymour {V : Type*} [DecidableEq V] [Fintype V] (G : SimpleGraph
 
 theorem DegenerateSet_LowerBound (k : ℕ) :
     IsCaroWeiTypeLowerBound (aks_bound k) (GraphParameter.DegenerateSet k) := by
-  intro n _ _ G
+  intro n _ _ G _
   obtain ⟨s, hd, hdeg, hcard⟩ :=
-    AlonKahnSeymour G.graph k univ (by simp only [coe_univ, Set.subset_univ])
+    AlonKahnSeymour G k univ (by simp only [coe_univ, Set.subset_univ])
   exact ⟨s, hdeg, hcard⟩
 
 theorem kDegenerateSet_LowerBound_iff (f : ℕ → ℝ) :

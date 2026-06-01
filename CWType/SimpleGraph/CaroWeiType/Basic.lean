@@ -59,7 +59,7 @@ end SimpleGraph
 
 def IsNonAdjacentUnionStableProp {V : Type*} [DecidableEq V]
     (π : (G : SimpleGraph V) → [DecidableRel G.Adj] → Finset V → Prop) : Prop :=
-  ∀ G : SimpleGraph V, ∀ [DecidableRel G.Adj], ∀ s s' : Finset V,
+  ∀ (G : SimpleGraph V) [DecidableRel G.Adj] (s s' : Finset V),
     (s ∩ s' = ∅) → (∀ x ∈ s, ∀ y ∈ s', ¬G.Adj x y) → π G s → π G s' → π G (s ∪ s')
 
 namespace CaroWeiType
@@ -67,53 +67,41 @@ namespace CaroWeiType
 open Finset
 open SimpleGraph
 
-structure FiniteSimpleGraph (α : Type*) [Fintype α] where
-  graph : SimpleGraph α
-  decAdj : DecidableRel graph.Adj := by infer_instance
-
-instance {α : Type*} [Fintype α] {G : FiniteSimpleGraph α} :
-    DecidableRel G.graph.Adj :=
-  G.decAdj
-
-@[simp]
-abbrev FiniteCompleteGraph (n : ℕ) : FiniteSimpleGraph (Fin n) where
-  graph := completeGraph (Fin n)
-  decAdj := by infer_instance
-
-lemma FiniteCompleteGraph_degree {n : ℕ} {v : Fin (n + 1)}
-    [DecidableRel (FiniteCompleteGraph (n + 1)).graph.Adj] :
-    (FiniteCompleteGraph (n + 1)).graph.degree v = n := by
+lemma CompleteGraph_degree {n : ℕ} {v : Fin (n + 1)}
+    [DecidableRel (completeGraph (Fin (n + 1))).Adj] :
+    (completeGraph (Fin (n + 1))).degree v = n := by
   have H : #(Finset.univ \ {v}) = n := by
     rw [card_sdiff]
     simp only [card_univ, Fintype.card_fin, inter_univ, card_singleton, add_tsub_cancel_right]
   refine Eq.trans ?_ H
   refine congrArg Finset.card ?_
   ext
-  simp only [FiniteCompleteGraph, completeGraph_eq_top, mem_neighborFinset, top_adj, ne_eq,
+  simp only [completeGraph_eq_top, mem_neighborFinset, top_adj, ne_eq,
     mem_sdiff, mem_univ, mem_singleton, ne_comm, true_and]
 
 structure GraphParameter where
-  toFun : {V : Type} → [DecidableEq V] → [Fintype V] → FiniteSimpleGraph V → Finset V → Prop
+  toFun : {V : Type} → [DecidableEq V] → [Fintype V] →
+    (G : SimpleGraph V) → [DecidableRel G.Adj] → Finset V → Prop
   invariant : ∀ {V V' : Type} [DecidableEq V] [DecidableEq V'] [Fintype V] [Fintype V']
-    (G : FiniteSimpleGraph V) (G' : FiniteSimpleGraph V') (φ : G.graph ≃g G'.graph) (s : Finset V),
-    toFun G s ↔ toFun G' (s.image φ.toFun)
+    (G : SimpleGraph V) [DecidableRel G.Adj] (G' : SimpleGraph V') [DecidableRel G'.Adj]
+    (φ : G ≃g G') (s : Finset V), toFun G s ↔ toFun G' (s.image φ.toFun)
 
 def IsCaroWeiTypeLowerBound (f : ℕ → ℝ) (π : GraphParameter) :=
-  ∀ {V : Type}, ∀ [DecidableEq V] [Fintype V], ∀ G : FiniteSimpleGraph V,
-    ∃ s : Finset V, π.toFun G s ∧ ∑ v, f (G.graph.degree v) ≤ #s
+  ∀ {V : Type} [DecidableEq V] [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj],
+    ∃ s : Finset V, π.toFun G s ∧ ∑ v, f (G.degree v) ≤ #s
 
 lemma f_on_complete_graph {n : ℕ} {f : ℕ → ℝ} :
-    ∑ v, f ((FiniteCompleteGraph (n + 1)).graph.degree v) = (n + 1 : ℕ) * f n := by
-  calc ∑ v, f ((FiniteCompleteGraph (n + 1)).graph.degree v)
+    ∑ v, f ((completeGraph (Fin (n + 1))).degree v) = (n + 1 : ℕ) * f n := by
+  calc ∑ v, f ((completeGraph (Fin (n + 1))).degree v)
     _ = ∑ v : (Fin (n + 1)), f n :=
-      sum_congr rfl (fun _ _ ↦ congrArg _ FiniteCompleteGraph_degree)
+      sum_congr rfl (fun _ _ ↦ congrArg _ CompleteGraph_degree)
   simp only [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul, Nat.cast_add, Nat.cast_one]
 
 lemma f_on_complete_graph' {n k : ℕ} {f : ℕ → ℝ} {π : GraphParameter}
     (hf : IsCaroWeiTypeLowerBound f π)
-    (h : ∀ s, π.toFun (FiniteCompleteGraph (n + 1)) s → #s ≤ k) :
+    (h : ∀ s, π.toFun (completeGraph (Fin (n + 1))) s → #s ≤ k) :
     f n ≤ k / (n + 1 : ℝ) := by
-  obtain ⟨s, hs, hcard⟩ := hf (FiniteCompleteGraph (n + 1))
+  obtain ⟨s, hs, hcard⟩ := hf <| completeGraph (Fin (n + 1))
   rw [f_on_complete_graph] at hcard
   rw [← Nat.cast_one, ← Nat.cast_add]
   refine (le_div_iff₀ (Nat.cast_pos'.mpr <| Nat.zero_lt_succ _)).mpr ?_
@@ -131,9 +119,9 @@ lemma f_le_1_of_IsCaroWeiTypeLowerBound {f π} (hf : IsCaroWeiTypeLowerBound f �
 
 theorem CaroWeiTypeLowerBound_mono {π : GraphParameter} {f₁ f₂ : ℕ → ℝ} (hle : f₁ ≤ f₂)
     (hf₂ : IsCaroWeiTypeLowerBound f₂ π) : IsCaroWeiTypeLowerBound f₁ π := by
-  intro _ _ _ G
+  intro _ _ _ G _
   obtain ⟨s, hs⟩ := hf₂ G
   refine ⟨s, ⟨hs.1, ?_⟩⟩
-  refine le_trans (sum_le_sum fun v _ ↦ hle (G.graph.degree v)) hs.2
+  refine le_trans (sum_le_sum fun v _ ↦ hle (G.degree v)) hs.2
 
 end CaroWeiType

@@ -21,9 +21,9 @@ private lemma IndepSet_of_graph_iso {V : Type u} {V' : Type u'} [DecidableEq V']
   exact hne
 
 def IndepSet : GraphParameter where
-  toFun := fun G s ↦ G.graph.IsIndepSet s
+  toFun := fun G _ s ↦ G.IsIndepSet s
   invariant := by
-    intro _ _ _ _ _ _ G G' φ s
+    intro _ _ _ _ _ _ G _ G' _ φ s
     refine ⟨IndepSet_of_graph_iso φ, ?_⟩
     suffices (s.image φ).image φ.symm = s by
       intro h
@@ -65,12 +65,12 @@ theorem IndepSet_LowerBound_iff_0DegenerateSet_LowerBound (f : ℕ → ℝ) :
     IsCaroWeiTypeLowerBound f GraphParameter.IndepSet
       ↔ IsCaroWeiTypeLowerBound f (GraphParameter.DegenerateSet 0) := by
   constructor
-  · intro h _ _ _ G
+  · intro h _ _ _ G _
     obtain ⟨s, hs, hcard⟩ := h G
-    exact ⟨s, Is0DegenerateSet_iff_IsIndepSet G.graph s |>.mpr hs, hcard⟩
-  · intro h _ _ _ G
+    exact ⟨s, Is0DegenerateSet_iff_IsIndepSet G s |>.mpr hs, hcard⟩
+  · intro h _ _ _ G _
     obtain ⟨s, hs, hcard⟩ := h G
-    exact ⟨s, Is0DegenerateSet_iff_IsIndepSet G.graph s |>.mp hs, hcard⟩
+    exact ⟨s, Is0DegenerateSet_iff_IsIndepSet G s |>.mp hs, hcard⟩
 
 noncomputable abbrev cw_bound := aks_bound 0
 

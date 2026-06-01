@@ -29,25 +29,18 @@ a function that associates to every (finite) graph $G$ a predicate that determin
 That function must also be an invariant, i.e. if $\varphi$ is an isomorphism between two graphs $G$ and $G'$, then $s$ satisfies the property in $G$ if and only if $\varphi$(s)$ satisfies the property in $G'$.
 ```lean4
 structure GraphParameter where
-  toFun : {V : Type} → [DecidableEq V] → [Fintype V] → FiniteSimpleGraph V → Finset V → Prop
+  toFun : {V : Type} → [DecidableEq V] → [Fintype V] →
+    SimpleGraph V → [DecidableRel G.Adj] → Finset V → Prop
   invariant : ∀ {V V' : Type} [DecidableEq V] [DecidableEq V'] [Fintype V] [Fintype V']
-    (G : FiniteSimpleGraph V) (G' : FiniteSimpleGraph V') (φ : G.graph ≃g G'.graph) (s : Finset V),
-    toFun G s ↔ toFun G' (s.image φ.toFun)
+    (G : SimpleGraph V) [DecidableRel G.Adj] (G' : SimpleGraph V') [DecidableRel G'.Adj]
+    (φ : G.graph ≃g G'.graph) (s : Finset V), toFun G s ↔ toFun G' (s.image φ.toFun)
 ```
 
 The Lean definition provided in this module is:
 ```lean4
 def IsCaroWeiTypeLowerBound (f : ℕ → ℝ) (π : GraphParameter) :=
-  ∀ {V : Type}, ∀ [DecidableEq V] [Fintype V], ∀ G : FiniteSimpleGraph V,
+  ∀ {V : Type} [DecidableEq V] [Fintype V] (G : SimpleGraph V) [DecidableRel G.Adj],
     ∃ s : Finset V, π.toFun G s ∧ ∑ v, f (G.graph.degree v) ≤ #s
-```
-
-where `FiniteSimpleGraph` is defined as:
-```lean4
-structure FiniteSimpleGraph (α : Type*) [Fintype α] where
-  graph : SimpleGraph α
-  decAdj : DecidableRel graph.Adj := by infer_instance
-
 ```
 
 This structure is used instead of `SimpleGraph` so that `SimpleGraph.degree` can be used.

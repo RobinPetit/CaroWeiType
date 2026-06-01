@@ -24,9 +24,9 @@ private lemma hdΛ {V : Type*} [Fintype V] {G : SimpleGraph V} [DecidableRel G.A
 namespace GraphParameter
 
 def BoundedDegreeCaterpillar (k : ℕ) : GraphParameter where
-  toFun := fun G s ↦ G.graph.InducesCaterpillar s ∧ ∀ v ∈ s, G.graph.degree_in s v ≤ k
+  toFun := fun G _ s ↦ G.InducesCaterpillar s ∧ ∀ v ∈ s, G.degree_in s v ≤ k
   invariant := by
-    intro V V' _ _ _ _ G G' φ s
+    intro V V' _ _ _ _ G _ G' _ φ s
     constructor
     · intro ⟨h, hdeg⟩
       refine ⟨InducesCaterpillar_of_iso φ h, ?_⟩
@@ -98,25 +98,22 @@ private lemma φ_decreasing (k : ℕ) (ε : ℝ) (hε : 0 ≤ ε) (hε' : ε ≤
     grind
 
 @[reducible]
-private def _H (n k : ℕ) : SimpleGraph (Fin n × Fin (k + 2)) where
+private def H (n k : ℕ) : SimpleGraph (Fin n × Fin (k + 2)) where
   Adj u v := u ≠ v ∧ ((u.2 = 0 ∧ v.2 = 0) ∨ (u.2 = 0 ∧ u.1 = v.1) ∨ (v.2 = 0 ∧ u.1 = v.1))
 
-private def H (n k : ℕ) : FiniteSimpleGraph (Fin n × Fin (k + 2)) where
-  graph := _H n k
-
 private lemma _degree_bound_Hnk {n k : ℕ} (s : Finset (Fin n × Fin (k + 2)))
-    (hsd : ∀ x ∈ s, (_H n k).degree_in s x ≤ k) :
+    (hsd : ∀ x ∈ s, (H n k).degree_in s x ≤ k) :
     #s ≤ n * (k + 1) := by
   have : ∀ u : Fin n, ∃ w : Fin (k + 2), ⟨u, w⟩ ∉ s := by
     by_contra
     simp only [not_forall, not_exists, Decidable.not_not] at this
     obtain ⟨x, hx⟩ := this
-    suffices k + 1 ≤ (_H n k).degree_in s ⟨x, 0⟩ by grind only
+    suffices k + 1 ≤ (H n k).degree_in s ⟨x, 0⟩ by grind only
     have : #(@univ (Fin (k + 2)) _ \ {0}) = k + 1 := by
       simp only [card_sdiff, card_univ, Fintype.card_fin, inter_univ, card_singleton,
         Nat.add_one_sub_one]
     rw [← this, degree_in]
-    let f : ↥(@univ (Fin (k + 2)) _ \ {0}) → ↥(((_H n k).neighborFinset ⟨x, 0⟩) ∩ s) :=
+    let f : ↥(@univ (Fin (k + 2)) _ \ {0}) → ↥(((H n k).neighborFinset ⟨x, 0⟩) ∩ s) :=
       fun ⟨w, hw⟩ ↦ ⟨⟨x, w⟩, by grind [mem_neighborFinset]⟩
     suffices Function.Injective f by
       exact card_le_card_of_injective this
@@ -140,7 +137,7 @@ private lemma _bound_fnpk_f1 (n k : ℕ) [NeZero n] (f : ℕ → ℝ)
     f (n + k) + (k + 1) * f 1 ≤ k + 1 := by
   obtain ⟨s, hs, hcard⟩ := hf (H n k)
   have hcards := @_degree_bound_Hnk n k s hs.2
-  have : ∑ v, f ((H n k).graph.degree v) = n * f (n + k) + n * (k + 1) * f 1 := by
+  have : ∑ v, f ((H n k).degree v) = n * f (n + k) + n * (k + 1) * f 1 := by
     have hcard_ : #(univ.image (⟨·, 0⟩ : Fin n → Fin n × Fin (k + 2))) = n := by
       have : #(univ.image (⟨·, 0⟩ : Fin n → Fin n × Fin (k + 2))) = #(@univ (Fin n) _) := by
         refine card_image_iff.mpr ?_
@@ -151,16 +148,16 @@ private lemma _bound_fnpk_f1 (n k : ℕ) [NeZero n] (f : ℕ → ℝ)
     rw [← Nat.cast_one, ← Nat.cast_add, ← Nat.cast_mul]
     calc _
       _ = ∑ v ∈ univ \ ({⟨u, 0⟩ | u ∈ univ} : Finset (Fin n × Fin (k + 2))),
-              f ((H n k).graph.degree v)
+              f ((H n k).degree v)
           + ∑ v ∈ ({⟨u, 0⟩ | u ∈ univ} : Finset (Fin n × Fin (k + 2))),
-              f ((H n k).graph.degree v) := by
+              f ((H n k).degree v) := by
         refine Eq.symm (sum_sdiff ?_)
         intro u
         simp only [inter_univ, ne_eq, singleton_ne_empty, not_false_eq_true,
           mem_of_singleton_inter_ne_emty, true_and, univ_filter_exists, mem_image, implies_true]
       _ = ∑ v ∈ univ \ ({⟨u, 0⟩ | u ∈ univ} : Finset (Fin n × Fin (k + 2))), f 1
           + ∑ v ∈ ({⟨u, 0⟩ | u ∈ univ} : Finset (Fin n × Fin (k + 2))),
-            f ((H n k).graph.degree v) := by
+            f ((H n k).degree v) := by
         simp only [add_left_inj]
         refine sum_congr rfl ?_
         intro u
@@ -173,7 +170,7 @@ private lemma _bound_fnpk_f1 (n k : ℕ) [NeZero n] (f : ℕ → ℝ)
         rw [← card_singleton (⟨u.1, 0⟩ : Fin n × Fin (k + 2))]
         refine congrArg Finset.card ?_
         ext w
-        simp only [H, _H, ne_eq, mem_neighborFinset, mem_singleton]
+        simp only [H, ne_eq, mem_neighborFinset, mem_singleton]
         grind
       _ = ∑ v ∈ univ \ ({⟨u, 0⟩ | u ∈ univ} : Finset (Fin n × Fin (k + 2))), f 1
           + ∑ v ∈ ({⟨u, 0⟩ | u ∈ univ} : Finset (Fin n × Fin (k + 2))), f (n + k) := by
@@ -193,7 +190,7 @@ private lemma _bound_fnpk_f1 (n k : ℕ) [NeZero n] (f : ℕ → ℝ)
           simp only [mem_inter, notMem_empty, iff_false, not_and, S1, S2]
           grind only [= mem_image, = mem_sdiff, = mem_singleton]
         simp only [H, degree]
-        have hNu : (_H n k).neighborFinset ⟨u', 0⟩ = S1 ∪ S2 := by
+        have hNu : (H n k).neighborFinset ⟨u', 0⟩ = S1 ∪ S2 := by
           ext
           simp only [S1, S2, mem_neighborFinset]
           grind only [= mem_union, = mem_image, = mem_sdiff, ← mem_univ, = mem_singleton]
@@ -514,7 +511,6 @@ private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_kp1_le_deg_of_min_left_of_B_o
     {k : ℕ} (hk : 2 ≤ k) {ε : ℝ} (hε' : ε ≤ 2 / ((k + 1) * (k + 2 : ℝ)))
     {G : SimpleGraph V} [DecidableRel G.Adj] {x : V} (X : Finset V)
     (hdx : 2 ≤ G.degree x) (hdx' : ¬G.degree x ≤ k)
-    -- (hle : (k + 1 : ℝ) * ε < 2 / (↑(G.degree x) + 1))
     (hle : ε < (2 / 3) / (↑(G.degree x) + 1))
     (hBorC : (_ABC hk X G).B x ∨ (_ABC hk X G).C x) :
     φ k ε (G.degree x) - #(G.neighborFinset x ∩ G.Λ) * ε
@@ -1047,9 +1043,9 @@ private lemma _f_is_lb {k : ℕ} (hk : 2 ≤ k)
 private lemma f_is_lb {k : ℕ} {f : ℕ → ℝ} (hk : 2 ≤ k)
     {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 2 / ((k + 1) * (k + 2 : ℝ))) (hf : f ≤ φ k ε) :
     IsCaroWeiTypeLowerBound f (GraphParameter.BoundedDegreeCaterpillar k) := by
-  intro V _ _ G
+  intro V _ _ G _
   obtain ⟨s, hs, hscat, hsdeg, hscard⟩ := by
-    refine _f_is_lb hk hε hε' G.graph univ ?_
+    refine _f_is_lb hk hε hε' G univ ?_
     simp only [coe_univ, Set.subset_univ]
   exact ⟨s, ⟨hscat, hsdeg⟩, le_trans (sum_le_sum fun v _ ↦ hf _) hscard⟩
 
