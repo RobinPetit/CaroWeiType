@@ -71,8 +71,7 @@ private lemma split_eval_on_component {G : SimpleGraph V} [DecidableRel G.Adj]
   let hx' := mem_sdiff.mp (ABC.sdiff_toFinset ▸ hx) |>.2
   have hx'' : x ∉ C.supp := not_iff_not.mpr Set.mem_toFinset |>.mp hx'
   rw [← f_eq_in_sdiff G ABC hx']
-  suffices G.degree x = (G.deleteIncidencesOf C.supp.toFinset).degree x by
-    exact f_mono_degree _ _ _ this
+  refine f_congr_degree _ _ _ ?_
   refine congrArg Finset.card ?_
   ext y
   simp only [mem_neighborFinset, deleteIncidencesOf, deleteIncidenceSet, incidenceSet,

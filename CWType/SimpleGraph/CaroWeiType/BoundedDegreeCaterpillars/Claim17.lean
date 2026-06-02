@@ -29,10 +29,10 @@ private lemma _A4 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V
     simp only [f, hA, ↓reduceDIte] at hfu
     have := fA_decreasing' (fA5 ▸ hfu)
     have hdu : G.degree u ≤ 3 := by lia
-    grind [γA1, γA2, γA3]
+    grind only [γA2, γA3]
   · have hfB3 : fB 3 = 1 / 3 := by grind
     simp only [f, hB, not_A_of_B, ↓reduceDIte, ← hfB3] at hfu
-    grind [fB_decreasing' hfu]
+    grind only [fB_decreasing' hfu]
   · have hfC1 : fC 2 = 1 / 6 := by grind
     let hobj := hfC1 ▸ (fC_decreasing hdu)
     simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte] at hfu

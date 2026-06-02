@@ -41,19 +41,21 @@ instance instDecidableRel_deleteIncidencesOf {V : Type*} {W : Finset V} [Decidab
       mem_edgeSet, Sym2.mem_iff, true_and, not_or]
     if hu : u ∈ W then
       refine .isFalse ?_
-      simp_all only [huv.ne, not_false_eq_true, and_true, not_forall, not_and]
-      refine ⟨u, hu, by simp⟩
+      simp only [huv.ne, not_false_eq_true, and_true, not_forall, not_and]
+      refine ⟨u, hu, ?_⟩
+      simp only [not_true_eq_false]
+      exact False.elim
     else if hv : v ∈ W then
       refine .isFalse ?_
       simp_all only [huv.ne, not_false_eq_true, and_true, not_forall, not_and]
-      exact ⟨v, hv, by simp⟩
+      exact ⟨v, hv, by simp only [Decidable.not_not, implies_true]⟩
     else
       refine .isTrue ?_
       refine ⟨fun w ↦ ⟨fun hw ↦ ⟨?_, ?_⟩, huv.ne⟩, huv.ne⟩
       · exact fun this ↦ hu (this ▸ hw) |>.elim
       · exact fun this ↦ hv (this ▸ hw) |>.elim
   else
-    refine .isFalse (by simp [huv])
+    refine .isFalse (by simp only [huv, false_and, not_false_eq_true])
 
 end SimpleGraph
 
@@ -76,8 +78,8 @@ lemma CompleteGraph_degree {n : ℕ} {v : Fin (n + 1)}
   refine Eq.trans ?_ H
   refine congrArg Finset.card ?_
   ext
-  simp only [completeGraph_eq_top, mem_neighborFinset, top_adj, ne_eq,
-    mem_sdiff, mem_univ, mem_singleton, ne_comm, true_and]
+  simp only [completeGraph, mem_neighborFinset, top_adj, mem_sdiff, mem_univ, true_and,
+    mem_singleton, ne_comm]
 
 structure GraphParameter where
   toFun : {V : Type} → [DecidableEq V] → [Fintype V] →
@@ -113,15 +115,14 @@ lemma f_le_1_of_IsCaroWeiTypeLowerBound {f π} (hf : IsCaroWeiTypeLowerBound f �
   suffices f d ≤ (d + 1 : ℕ) / (d + 1 : ℝ) by
     refine le_of_le_of_eq this <| ?_
     nth_rw 2 [← Nat.cast_one]
-    rw [Nat.cast_add]
-    grind only
-  refine f_on_complete_graph' hf <| fun s _ ↦ card_finset_fin_le s
+    rw [← Nat.cast_add]
+    exact div_self_eq_one₀.mpr <| Ne.symm <| ne_of_lt <| Nat.cast_pos'.mpr <| Nat.zero_lt_succ _
+  exact f_on_complete_graph' hf <| fun s _ ↦ card_finset_fin_le s
 
 theorem CaroWeiTypeLowerBound_mono {π : GraphParameter} {f₁ f₂ : ℕ → ℝ} (hle : f₁ ≤ f₂)
     (hf₂ : IsCaroWeiTypeLowerBound f₂ π) : IsCaroWeiTypeLowerBound f₁ π := by
   intro _ _ _ G _
   obtain ⟨s, hs⟩ := hf₂ G
-  refine ⟨s, ⟨hs.1, ?_⟩⟩
-  refine le_trans (sum_le_sum fun v _ ↦ hle (G.degree v)) hs.2
+  exact ⟨s, ⟨hs.1, le_trans (sum_le_sum fun v _ ↦ hle (G.degree v)) hs.2⟩⟩
 
 end CaroWeiType

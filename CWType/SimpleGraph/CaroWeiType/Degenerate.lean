@@ -2,7 +2,7 @@ import Mathlib.Analysis.RCLike.Basic
 import Mathlib.Data.Nat.Cast.Order.Field
 
 import CWType.SimpleGraph.CaroWeiType.Basic
-import CWType.SimpleGraph.CaroWeiType.Lemmas
+import CWType.SimpleGraph.CaroWeiType.Calc
 
 open CaroWeiType
 

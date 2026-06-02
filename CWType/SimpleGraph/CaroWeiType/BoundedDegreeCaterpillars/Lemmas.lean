@@ -29,6 +29,15 @@ lemma two_thirds_le_one : (2 : ℝ) / 3 ≤ 1 := by linarith
 
 lemma four_thirds_le_two : (4 : ℝ) / 3 ≤ 2 := by linarith
 
+private lemma five_pos : (0 : ℝ) < 5 := by
+  exact Nat.ofNat_pos'
+
+private lemma six_pos : (0 : ℝ) < 6 := by
+  exact Nat.ofNat_pos'
+
+lemma two_le_of_ne_zero_of_ne_one {n : ℕ} (h0 : n ≠ 0) (h1 : n ≠ 1) : 2 ≤ n := by
+  lia
+
 namespace CaroWeiType
 namespace ABC
 
@@ -60,25 +69,16 @@ lemma fA_decreasing {d d' : ℕ} (h : d ≤ d') : fA d' ≤ fA d := by
   simp only [fA]
   split_ifs
   any_goals grind
-  · ring_nf
-    calc (1 + d' : ℝ)⁻¹ * 2
-      _ ≤ (1 + 2 : ℝ)⁻¹ * 2 := by
-        simp only [Nat.ofNat_pos, mul_le_mul_iff_left₀]
-        refine inv_anti₀ (by lia) ?_
-        simp only [add_le_add_iff_left, Nat.ofNat_le_cast]
-        lia
-      _ ≤ 1 := by linarith
-  · ring_nf
-    calc (1 + d' : ℝ)⁻¹ * 2
-      _ ≤ (1 + 2 : ℝ)⁻¹ * 2 := by
-        simp only [Nat.ofNat_pos, mul_le_mul_iff_left₀]
-        refine inv_anti₀ (by lia) ?_
-        simp only [add_le_add_iff_left, Nat.ofNat_le_cast]
-        lia
-      _ ≤ 5 / 6 := by linarith
-  · ring_nf
-    simp only [Nat.ofNat_pos, mul_le_mul_iff_left₀]
-    exact inv_anti₀ one_add_pos <| by simp only [add_le_add_iff_left, Nat.cast_le, h]
+  · refine (div_le_one₀ add_one_pos).mpr ?_
+    rw [← Nat.cast_two, ← Nat.cast_one, ← Nat.cast_add, Nat.cast_le]
+    refine two_le_of_ne_zero_of_ne_one ?_ ?_ <;> grind only
+  · refine @le_trans _ _ _ (2 / 3) _ ?_ (by linarith)
+    refine (div_le_div_iff_of_pos_left two_pos add_one_pos three_pos).mpr ?_
+    rw [← Nat.cast_three, ← Nat.cast_one, ← Nat.cast_add, Nat.cast_le]
+    suffices 2 ≤ d' by linarith
+    refine two_le_of_ne_zero_of_ne_one ?_ ?_ <;> grind only
+  · refine (div_le_div_iff_of_pos_left two_pos add_one_pos add_one_pos).mpr ?_
+    simp only [add_le_add_iff_right, Nat.cast_le, h]
 
 lemma fA_decreasing' {d d' : ℕ} (h : fA d' < fA d) : d < d' := by
   exact Nat.lt_of_not_le <| fA_decreasing.mt <| not_le.mpr h
@@ -116,23 +116,12 @@ lemma fC_decreasing {d d' : ℕ} (h : d ≤ d') : fC d' ≤ fC d := by
   simp only [fC]
   split_ifs
   any_goals grind
-  · ring_nf
-    have h' : 3 ≤ d' := by lia
-    calc (1 + d' : ℝ)⁻¹ * (2 / 3)
-      _ ≤ (1 + 1 : ℝ)⁻¹ * (2 / 3) := by
-        simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
-        refine inv_anti₀ (pos_add_self_iff.mpr zero_lt_one) ?_
-        rw [← Nat.cast_one, ← Nat.cast_add, ← Nat.cast_add]
-        exact Nat.cast_le.mpr <| by lia
-      _ ≤ 1 := by linarith
-  · ring_nf
-    simp only [one_div]
-    have h' : 3 ≤ d' := by lia
-    calc (1 + d' : ℝ)⁻¹ * (2 / 3)
-      _ ≤ (1 + 3 : ℝ)⁻¹ * (2 / 3) := by
-        simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
-        exact inv_anti₀ (by lia) <| by simp only [add_le_add_iff_left, Nat.ofNat_le_cast, h']
-      _ ≤ 6⁻¹ := by linarith
+  · exact (div_le_one₀ add_one_pos).mpr <| le_trans (by linarith) one_le_add_one_of_nat
+  · refine (div_le_div_iff₀ add_one_pos six_pos).mpr ?_
+    simp only [one_mul]
+    refine @le_of_eq_of_le _ _ 4 _ _ (by linarith) ?_
+    rw [← Nat.cast_four, ← Nat.cast_one, ← Nat.cast_add, Nat.cast_le]
+    lia
   · ring_nf
     simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_le_mul_iff_left₀]
     exact inv_anti₀ one_add_pos (by simp only [add_le_add_iff_left, Nat.cast_le, h])
@@ -159,9 +148,6 @@ lemma not_and' {p q : Prop} : ¬(p ∧ q) ↔ (¬p) ∨ (¬q) := by
       exact Or.inl hp
   · intro h
     rcases h with h | h <;> simp only [h, false_and, and_false, not_false_eq_true]
-
-private lemma five_pos : (0 : ℝ) < 5 := by
-  exact Nat.ofNat_pos'
 
 variable {V : Type} [Fintype V]
 
@@ -268,27 +254,27 @@ lemma fC_le_fB {d : ℕ} : fC d ≤ fB d := by
 lemma fC_le_fA {d : ℕ} : fC d ≤ fA d :=
   le_trans fC_le_fB fB_le_fA
 
-lemma zero_le_fA {d : ℕ} : 0 ≤ fA d := by
-  rw [fA]
+lemma fC_pos {d : ℕ} : 0 < fC d := by
+  simp only [fC]
   split_ifs
-  · exact zero_le_one
-  · exact zero_le_five_sixths
-  · exact div_nonneg zero_le_two (le_of_lt add_one_pos)
+  · exact zero_lt_one
+  · linarith
+  · refine div_pos_iff_of_pos_left two_thirds_pos |>.mpr add_one_pos
 
-lemma zero_le_fB {d : ℕ} : 0 ≤ fB d := by
-  rw [fB]
-  split_ifs
-  · exact zero_le_one
-  · exact zero_le_five_sixths
-  · exact zero_le_one_third
-  · exact div_nonneg zero_le_four_thirds (le_of_lt add_one_pos)
+lemma zero_le_fC {d : ℕ} : 0 ≤ fC d :=
+  le_of_lt fC_pos
 
-lemma zero_le_fC {d : ℕ} : 0 ≤ fC d := by
-  rw [fC]
-  split_ifs
-  · exact zero_le_one
-  · exact zero_le_one_sixth
-  · exact div_nonneg zero_le_two_thirds (le_of_lt add_one_pos)
+lemma fB_pos {d : ℕ} : 0 < fB d :=
+  lt_of_lt_of_le fC_pos fC_le_fB
+
+lemma zero_le_fB {d : ℕ} : 0 ≤ fB d :=
+  le_trans zero_le_fC fC_le_fB
+
+lemma fA_pos {d : ℕ} : 0 < fA d :=
+  lt_of_lt_of_le fC_pos fC_le_fA
+
+lemma zero_le_fA {d : ℕ} : 0 ≤ fA d :=
+  le_trans zero_le_fC fC_le_fA
 
 lemma fA_le_one {d : ℕ} : fA d ≤ 1 := by
   rw [fA]
@@ -299,28 +285,11 @@ lemma fA_le_one {d : ℕ} : fA d ≤ 1 := by
     rw [← Nat.cast_one, ← Nat.cast_add]
     refine Nat.cast_le.mpr <| by lia
 
-lemma fB_le_one {d : ℕ} : fB d ≤ 1 := by
-  rw [fB]
-  split_ifs
-  · exact le_refl _
-  · linarith
-  · linarith
-  · refine div_le_one₀ add_one_pos |>.mpr ?_
-    rw [← Nat.cast_one, ← Nat.cast_add]
-    have H : 4 / 3 ≤ (2 : ℝ) := by linarith
-    exact le_trans H (Nat.cast_le.mpr <| by lia)
+lemma fB_le_one {d : ℕ} : fB d ≤ 1 :=
+  le_trans fB_le_fA fA_le_one
 
-lemma fC_le_one {d : ℕ} : fC d ≤ 1 := by
-  rw [fC]
-  split_ifs
-  · exact le_refl _
-  · linarith
-  · refine div_le_one₀ add_one_pos |>.mpr ?_
-    rw [← Nat.cast_one, ← Nat.cast_add]
-    have H : 2 / 3 ≤ (1 : ℝ) := by linarith
-    refine le_trans H ?_
-    rw [← Nat.cast_one]
-    exact Nat.cast_le.mpr <| by lia
+lemma fC_le_one {d : ℕ} : fC d ≤ 1 :=
+  le_trans fC_le_fA fA_le_one
 
 lemma f_le_one {G : SimpleGraph V} {ABC : Tripartition V} {v : V} [Fintype (G.neighborSet v)] :
     f G ABC v ≤ 1 := by
@@ -481,6 +450,14 @@ lemma f_le_fB_of_not_A {G : SimpleGraph V} {ABC : Tripartition V}
   else
     exact (f_eq_zero_of_notMem G hv) ▸ zero_le_fB
 
+lemma fC_le_f {G : SimpleGraph V} {ABC : Tripartition V}
+    {v : V} [Fintype (G.neighborSet v)] (hv : v ∈ ABC) :
+    fC (G.degree v) ≤ f G ABC v  := by
+  rcases hv with hA | hB | hC
+  · simp only [f, hA, ↓reduceDIte, fC_le_fA]
+  · simp only [f, hB, not_A_of_B, ↓reduceDIte, fC_le_fB]
+  · simp only [f, hC, not_A_of_C, not_B_of_C, ↓reduceDIte, le_refl]
+
 lemma fA_eq_deg_mul_γ_of_three_le_deg {G : SimpleGraph V} {ABC : Tripartition V}
     {v : V} [Fintype (G.neighborSet v)] (hAv : ABC.A v) (hdv : 3 ≤ G.degree v) :
     f G ABC v = G.degree v * γ G ABC v := by
@@ -520,16 +497,8 @@ lemma fC_eq_deg_mul_γ_of_four_le_deg {G : SimpleGraph V} {ABC : Tripartition V}
   rw [h, Δf_eq' (Nat.zero_lt_of_lt hdv)]
   grind only
 
-lemma fA_le_13_of_5_le_deg' {d : ℕ} (hv : 5 ≤ d) : fA d ≤ 1 / 3 := by
-  haveI : (1 : ℝ) / 3 = 2 / 6 := by linarith
-  rw [this]
-  simp only [fA]
-  split_ifs
-  any_goals linarith
-  refine (div_le_div_iff_of_pos_left two_pos add_one_pos Nat.ofNat_pos').mpr ?_
-  rw [← Nat.cast_one, ← Nat.cast_add]
-  refine Nat.cast_le.mpr ?_
-  simp only [Nat.reduceLeDiff, hv]
+lemma fA_le_13_of_5_le_deg' {d : ℕ} (h : 5 ≤ d) : fA d ≤ 1 / 3 :=
+  le_of_le_of_eq (fA_decreasing h) (by grind only)
 
 lemma fA_le_13_of_5_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
     [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : 5 ≤ G.degree v) :
@@ -537,14 +506,8 @@ lemma fA_le_13_of_5_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
   simp only [f, hA, ↓reduceDIte]
   exact fA_le_13_of_5_le_deg' hv
 
-lemma fA_le_25_of_4_le_deg' {d : ℕ} (hv : 4 ≤ d) : fA d ≤ 2 / 5 := by
-  simp only [fA]
-  split_ifs
-  any_goals linarith
-  refine (div_le_div_iff_of_pos_left two_pos add_one_pos five_pos).mpr ?_
-  rw [← Nat.cast_one, ← Nat.cast_add]
-  refine Nat.cast_le.mpr ?_
-  simp only [Nat.reduceLeDiff, hv]
+lemma fA_le_25_of_4_le_deg' {d : ℕ} (h : 4 ≤ d) : fA d ≤ 2 / 5 :=
+  le_of_le_of_eq (fA_decreasing h) (by grind only)
 
 lemma fA_le_25_of_4_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
     [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : 4 ≤ G.degree v) :
@@ -552,16 +515,8 @@ lemma fA_le_25_of_4_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
   simp only [f, hA, ↓reduceDIte]
   exact fA_le_25_of_4_le_deg' hv
 
-lemma fA_le_12_of_3_le_deg' {d : ℕ} (hv : 3 ≤ d) : fA d ≤ 1 / 2 := by
-  simp only [fA]
-  split_ifs
-  any_goals linarith
-  calc _
-    _ ≤ 2 / (4 : ℝ) := by
-      refine (div_le_div_iff_of_pos_left two_pos add_one_pos four_pos).mpr ?_
-      rw [← Nat.cast_four, ← Nat.cast_one, ← Nat.cast_add]
-      exact Nat.cast_le.mpr <| Nat.le_add_of_sub_le hv
-    _ ≤ 1 / 2 := by linarith
+lemma fA_le_12_of_3_le_deg' {d : ℕ} (h : 3 ≤ d) : fA d ≤ 1 / 2 :=
+  le_of_le_of_eq (fA_decreasing h) (by grind only)
 
 lemma fA_le_12_of_3_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
     [Fintype (G.neighborSet v)] (hA : ABC.A v) (hv : 3 ≤ G.degree v) :
@@ -594,18 +549,14 @@ lemma fA_le_56_of_1_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
   simp only [f, hA, ↓reduceDIte]
   exact fA_le_56_of_1_le_deg' hv
 
+lemma fB_le_13_if_2_le_deg' {d : ℕ} (h : 2 ≤ d) : fB d ≤ 1 / 3 :=
+  le_trans (fB_decreasing h) (by grind only)
+
 lemma fB_le_13_if_2_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
     [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : 2 ≤ G.degree v) :
     f G ABC v ≤ 1 / 3 := by
-  simp only [f, hB, not_A_of_B, ↓reduceDIte, fB]
-  split_ifs
-  any_goals linarith
-  calc (4 / 3) / (G.degree v + 1 : ℝ)
-    _ ≤ (4 / 3) / (4 : ℝ) := by
-      refine (div_le_div_iff_of_pos_left (by linarith) add_one_pos four_pos).mpr ?_
-      rw [← Nat.cast_four, ← Nat.cast_one, ← Nat.cast_add]
-      exact Nat.cast_le.mpr (by lia)
-    _ ≤ 1 / 3 := by linarith
+  simp only [f, hB, not_A_of_B, ↓reduceDIte]
+  exact fB_le_13_if_2_le_deg' hv
 
 lemma fB_le_56_if_1_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
     [Fintype (G.neighborSet v)] (hB : ABC.B v) (hv : 1 ≤ G.degree v) :
@@ -615,18 +566,14 @@ lemma fB_le_56_if_1_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
   else
     exact le_trans (fB_le_13_if_2_le_deg hB (by lia)) (by linarith)
 
+lemma fC_le_16_if_2_le_deg' {d : ℕ} (h : 2 ≤ d) : fC d ≤ 1 / 6 :=
+  le_trans (fC_decreasing h) (by grind only)
+
 lemma fC_le_16_if_2_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
     [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : 2 ≤ G.degree v) :
     f G ABC v ≤ 1 / 6 := by
-  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC]
-  split_ifs
-  any_goals linarith
-  calc (2 / 3) / (G.degree v + 1 : ℝ)
-    _ ≤ (2 / 3) / (4 : ℝ) := by
-      refine (div_le_div_iff_of_pos_left (by linarith) add_one_pos four_pos).mpr ?_
-      rw [← Nat.cast_four, ← Nat.cast_one, ← Nat.cast_add]
-      exact Nat.cast_le.mpr (by lia)
-    _ ≤ 1 / 6 := by linarith
+  simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C]
+  exact fC_le_16_if_2_le_deg' hv
 
 lemma fC_le_16_if_1_le_deg {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
     [Fintype (G.neighborSet v)] (hC : ABC.C v) (hv : 1 ≤ G.degree v) :
@@ -690,7 +637,8 @@ lemma f_le_1_over_3_of_4_le_deg_of_not_A4 {G : SimpleGraph V} {ABC : Tripartitio
     · exact fB_le_13_if_2_le_deg hB (Nat.le_of_add_left_le hv)
     · exact le_trans (fC_le_16_if_2_le_deg hC (Nat.le_of_add_left_le hv)) (by linarith)
   else
-    grind [f, ABC.mem_iff]
+    rw [← f_eq_zero_of_notMem _ hvABC]
+    linarith
 
 lemma A2_or_A3_of_f_lt_25_of_2_le_deg {G : SimpleGraph V} {ABC : Tripartition V}
     {v : V} [Fintype (G.neighborSet v)]
@@ -821,28 +769,27 @@ lemma γA8 {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
 lemma γA_decreasing_of_three_le_degree {d d' : ℕ} (hdd' : d ≤ d') (hd : 3 ≤ d) :
     fA (d' - 1) - fA d' ≤ fA (d - 1) - fA d := by
   simp only [fA]
-  have hd0 : d ≠ 0 := by linarith
-  have hd'0 : d' ≠ 0 := by linarith
+  have hd0 : d ≠ 0 := Nat.ne_zero_of_lt hd
+  have hd'0 : d' ≠ 0 := Nat.ne_zero_of_lt (hd.trans hdd')
   have hd1 : d ≠ 1 := by linarith
   have hd'1 : d' ≠ 1 := by linarith
-  have hd1' : d - 1 ≠ 0 := by lia
-  have hd'1' : d' - 1 ≠ 0 := by lia
-  have hd2 : d ≠ 2 := by linarith
-  have hd'2 : d' ≠ 2 := by linarith
+  have hd1' : d - 1 ≠ 0 := Nat.sub_ne_zero_of_lt <| Nat.lt_of_add_left_lt hd
+  have hd'1' : d' - 1 ≠ 0 := Nat.sub_ne_zero_of_lt <| Nat.lt_of_add_left_lt (hd.trans hdd')
+  have hd2 : d ≠ 2 := Ne.symm <| Nat.ne_of_lt hd
+  have hd'2 : d' ≠ 2 := Ne.symm <| Nat.ne_of_lt (hd.trans hdd')
   simp only [ ↓reduceIte, Nat.pred_eq_succ_iff, zero_add, ge_iff_le,
     hd0, hd'0, hd1, hd'1, hd1', hd'1', hd2, hd'2]
   repeat rw [Δf_eq'' (by lia)]
   refine (div_le_div_iff₀ ?_ ?_).mpr ?_
   · refine Left.mul_pos ?_ add_one_pos
     rw [← Nat.cast_zero, Nat.cast_lt]
-    lia
+    exact Nat.zero_lt_of_ne_zero hd'0
   · refine Left.mul_pos ?_ add_one_pos
     rw [← Nat.cast_zero, Nat.cast_lt]
-    lia
+    exact Nat.zero_lt_of_ne_zero hd0
   · simp only [Nat.ofNat_pos, mul_le_mul_iff_right₀]
     rw [← Nat.cast_one, ← Nat.cast_add, ← Nat.cast_mul, ← Nat.cast_add, ← Nat.cast_mul, Nat.cast_le]
-    refine Nat.mul_le_mul hdd' ?_
-    simp only [add_le_add_iff_right, hdd']
+    refine Nat.mul_le_mul hdd' <| add_le_add hdd' (le_refl _)
 
 lemma γA_le_1_10_of_4_le_degree {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
     [Fintype (G.neighborSet v)] (hdv : 4 ≤ G.degree v) (hAv : ABC.A v) :
@@ -892,16 +839,16 @@ lemma γB4 {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
 lemma γB_decreasing_of_four_le_degree {d d' : ℕ} (hdd' : d ≤ d') (hd : 4 ≤ d) :
     fB (d' - 1) - fB d' ≤ fB (d - 1) - fB d := by
   simp only [fB]
-  have hd0 : d ≠ 0 := by linarith
-  have hd'0 : d' ≠ 0 := by linarith
+  have hd0 : d ≠ 0 := Nat.ne_zero_of_lt hd
+  have hd'0 : d' ≠ 0 := Nat.ne_zero_of_lt (hd.trans hdd')
   have hd1 : d ≠ 1 := by linarith
   have hd'1 : d' ≠ 1 := by linarith
-  have hd1' : d - 1 ≠ 0 := by lia
-  have hd'1' : d' - 1 ≠ 0 := by lia
-  have hd2 : d ≠ 2 := by linarith
-  have hd'2 : d' ≠ 2 := by linarith
-  have hd3 : d ≠ 3 := by linarith
-  have hd'3 : d' ≠ 3 := by linarith
+  have hd1' : d - 1 ≠ 0 := Nat.sub_ne_zero_of_lt <| Nat.lt_of_add_left_lt hd
+  have hd'1' : d' - 1 ≠ 0 := Nat.sub_ne_zero_of_lt <| Nat.lt_of_add_left_lt (hd.trans hdd')
+  have hd2 : d ≠ 2 := Ne.symm <| Nat.ne_of_lt <| Nat.lt_of_add_left_lt hd
+  have hd'2 : d' ≠ 2 := Ne.symm <| Nat.ne_of_lt <| Nat.lt_of_add_left_lt (hd.trans hdd')
+  have hd3 : d ≠ 3 := Ne.symm <| Nat.ne_of_lt hd
+  have hd'3 : d' ≠ 3 := Ne.symm <| Nat.ne_of_lt (hd.trans hdd')
   simp only [ ↓reduceIte, Nat.pred_eq_succ_iff, zero_add, ge_iff_le,
     hd0, hd'0, hd1, hd'1, hd1', hd'1', hd2, hd'2, hd3, hd'3]
   repeat rw [Δf_eq'' (by lia)]
@@ -920,16 +867,16 @@ lemma γB_decreasing_of_four_le_degree {d d' : ℕ} (hdd' : d ≤ d') (hd : 4 �
 lemma γC_decreasing_of_four_le_degree {d d' : ℕ} (hdd' : d ≤ d') (hd : 4 ≤ d) :
     fC (d' - 1) - fC d' ≤ fC (d - 1) - fC d := by
   simp only [fC]
-  have hd0 : d ≠ 0 := by linarith
-  have hd'0 : d' ≠ 0 := by linarith
+  have hd0 : d ≠ 0 := Nat.ne_zero_of_lt hd
+  have hd'0 : d' ≠ 0 := Nat.ne_zero_of_lt (hd.trans hdd')
   have hd1 : d ≠ 1 := by linarith
   have hd'1 : d' ≠ 1 := by linarith
-  have hd1' : d - 1 ≠ 0 := by lia
-  have hd'1' : d' - 1 ≠ 0 := by lia
-  have hd2 : d ≠ 2 := by linarith
-  have hd'2 : d' ≠ 2 := by linarith
-  have hd3 : d ≠ 3 := by linarith
-  have hd'3 : d' ≠ 3 := by linarith
+  have hd1' : d - 1 ≠ 0 := Nat.sub_ne_zero_of_lt <| Nat.lt_of_add_left_lt hd
+  have hd'1' : d' - 1 ≠ 0 := Nat.sub_ne_zero_of_lt <| Nat.lt_of_add_left_lt (hd.trans hdd')
+  have hd2 : d ≠ 2 := Ne.symm <| Nat.ne_of_lt <| Nat.lt_of_add_left_lt hd
+  have hd'2 : d' ≠ 2 := Ne.symm <| Nat.ne_of_lt <| Nat.lt_of_add_left_lt (hd.trans hdd')
+  have hd3 : d ≠ 3 := Ne.symm <| Nat.ne_of_lt hd
+  have hd'3 : d' ≠ 3 := Ne.symm <| Nat.ne_of_lt (hd.trans hdd')
   simp only [ ↓reduceIte, Nat.pred_eq_succ_iff, zero_add, ge_iff_le, false_or,
     hd0, hd'0, hd1, hd'1, hd1', hd'1', hd2, hd'2, hd3, hd'3]
   repeat rw [Δf_eq'' (by lia)]
@@ -1172,7 +1119,6 @@ lemma γ_eq_0_iff {G : SimpleGraph V} {ABC : Tripartition V} {v : V}
       suffices 0 < (0 : ℝ) by exact (lt_self_iff_false _).mp this |>.elim
       exact lt_of_lt_of_eq (γ_pos_of_four_le_deg hv hdv') h
     else
-      have hdv : G.degree v = 1 ∨ G.degree v = 2 ∨ G.degree v = 3 := by lia
       rcases hv with hAv | hBv | hCv <;> grind only [γA1, γA2, γA3, γB1, γB2, γC1]
   · intro h
     rcases h with ⟨hdv, hBv⟩ | ⟨hdv, hCv⟩ | ⟨hdv, hCv⟩
@@ -1855,28 +1801,8 @@ end Tripartition
 
 lemma f_le_56 (G : SimpleGraph V) (ABC : Tripartition V)
     {v : V} [Fintype (G.neighborSet v)] (hv : 0 < G.degree v) :
-    f G ABC v ≤ 5 / (6 : ℝ) := by
-  simp only [f, fA, fB, one_div, fC, dite_eq_ite]
-  split_ifs
-  any_goals grind
-  · calc 2 / (G.degree v + 1 : ℝ)
-      _ ≤ 2 / (2 + 1 : ℝ) := by
-        refine div_le_div_iff_of_pos_left two_pos add_one_pos (by lia) |>.mpr ?_
-        simp only [add_le_add_iff_right, Nat.ofNat_le_cast]
-        lia
-      _ ≤ 5 / 6 := by linarith
-  · calc (4 / 3) / (G.degree v + 1 : ℝ)
-      _ ≤ (4 / 3) / (2 + 1 : ℝ) := by
-        refine div_le_div_iff_of_pos_left (by linarith) add_one_pos (by lia) |>.mpr ?_
-        simp only [add_le_add_iff_right, Nat.ofNat_le_cast]
-        lia
-      _ ≤ 5 / 6 := by linarith
-  · calc (2 / 3) / (G.degree v + 1 : ℝ)
-      _ ≤ (2 / 3) / (2 + 1 : ℝ) := by
-        refine div_le_div_iff_of_pos_left (by linarith) add_one_pos (by lia) |>.mpr ?_
-        simp only [add_le_add_iff_right, Nat.ofNat_le_cast]
-        lia
-      _ ≤ 5 / 6 := by linarith
+    f G ABC v ≤ 5 / (6 : ℝ) :=
+  le_trans f_le_fA (fA_le_56_of_1_le_deg' hv)
 
 lemma f_le_two_fifths_of_γ_lt_one_sixth {G : SimpleGraph V} {ABC : Tripartition V}
     {v : V} [Fintype (G.neighborSet v)] (hdv : 0 < G.degree v) (hγv : γ G ABC v < 1 / 6) :
@@ -1987,43 +1913,30 @@ lemma f_le_two_sevenths_of_γ_lt_one_fifteenth_of_γ_ne_zero {G : SimpleGraph V}
   else
     linarith [f_eq_zero_of_notMem G hvABC]
 
-lemma f_eq_in_sdiff (G : SimpleGraph V) (ABC : Tripartition V)
-    {s : Finset V} {w : V} [Fintype (G.neighborSet w)] (hw : w ∉ s) :
-    f G (ABC \ s) w = f G ABC w := by
-  have : ABC.A w ↔ (ABC \ s).A w := ⟨fun h ↦ ⟨h, hw⟩, fun ⟨h, _⟩ ↦ h⟩
-  have : ABC.B w ↔ (ABC \ s).B w := ⟨fun h ↦ ⟨h, hw⟩, fun ⟨h, _⟩ ↦ h⟩
-  have : ABC.C w ↔ (ABC \ s).C w := ⟨fun h ↦ ⟨h, hw⟩, fun ⟨h, _⟩ ↦ h⟩
-  simp only [f]
-  split_ifs
-  any_goals lia
-
-lemma f_mono_degree (G₁ G₂ : SimpleGraph V) (ABC : Tripartition V)
+lemma f_congr_degree (G₁ G₂ : SimpleGraph V) (ABC : Tripartition V)
     {v : V} [Fintype (G₁.neighborSet v)] [Fintype (G₂.neighborSet v)] :
     G₁.degree v = G₂.degree v → f G₁ ABC v = f G₂ ABC v := by
   intro heq
   simp only [f, fA, fB, one_div, fC, dite_eq_ite, heq]
 
+lemma f_eq_in_sdiff (G : SimpleGraph V) (ABC : Tripartition V)
+    {s : Finset V} {w : V} [Fintype (G.neighborSet w)] (hw : w ∉ s) :
+    f G (ABC \ s) w = f G ABC w := by
+  have hAiff : ABC.A w ↔ (ABC \ s).A w := ⟨fun h ↦ ⟨h, hw⟩, fun ⟨h, _⟩ ↦ h⟩
+  have hBiff : ABC.B w ↔ (ABC \ s).B w := ⟨fun h ↦ ⟨h, hw⟩, fun ⟨h, _⟩ ↦ h⟩
+  have hCiff : ABC.C w ↔ (ABC \ s).C w := ⟨fun h ↦ ⟨h, hw⟩, fun ⟨h, _⟩ ↦ h⟩
+  if hw : w ∈ ABC then
+    rcases hw with hA | hB | hC
+    · simp only [f, hA, hAiff.mp, ↓reduceDIte]
+    · simp only [f, hB, hBiff.mp, not_A_of_B, ↓reduceDIte]
+    · simp only [f, hC, hCiff.mp, not_A_of_C, not_B_of_C, ↓reduceDIte]
+  else
+    have hw' : w ∉ (ABC \ s) := by grind only [Tripartition.mem_iff]
+    rw [← f_eq_zero_of_notMem _ hw, ← f_eq_zero_of_notMem _ hw']
+
 lemma f_pos_of_mem (G : SimpleGraph V) (ABC : Tripartition V)
-    (v : V) [Fintype (G.neighborSet v)] : v ∈ ABC → 0 < f G ABC v := by
-  intro h
-  rcases ABC.mem_iff.mp h with hA | hB | hC
-  · simp only [f, hA, ↓reduceDIte, fA]
-    split_ifs
-    any_goals linarith
-    ring_nf
-    simp only [Nat.ofNat_pos, mul_pos_iff_of_pos_right, inv_pos, one_add_pos]
-  · simp only [f, hB, not_A_of_B, ↓reduceDIte, fB, one_div]
-    split_ifs
-    any_goals linarith
-    ring_nf
-    simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_pos_iff_of_pos_right, inv_pos,
-      one_add_pos]
-  · simp only [f, hC, not_A_of_C, ↓reduceDIte, not_B_of_C, fC, one_div]
-    split_ifs
-    any_goals linarith
-    ring_nf
-    simp only [Nat.ofNat_pos, div_pos_iff_of_pos_left, mul_pos_iff_of_pos_right, inv_pos,
-      one_add_pos]
+    (v : V) [Fintype (G.neighborSet v)] : v ∈ ABC → 0 < f G ABC v :=
+  (lt_of_lt_of_le fC_pos <| fC_le_f ·)
 
 lemma f_mono {G₁ G₂ : SimpleGraph V} {ABC : Tripartition V}
     {v : V} [Fintype (G₁.neighborSet v)] [Fintype (G₂.neighborSet v)] (hle : G₂ ≤ G₁) :
@@ -2031,11 +1944,11 @@ lemma f_mono {G₁ G₂ : SimpleGraph V} {ABC : Tripartition V}
   if hv : v ∈ ABC then
     rcases ABC.mem_iff.mp hv with hA | hB | hC
     · simp only [f, hA, ↓reduceDIte]
-      refine fA_decreasing <| degree_le_of_le hle
+      exact fA_decreasing <| degree_le_of_le hle
     · simp only [f, not_A_of_B, hB, ↓reduceDIte]
-      refine fB_decreasing <| degree_le_of_le hle
+      exact fB_decreasing <| degree_le_of_le hle
     · simp only [f, not_A_of_C, not_B_of_C, hC, ↓reduceDIte]
-      refine fC_decreasing <| degree_le_of_le hle
+      exact fC_decreasing <| degree_le_of_le hle
   else
     rw [← f_eq_zero_of_notMem G₁ hv, ← f_eq_zero_of_notMem G₂ hv]
 

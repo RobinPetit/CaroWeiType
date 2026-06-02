@@ -41,7 +41,7 @@ lemma sum_sdiff_singleton_eval {V : Type} [DecidableEq V] [Fintype V]
   refine sum_sdiff_singleton G (fun G v _ ↦ f G ABC v) hv hNv ?_ |>.trans ?_
   · intro w hw
     simp only
-    refine f_mono_degree _ _ _ ?_
+    refine f_congr_degree _ _ _ ?_
     refine congrArg Finset.card ?_
     refine Eq.symm <| neighborFinset_eq_delelteIncidencesOf_of_empty_inter_neighborFinset ?_ ?_
     · simp only [inter_singleton_eq_empty_iff]

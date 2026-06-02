@@ -257,7 +257,7 @@ lemma Claim2' {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V} [A
         mem_sdiff.mp (mem_sdiff.mp hz |>.1) |>.2
       rw [f_eq_in_sdiff _ ABC hz']
       rw [sub_eq_zero]
-      refine f_mono_degree _ _ ABC ?_
+      refine f_congr_degree _ _ ABC ?_
       repeat rw [degree]
       refine congrArg _ ?_
       ext y
