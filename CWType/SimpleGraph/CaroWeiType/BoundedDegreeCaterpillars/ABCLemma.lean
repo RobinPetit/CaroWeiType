@@ -11,19 +11,6 @@ open Tripartition
 
 variable {V : Type} [Fintype V] [DecidableEq V]
 
-private lemma exists_argmin {α β : Type*} [LinearOrder β] {s : Finset α} (hs : s.Nonempty)
-    (f : α → β) : ∃ x ∈ s, ∀ y ∈ s, f x ≤ f y := by
-  classical
-  induction s using Finset.induction_on_min_value f with
-  | h0 => simp only [Finset.not_nonempty_empty] at hs
-  | step a s' ha hmin ih => ?_
-  refine ⟨a, mem_insert_self .., ?_⟩
-  intro y hy
-  simp only [mem_insert] at hy
-  rcases hy with hy | hy
-  · simp only [hy, le_refl]
-  · exact hmin _ hy
-
 private lemma _ok_if_no_nonneg_gain {k : ℕ} {G : SimpleGraph V} [DecidableRel G.Adj]
     {ABC : Tripartition V} [ABC.Decidable] (hG : G.support ⊆ ABC.toFinset)
     (hcard : ABC.card = k) (hk : ¬k = 0) (hW : ({v | v ∈ ABC ∧ 0 < γ G ABC v} : Finset _) = ∅)

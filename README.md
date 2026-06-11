@@ -173,11 +173,15 @@ See the [LICENSE](https://github.com/RobinPetit/graphs-in-lean/blob/main/LICENSE
 
 ## Done
 
-- [x] Generic definition
-- [x] proof for independent sets (Caro-Wei)
-- [x] proof for $k$-degenerate induced subgraphs (Alon-Khhan-Seymour)
-- [x] Proof for caterpillars of max degree at most $k$ (Joret-Petit)
+- Generic definition
+- proof for independent sets (Caro-Wei)
+- proof for $k$-degenerate induced subgraphs (Alon-Khhan-Seymour)
+- Proof for caterpillars of max degree at most $k$ (Joret-Petit)
+
+## WIP
+
+- Bound for induced forests of stars
 
 ## TODO
 
-- Bound for degree-bounded induced forests of stars
+- Get rid of `ℝ` and use `ℚ` instead so that `noncomputable` can be removed everywhere. (This probably will require a heavy refactor and using several `def`'s all around)

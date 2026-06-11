@@ -398,7 +398,7 @@ lemma Claim18 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
           <| by simp only [fC3 hCz hdz, γA3 hAy hdy, le_refl]
       · exact Claim6 hG ih ⟨z, hdz, not_A_of_C hCz⟩
     else
-      simp only [mem_neighborFinset, ne_eq, not_exists, not_and', Decidable.not_not] at hNx hNy
+      simp only [mem_neighborFinset, ne_eq, not_exists, not_and_or, Decidable.not_not] at hNx hNy
       have hwx : ¬G.Adj w x := by
         rcases hNx w with hxw | h
         · exact fun hwx ↦ hxw hwx.symm

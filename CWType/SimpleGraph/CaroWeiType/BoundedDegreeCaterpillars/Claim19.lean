@@ -720,7 +720,7 @@ private lemma ok_of_A4_step2 {G : SimpleGraph V} [DecidableRel G.Adj]
   if h : ∀ q' ∈ ({q, r} : Finset _), (ABC.A q' ∧ (G.degree q' = 3 ∨ G.degree q' = 4)) then
     exact Or.inr h
   else
-    simp only [not_forall, not_and'] at h
+    simp only [not_forall, not_and_or] at h
     obtain ⟨q', hq', Hq'⟩ := h
     if hAq' : ABC.A q' then
       simp only [hAq', not_true_eq_false, false_or, not_or] at Hq'

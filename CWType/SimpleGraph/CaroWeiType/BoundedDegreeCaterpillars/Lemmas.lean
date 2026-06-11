@@ -5,64 +5,10 @@ import CWType.SimpleGraph.CaroWeiType.BoundedDegreeCaterpillars.ABC
 
 open Finset
 
-lemma one_sixth_pos : (0 : ℝ) < 1 / 6 := by linarith
-
-lemma one_third_pos : (0 : ℝ) < 1 / 3 := by linarith
-
-lemma two_thirds_pos : (0 : ℝ) < 2 / 3 := by linarith
-
-lemma four_thirds_pos : (0 : ℝ) < 4 / 3 := by linarith
-
-lemma zero_le_one_sixth : (0 : ℝ) ≤ 1 / 6 := by linarith
-
-lemma zero_le_one_third : (0 : ℝ) ≤ 1 / 3 := by linarith
-
-lemma zero_le_two_thirds : (0 : ℝ) ≤ 2 / 3 := by linarith
-
-lemma zero_le_five_sixths : (0 : ℝ) ≤ 5 / 6 := by linarith
-
-lemma zero_le_four_thirds : (0 : ℝ) ≤ 4 / 3 := by linarith
-
-lemma two_thirds_le_five_sixths : (2 : ℝ) / 3 ≤ 5 / 6 := by linarith
-
-lemma two_thirds_le_one : (2 : ℝ) / 3 ≤ 1 := by linarith
-
-lemma four_thirds_le_two : (4 : ℝ) / 3 ≤ 2 := by linarith
-
-private lemma five_pos : (0 : ℝ) < 5 := by
-  exact Nat.ofNat_pos'
-
-private lemma six_pos : (0 : ℝ) < 6 := by
-  exact Nat.ofNat_pos'
-
-lemma two_le_of_ne_zero_of_ne_one {n : ℕ} (h0 : n ≠ 0) (h1 : n ≠ 1) : 2 ≤ n := by
-  lia
-
 namespace CaroWeiType
 namespace ABC
 
 open SimpleGraph
-
-lemma Δf_eq {c : ℝ} {d : ℕ} :
-    c / (d + 1 : ℝ) - c / (d + 1 + 1 : ℝ) = c / ((d + 1 : ℝ)*(d + 1 + 1 : ℝ)) := by
-  grind only
-
-lemma Δf_eq' {c : ℝ} {d : ℕ} (hd : 0 < d) :
-    c / (d : ℝ) - c / (d + 1 : ℝ) = c / ((d : ℝ)*(d + 1 : ℝ)) := by
-  have heq : (d : ℝ) = ((d - 1 : ℕ) + 1 : ℝ) := by
-    rw [← @Nat.cast_one ℝ _, ← Nat.cast_add]
-    exact Nat.cast_inj.mpr <| Nat.sub_eq_iff_eq_add hd |>.mp rfl
-  let hobj := @Δf_eq c (d - 1)
-  rw [← heq] at hobj
-  exact hobj
-
-lemma Δf_eq'' {c : ℝ} {d : ℕ} (hd : 0 < d) :
-    c / ((d - 1 : ℕ) + 1: ℝ) - c / (d + 1 : ℝ) = c / ((d : ℝ)*(d + 1 : ℝ)) := by
-  let hobj := @Δf_eq c (d - 1)
-  have heq : (d : ℝ) = ((d - 1 : ℕ) + 1 : ℝ) := by
-    rw [← @Nat.cast_one ℝ _, ← Nat.cast_add]
-    exact Nat.cast_inj.mpr <| Nat.sub_eq_iff_eq_add hd |>.mp rfl
-  exact heq ▸ hobj
 
 lemma fA_decreasing {d d' : ℕ} (h : d ≤ d') : fA d' ≤ fA d := by
   if heq : d = d' then exact le_of_eq (heq ▸ rfl) else ?_
@@ -128,26 +74,6 @@ lemma fC_decreasing {d d' : ℕ} (h : d ≤ d') : fC d' ≤ fC d := by
 
 lemma fC_decreasing' {d d' : ℕ} (h : fC d' < fC d) : d < d' := by
   exact Nat.lt_of_not_le <| fC_decreasing.mt <| not_le.mpr h
-
-@[simp]
-lemma and_or_3 {p₁ p₂ p₃ q : Prop} : (p₁ ∧ q) ∨ (p₂ ∧ q) ∨ (p₃ ∧ q) ↔ (p₁ ∨ p₂ ∨ p₃) ∧ q := by
-  constructor
-  · intro h
-    rcases h with h | h | h <;> simp only [h, true_or, or_true, and_self]
-  · intro ⟨hp, hq⟩
-    rcases hp with h | h | h <;> simp only [hq, and_true, h, and_self, true_or, or_true]
-
-@[simp]
-lemma not_and' {p q : Prop} : ¬(p ∧ q) ↔ (¬p) ∨ (¬q) := by
-  constructor
-  · intro h
-    simp only [not_and] at h
-    if hp : p then
-      exact Or.inr <| h hp
-    else
-      exact Or.inl hp
-  · intro h
-    rcases h with h | h <;> simp only [h, false_and, and_false, not_false_eq_true]
 
 variable {V : Type} [Fintype V]
 
@@ -2033,56 +1959,6 @@ lemma eval_lt [DecidableEq V] (G : SimpleGraph V) [G.LocallyFinite]
           mem_sdiff, mem_filter, mem_univ, true_and]
       rw [add_comm, inter_comm, h']
       exact Finset.sum_inter_add_sum_diff ..
-
-section
-
-variable {V : Type}
-
-lemma degree_deleteIncidencesOf_neighbor (G : SimpleGraph V) {s : Finset V} {w : V}
-    [Fintype (G.neighborSet w)] [Fintype ((G.deleteIncidencesOf s).neighborSet w)]
-    (hs : s ⊆ G.neighborFinset w) :
-    G.degree w = (G.deleteIncidencesOf s).degree w + #s := by
-  classical
-  suffices G.neighborFinset w = (G.deleteIncidencesOf s).neighborFinset w ∪ s by
-    simp only [degree, congrArg card this]
-    refine card_union_of_disjoint ?_
-    refine disjoint_iff_inter_eq_empty.mpr ?_
-    ext u
-    simp only [deleteIncidencesOf, deleteIncidenceSet, incidenceSet, mem_inter, mem_neighborFinset,
-      inf_adj, iInf_adj, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and,
-      not_or, ne_eq, notMem_empty, iff_false, and_imp]
-    intro hwu h hne hus
-    exact (h u |>.1 hus |>.2 hwu |>.2) rfl
-  ext u
-  simp only [mem_neighborFinset, deleteIncidencesOf, deleteIncidenceSet, incidenceSet, mem_union,
-    inf_adj, iInf_adj, deleteEdges_adj, Set.mem_setOf_eq, mem_edgeSet, Sym2.mem_iff, not_and,
-    not_or, ne_eq]
-  constructor
-  · intro h
-    simp only [h, forall_const, true_and, h.ne, not_false_eq_true, and_true]
-    if hus : u ∈ s then
-      exact Or.inr hus
-    else
-      refine Or.inl ?_
-      intro i hi
-      refine ⟨?_, ?_⟩
-      · have hws : w ∉ s := hs.mt <| notMem_neighborFinset_self G _
-        exact fun heq ↦ hws (heq ▸ hi)
-      · exact fun heq ↦ hus (heq ▸ hi)
-  · intro h
-    rcases h with h | h
-    · exact h.1
-    · exact G.mem_neighborFinset .. |>.mp <| hs h
-
-lemma degree_deleteIncidencesOf_neighbor_singleton (G : SimpleGraph V) {v w : V}
-    [Fintype (G.neighborSet w)] [Fintype ((G.deleteIncidencesOf {v}).neighborSet w)]
-    (hw : G.Adj v w) :
-    G.degree w = (G.deleteIncidencesOf {v}).degree w + 1 := by
-  rw [← card_singleton v]
-  refine degree_deleteIncidencesOf_neighbor G ?_
-  simp only [singleton_subset_iff, mem_neighborFinset, hw.symm]
-
-end
 
 lemma f_deleteIncidencesOf_singleton (ABC : Tripartition V) (G : SimpleGraph V) {v w : V}
     [Fintype (G.neighborSet w)] [Fintype ((G.deleteIncidencesOf {v}).neighborSet w)]

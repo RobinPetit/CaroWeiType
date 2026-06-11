@@ -17,4 +17,7 @@ def InducesLinearForest (s : Finset V) : Prop :=
 def InducesCaterpillar (s : Finset V) : Prop :=
   G.InducesLinearForest <| s \ {x ∈ s | G.degree_in s x = 1}
 
+def InducesForestOfStars (s : Finset V) : Prop :=
+  G.IsIndepSet <| ↑(s \ {x ∈ s | G.degree_in s x = 1})
+
 end SimpleGraph

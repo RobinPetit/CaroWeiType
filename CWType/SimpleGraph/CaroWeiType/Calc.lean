@@ -2,6 +2,83 @@ import CWType.SimpleGraph.CaroWeiType.Lemmas
 
 namespace Finset
 
+lemma exists_argmin {α β : Type*} [LinearOrder β] {s : Finset α} (hs : s.Nonempty)
+    (f : α → β) : ∃ x ∈ s, ∀ y ∈ s, f x ≤ f y := by
+  classical
+  induction s using Finset.induction_on_min_value f with
+  | h0 => simp only [Finset.not_nonempty_empty] at hs
+  | step a s' ha hmin ih => ?_
+  refine ⟨a, mem_insert_self .., ?_⟩
+  intro y hy
+  simp only [mem_insert] at hy
+  rcases hy with hy | hy
+  · simp only [hy, le_refl]
+  · exact hmin _ hy
+
+lemma one_sixth_pos : (0 : ℝ) < 1 / 6 := by linarith
+
+lemma one_third_pos : (0 : ℝ) < 1 / 3 := by linarith
+
+lemma two_thirds_pos : (0 : ℝ) < 2 / 3 := by linarith
+
+lemma four_thirds_pos : (0 : ℝ) < 4 / 3 := by linarith
+
+lemma zero_le_one_tenth : (0 : ℝ) ≤ 1 / 10 := by linarith
+
+lemma zero_le_one_sixth : (0 : ℝ) ≤ 1 / 6 := by linarith
+
+lemma zero_le_one_third : (0 : ℝ) ≤ 1 / 3 := by linarith
+
+lemma zero_le_one_half : (0 : ℝ) ≤ 1 / 2 := by linarith
+
+lemma zero_le_two_thirds : (0 : ℝ) ≤ 2 / 3 := by linarith
+
+lemma zero_le_five_sixths : (0 : ℝ) ≤ 5 / 6 := by linarith
+
+lemma zero_le_four_thirds : (0 : ℝ) ≤ 4 / 3 := by linarith
+
+lemma two_thirds_le_five_sixths : (2 : ℝ) / 3 ≤ 5 / 6 := by linarith
+
+lemma two_thirds_le_one : (2 : ℝ) / 3 ≤ 1 := by linarith
+
+lemma four_thirds_le_two : (4 : ℝ) / 3 ≤ 2 := by linarith
+
+lemma five_pos : (0 : ℝ) < 5 := by
+  exact Nat.ofNat_pos'
+
+lemma six_pos : (0 : ℝ) < 6 := by
+  exact Nat.ofNat_pos'
+
+lemma two_le_of_ne_zero_of_ne_one {n : ℕ} (h0 : n ≠ 0) (h1 : n ≠ 1) : 2 ≤ n := by
+  lia
+
+lemma two_le_of_one_le_of_ne_one {n : ℕ} (h0 : 1 ≤ n) (h1 : n ≠ 1) : 2 ≤ n := by
+  lia
+
+lemma zero_or_two_le_of_ne_one {n : ℕ} (h : n ≠ 1) : n = 0 ∨ 2 ≤ n := by
+  lia
+
+lemma Δf_eq {c : ℝ} {d : ℕ} :
+    c / (d + 1 : ℝ) - c / (d + 1 + 1 : ℝ) = c / ((d + 1 : ℝ)*(d + 1 + 1 : ℝ)) := by
+  grind only
+
+lemma Δf_eq' {c : ℝ} {d : ℕ} (hd : 0 < d) :
+    c / (d : ℝ) - c / (d + 1 : ℝ) = c / ((d : ℝ)*(d + 1 : ℝ)) := by
+  have heq : (d : ℝ) = ((d - 1 : ℕ) + 1 : ℝ) := by
+    rw [← @Nat.cast_one ℝ _, ← Nat.cast_add]
+    exact Nat.cast_inj.mpr <| Nat.sub_eq_iff_eq_add hd |>.mp rfl
+  let hobj := @Δf_eq c (d - 1)
+  rw [← heq] at hobj
+  exact hobj
+
+lemma Δf_eq'' {c : ℝ} {d : ℕ} (hd : 0 < d) :
+    c / ((d - 1 : ℕ) + 1 : ℝ) - c / (d + 1 : ℝ) = c / ((d : ℝ)*(d + 1 : ℝ)) := by
+  let hobj := @Δf_eq c (d - 1)
+  have heq : (d : ℝ) = ((d - 1 : ℕ) + 1 : ℝ) := by
+    rw [← @Nat.cast_one ℝ _, ← Nat.cast_add]
+    exact Nat.cast_inj.mpr <| Nat.sub_eq_iff_eq_add hd |>.mp rfl
+  exact heq ▸ hobj
+
 lemma split_sum {α β ι : Type*} [DecidableEq ι] [Ring β] {f : ι → β} (s : Finset α) (s' : Finset ι)
     {g : α → Finset ι} (h : s.sup g = s')
     (h' : ∀ x y, x ≠ y → g x ∩ g y = ∅) :
@@ -27,6 +104,22 @@ lemma sum_disjoint_union {α β : Type*} [DecidableEq α] [Ring β] {s s' t : Fi
     ∑ x ∈ s, f x + ∑ x ∈ s', f x = ∑ x ∈ t, f x := by
   refine Eq.symm <| Eq.trans ?_ sum_union_inter
   simp only [ht, hss', sum_empty, add_zero]
+
+lemma sum_triplet {α β : Type*} [DecidableEq α] [Ring β] {a b c : α} {f : α → β}
+    (hab : a ≠ b) (hac : a ≠ c) (hbc : b ≠ c) :
+    ∑ x ∈ {a, b, c}, f x = f a + f b + f c := by
+  have : ∑ x ∈ insert a {b, c}, f x = f a + ∑ x ∈ {b, c}, f x := by
+    refine sum_insert <| by grind
+  rw [this]
+  suffices ∑ x ∈ {b, c}, f x = f b + f c by
+    grind
+  exact sum_pair hbc
+
+lemma sum_quadruplet {α β : Type*} [DecidableEq α] [Ring β] {a b c d : α} {f : α → β}
+    (hab : a ≠ b) (hac : a ≠ c) (had : a ≠ d) (hbc : b ≠ c) (hbd : b ≠ d) (hcd : c ≠ d) :
+    ∑ x ∈ {a, b, c, d}, f x = f a + f b + f c + f d := by
+  repeat rw [sum_insert (by grind)]
+  grind
 
 end Finset
 

@@ -29,8 +29,8 @@ lemma Claim5_0 {G : SimpleGraph V} [DecidableRel G.Adj] {ABC : Tripartition V}
     rcases mem_union.mp hw with hw | hw
     · exact mem_sdiff.mp (ABC.sdiff_toFinset ▸ hs'1 hw) |>.1
     · exact (mem_singleton.mp hw) ▸ ABC.mem_toFinset.mp hx
-  · refine G.IsDegenerateSet_union s' {x} ?_ (by simp [hdegx0])
-    refine IsDegenerateSet_mono' G _ s' {x} ?_ hs'2
+  · refine G.IsDegenerateSet_union' s' {x} ?_ (by simp [hdegx0])
+    refine IsDegenerateSet_graph_mono' G _ s' {x} ?_ hs'2
     ext y
     simp only [mem_inter, mem_singleton, notMem_empty, iff_false, not_and]
     intro hy

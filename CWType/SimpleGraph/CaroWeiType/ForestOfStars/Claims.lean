@@ -1,0 +1,13 @@
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim0
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim1
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim2
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim3
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim4
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim5
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim6
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim7
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim8
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim9
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim10
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim11
+import CWType.SimpleGraph.CaroWeiType.ForestOfStars.Claim12
