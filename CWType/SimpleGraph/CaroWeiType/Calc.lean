@@ -15,6 +15,10 @@ lemma exists_argmin {α β : Type*} [LinearOrder β] {s : Finset α} (hs : s.Non
   · simp only [hy, le_refl]
   · exact hmin _ hy
 
+lemma exists_argmax {α β : Type*} [LinearOrder β] {s : Finset α} (hs : s.Nonempty)
+    (f : α → β) : ∃ x ∈ s, ∀ y ∈ s, f y ≤ f x :=
+  @exists_argmin α βᵒᵈ _ s hs f
+
 lemma one_sixth_pos : (0 : ℝ) < 1 / 6 := by linarith
 
 lemma one_third_pos : (0 : ℝ) < 1 / 3 := by linarith

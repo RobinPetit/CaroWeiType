@@ -246,6 +246,13 @@ lemma InducesForestOfStars_graph_mono' {V : Type*} [DecidableEq V] [Fintype V] {
       · exact notMem_of_mem_of_empty_inter hu₂ hs
       · exact notMem_of_mem_of_empty_inter hu₃ hs
 
+lemma InducesForestOfStars_empty {V : Type*} [Fintype V] [DecidableEq V]
+    {G : SimpleGraph V} [DecidableRel G.Adj] :
+    G.InducesForestOfStars ∅ := by
+  refine InducesForestOfStars_iff.mpr ⟨?_, ?_⟩
+  · exact fun t ht htne ↦ htne (subset_empty.mp ht) |>.elim
+  · simp only [notMem_empty, IsEmpty.forall_iff, implies_true]
+
 lemma InducesForestOfStars_singleton {V : Type*} [Fintype V] [DecidableEq V]
     {G : SimpleGraph V} [DecidableRel G.Adj] {v : V} :
     G.InducesForestOfStars {v} := by

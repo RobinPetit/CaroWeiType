@@ -241,6 +241,10 @@ theorem Finset_two_le_card_iff (s : Finset α) :
     rw [← card_pair hxy]
     exact card_le_card (by grind)
 
+lemma inter_sdiff_distrib [DecidableEq α] {X Y Z : Finset α} :
+    ((X ∩ Y) \ Z) = ((X \ Z) ∩ (Y \ Z)) := by
+  grind
+
 theorem Finset_card_eq_two_iff [DecidableEq α] (s : Finset α) (hs : #s = 2) :
     ∃ x y, x ≠ y ∧ s = {x, y} := by
   obtain ⟨x, y, hx, hy, hne⟩ := Finset_two_le_card_iff _ |>.mp (le_of_eq hs.symm)
@@ -1589,6 +1593,11 @@ lemma degree_in_union_le [DecidableEq V] {u : V} {s t : Finset V} [Fintype (G.ne
     exact le_trans (card_le_card this) <| card_union_le ..
   rw [inter_union_distrib_right]
   exact inter_subset_inter subset_union_left (subset_refl _)
+
+lemma degree_in_union_le_sum [DecidableEq V] {u : V} {s t : Finset V}
+    [Fintype (G.neighborSet u)] :
+    G.degree_in (s ∪ t) u ≤ G.degree_in s u + G.degree_in t u := by
+  simp only [degree_in, inter_union_distrib_left, card_union_le]
 
 lemma degree_in_union_of_empty_inter [DecidableEq V] {u : V} {s t : Finset V} (hcap : s ∩ t = ∅)
     [Fintype (G.neighborSet u)] :

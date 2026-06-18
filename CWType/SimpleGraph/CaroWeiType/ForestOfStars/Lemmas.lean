@@ -585,6 +585,11 @@ private lemma eval_mono (G₁ G₂ : SimpleGraph V) (hle : G₁ ≤ G₂)
   · simp only [f, hB, not_A_of_B, ↓reduceDIte, fB]
     exact fB_decreasing <| degree_le_of_le hle
 
+lemma respects_empty [DecidableEq V] {G : SimpleGraph V} [DecidableRel G.Adj]
+    {AB : Bipartition V} [AB.Decidable] :
+    AB.respects ∅ G :=
+  fun x hx ↦ notMem_empty x hx |>.elim
+
 lemma respects_pair [DecidableEq V] {v w : V} {G : SimpleGraph V} [DecidableRel G.Adj]
     {AB : Bipartition V} (hAv : AB.A v) : respects {v, w} G AB := by
   intro x hx hBx y hy hyx

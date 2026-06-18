@@ -22,15 +22,11 @@ macro_rules
       | exact mem_union.mpr <| Or.inl <| by member_of
       | exact mem_union.mpr <| Or.inr <| by member_of)
 
-private lemma inter_sdiff_distrib {α : Type*} [DecidableEq α] {X Y Z : Finset α} :
-    ((X ∩ Y) \ Z) = ((X \ Z) ∩ (Y \ Z)) := by
-  grind
-
 variable {V : Type} [Fintype V] [DecidableEq V]
 
 private lemma twonethree : 2 ≠ 3 := by linarith
 
-private lemma _card_N2_of_adj {x u v w : V} {G : SimpleGraph V} [DecidableRel G.Adj]
+lemma _card_N2_of_adj {x u v w : V} {G : SimpleGraph V} [DecidableRel G.Adj]
     (huv : G.Adj u v) (hvw : G.Adj v w) (huw : G.Adj x w) (hux : G.Adj u x)
     (hunew : u ≠ w) (hvnex : v ≠ x)
     (hdu : G.degree u = 3) (hdv : G.degree v = 2) (hdw : G.degree w = 3) :
@@ -780,7 +776,7 @@ private lemma _Claim12_of_not_v'w'
 
 lemma Claim12_of_dist_3 {G : SimpleGraph V} [DecidableRel G.Adj] {AB : Bipartition V} [AB.Decidable]
     (hG : G.support ⊆ AB.toFinset) {v w x y : V} (hdv : G.degree v = 2) (hdw : G.degree w = 2)
-    (hvnew : v ≠ w) (hxney : x ≠ y) (hvx : G.Adj v x) (hxy : G.Adj x y) (hyw : G.Adj y w)
+    (hvnew : v ≠ w) (hvx : G.Adj v x) (hxy : G.Adj x y) (hyw : G.Adj y w)
     (ih : ∀ (G' : SimpleGraph V) [DecidableRel G'.Adj] (AB' : Bipartition V)
       [AB'.Decidable], G'.support ⊆ AB'.toFinset → AB'.card < AB.card → Objective G' AB') :
     Objective G AB := by
@@ -835,10 +831,10 @@ lemma Claim12_of_dist_3 {G : SimpleGraph V} [DecidableRel G.Adj] {AB : Bipartiti
     exact Claim11 hG hdv (_card_N2_of_adj hvx.symm hv' hyv' hxy hxnev' hvney hdx hdv hdv') ih
   else if hv'w' : G.Adj v' w' then
     exact _Claim12_of_v'w' hG hdv hdw hdv' hdw' hdx hdy hvx hxy hyw hv' hw' hv'w' hv'x
-      (not_adj_symm hyw') hxw' hyv' hvnew hxney hvney hwnex hv'eqw' hv'eqy hw'eqx hxnev'
+      (not_adj_symm hyw') hxw' hyv' hvnew hxy.ne hvney hwnex hv'eqw' hv'eqy hw'eqx hxnev'
       hynew' hAx hAy  hAv' hAw' hAv hAw hNv h ih
   else
-    exact _Claim12_of_not_v'w' hG hdv hdw hdx hdy hdv' hdw' hvnew hxney hvney hwnex hxnev' hynew'
+    exact _Claim12_of_not_v'w' hG hdv hdw hdx hdy hdv' hdw' hvnew hxy.ne hvney hwnex hxnev' hynew'
       hv'eqw' hv'eqy hw'eqx hvx hxy hyw hv' hw' hv'x hyw' hxw' hyv' hv'w' hAv hAw hAx hAy hAv' hAw'
       hNv hNw h ih
 
