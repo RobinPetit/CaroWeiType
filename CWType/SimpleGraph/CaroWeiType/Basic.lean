@@ -3,8 +3,6 @@ import Mathlib.Combinatorics.SimpleGraph.Clique
 import Mathlib.Combinatorics.SimpleGraph.Finite
 import Mathlib.Data.Real.Basic
 
-import Mathlib.Data.ULift
-
 namespace SimpleGraph
 
 @[simp, reducible]

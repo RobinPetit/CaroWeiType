@@ -475,7 +475,8 @@ theorem ABLemma (G : SimpleGraph V) [DecidableRel G.Adj] (AB : Bipartition V) [A
       have : ({u, v, w} : Finset _) = {v, w} ∪ {u} := by grind only [= union_singleton]
       rw [N2_of_Finset, closed_neighborFinset_of_singleton_eq, hNu, ← this,
         closed_neighborFinset_of_triplet_eq, hNu, hNv, hNw]
-      have : (({v, w} ∪ {u, w, v'} ∪ {u, v, w'} ∪ {u, v, w}) \ {u, v, w}) ⊆ ({v', w'} : Finset _) := by
+      have : (({v, w} ∪ {u, w, v'} ∪ {u, v, w'} ∪ {u, v, w}) \ {u, v, w})
+          ⊆ ({v', w'} : Finset _) := by
         intro z
         simp only [union_insert, insert_union, singleton_union, ne_eq,
           singleton_inter_eq_empty_iff, mem_insert, mem_singleton, true_or, or_true,

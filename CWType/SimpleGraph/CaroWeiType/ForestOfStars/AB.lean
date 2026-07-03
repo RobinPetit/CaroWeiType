@@ -71,11 +71,7 @@ def toFinset (AB : Bipartition V) [Fintype AB.toSet] : Finset V :=
 def sdiff (AB : Bipartition V) (s : Finset V) : Bipartition V where
   A v := AB.A v ∧ v ∉ s
   B v := AB.B v ∧ v ∉ s
-  sound x := by
-    if hxs : x ∈ s then
-      simp only [hxs, not_true_eq_false, and_false, not_false_eq_true]
-    else
-      simp only [hxs, not_false_eq_true, and_true, AB.sound x]
+  sound x := by grind [AB.sound x]
 
 infixl:50 " \\ " => sdiff
 

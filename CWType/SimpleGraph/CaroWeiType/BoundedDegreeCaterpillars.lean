@@ -23,13 +23,13 @@ private lemma hdΛ {V : Type*} [Fintype V] {G : SimpleGraph V} [DecidableRel G.A
 
 namespace GraphParameter
 
-def BoundedDegreeCaterpillar (k : ℕ) : GraphParameter where
-  toFun := fun G _ s ↦ G.InducesCaterpillar s ∧ ∀ v ∈ s, G.degree_in s v ≤ k
+def BoundedDegreeForestOfCaterpillars (k : ℕ) : GraphParameter where
+  toFun := fun G _ s ↦ G.InducesForestOfCaterpillars s ∧ ∀ v ∈ s, G.degree_in s v ≤ k
   invariant := by
     intro V V' _ _ _ _ G _ G' _ φ s
     constructor
     · intro ⟨h, hdeg⟩
-      refine ⟨InducesCaterpillar_of_iso φ h, ?_⟩
+      refine ⟨InducesForestOfCaterpillars_of_iso φ h, ?_⟩
       refine fun φv h ↦ le_of_eq_of_le (Eq.symm ?_) (hdeg (φ.invFun φv) ?_)
       · have H : (φ.toFun (φ.invFun φv)) = φv := by
           simp only [Equiv.invFun_as_coe, Equiv.toFun_as_coe, Equiv.apply_symm_apply]
@@ -43,7 +43,7 @@ def BoundedDegreeCaterpillar (k : ℕ) : GraphParameter where
     · intro ⟨h, hdeg⟩
       refine ⟨?_, ?_⟩
       · suffices (image φ.symm.toFun (image φ.toFun s)) = s by
-          exact this ▸ (InducesCaterpillar_of_iso φ.symm h)
+          exact this ▸ (InducesForestOfCaterpillars_of_iso φ.symm h)
         ext
         simp only [Equiv.toFun_as_coe, RelIso.coe_fn_toEquiv, mem_image, exists_exists_and_eq_and,
           RelIso.symm_apply_apply, exists_eq_right]
@@ -52,18 +52,19 @@ def BoundedDegreeCaterpillar (k : ℕ) : GraphParameter where
 
 end GraphParameter
 
-private noncomputable def φ (k : ℕ) (ε : ℝ) : ℕ → ℝ := by
-  intro d
-  if hd : d = 0 then exact 1
-  else if d = 1 then exact 1 - ε
-  else if 2 ≤ d ∧ d ≤ k then exact 2 / (d + 1 : ℝ)
-  else exact min ((k + 1) * ε) (2 / (d + 1 : ℝ))
+open GraphParameter
+
+private noncomputable def φ (k : ℕ) (ε : ℝ) (d : ℕ) : ℝ :=
+  if d = 0 then 1
+  else if d = 1 then 1 - ε
+  else if 2 ≤ d ∧ d ≤ k then 2 / (d + 1 : ℝ)
+  else min ((k + 1) * ε) (2 / (d + 1 : ℝ))
 
 private lemma φ_le_1 {d k : ℕ} {ε : ℝ} (hε : 0 ≤ ε) : φ k ε d ≤ 1 := by
   if hd0 : d = 0 then
-    simp only [φ, hd0, ↓reduceDIte, le_refl]
+    simp only [φ, hd0, ↓reduceIte, le_refl]
   else if hd1 : d = 1 then
-    simp only [φ, hd1, one_ne_zero, ↓reduceDIte]
+    simp only [φ, hd1, one_ne_zero, ↓reduceIte]
     exact sub_le_self 1 hε
   else
     have : φ k ε d ≤ 2 / (d + 1 : ℝ) := by grind [φ]
@@ -78,9 +79,9 @@ private lemma φ_decreasing (k : ℕ) (ε : ℝ) (hε : 0 ≤ ε) (hε' : ε ≤
   if heq : d = d' then
     rw [heq]
   else if hd0 : d = 0 then
-    exact le_of_le_of_eq (φ_le_1 hε) (by simp only [φ, hd0, ↓reduceDIte])
+    exact le_of_le_of_eq (φ_le_1 hε) (by simp only [φ, hd0, ↓reduceIte])
   else if hd1 : d = 1 then
-    simp only [φ, hd1, one_ne_zero, ↓reduceDIte]
+    simp only [φ, hd1, one_ne_zero, ↓reduceIte]
     suffices 2 / (d' + 1 : ℝ) ≤ 1 - ε by
       grind
     refine le_trans ?_ (by linarith : 2 / 3 ≤ 1 - ε)
@@ -91,7 +92,7 @@ private lemma φ_decreasing (k : ℕ) (ε : ℝ) (hε : 0 ≤ ε) (hε' : ε ≤
   else
     have hd'0 : d' ≠ 0 := by lia
     have hd'1 : d' ≠ 1 := by lia
-    simp only [φ, hd0, hd'0, hd1, hd'1, ↓reduceDIte]
+    simp only [φ, hd0, hd'0, hd1, hd'1, ↓reduceIte]
     have H : 2 / (d' + 1 : ℝ) ≤ 2 / (d + 1 : ℝ) := by
       refine (div_le_div_iff_of_pos_left two_pos add_one_pos add_one_pos).mpr ?_
       simp only [add_le_add_iff_right, Nat.cast_le, hdd']
@@ -133,7 +134,7 @@ private lemma _degree_bound_Hnk {n k : ℕ} (s : Finset (Fin n × Fin (k + 2)))
   exact fun h _ ↦ h
 
 private lemma _bound_fnpk_f1 (n k : ℕ) [NeZero n] (f : ℕ → ℝ)
-      (hf : IsCaroWeiTypeLowerBound f (GraphParameter.BoundedDegreeCaterpillar k)) :
+      (hf : IsCaroWeiTypeLowerBound f (BoundedDegreeForestOfCaterpillars k)) :
     f (n + k) + (k + 1) * f 1 ≤ k + 1 := by
   obtain ⟨s, hs, hcard⟩ := hf (H n k)
   have hcards := @_degree_bound_Hnk n k s hs.2
@@ -242,7 +243,7 @@ private lemma _bound_fnpk_f1 (n k : ℕ) [NeZero n] (f : ℕ → ℝ)
   linarith
 
 private lemma _lb_bounded_by_extremal (f : ℕ → ℝ) {k : ℕ} (hk : 2 ≤ k)
-    (hf : IsCaroWeiTypeLowerBound f (GraphParameter.BoundedDegreeCaterpillar k)) :
+    (hf : IsCaroWeiTypeLowerBound f (BoundedDegreeForestOfCaterpillars k)) :
     ∃ ε : ℝ, 0 ≤ ε ∧ ε ≤ 2 / ((k + 1) * (k + 2 : ℝ)) ∧ f ≤ φ k ε := by
   have hfle1 : ∀ d, f d ≤ 1 := f_le_1_of_IsCaroWeiTypeLowerBound hf
   have fKn : ∀ d ≥ 2, f d ≤ 2 / (d + 1 : ℝ) := by
@@ -250,8 +251,8 @@ private lemma _lb_bounded_by_extremal (f : ℕ → ℝ) {k : ℕ} (hk : 2 ≤ k)
     rw [← Nat.cast_two]
     refine f_on_complete_graph' hf ?_
     intro s hs
-    simp only [GraphParameter.BoundedDegreeCaterpillar] at hs
-    have hf := InducesForest_of_InducesCaterpillar _ (hs.1)
+    simp only [BoundedDegreeForestOfCaterpillars] at hs
+    have hf := InducesForest_of_InducesForestOfCaterpillars _ (hs.1)
     refine card_le_2_iff_no_triplet.mpr ?_
     intro x y z hne
     refine no_induced_K3_of_InducesForest _ _ ?_ ?_ ?_ hf
@@ -350,7 +351,7 @@ private lemma _φ_closed_Nv_le_f_Nv_of_deg0 {k : ℕ} (hk : 2 ≤ k) {ε : ℝ} 
       ≤ ABC.f (G.deleteIncidencesOf G.Λ) (_ABC hk X G) x := by
   have hdx'0 : (G.deleteIncidencesOf G.Λ).degree x = 0 :=
     le_antisymm (le_of_le_of_eq deleteIncidencesOf_degree_le hdx) (Nat.zero_le _)
-  simp only [ABC.f0 ((_ABC hk X G).mem_toFinset.mpr hx) hdx'0, φ, hdx, ↓reduceDIte]
+  simp only [ABC.f0 ((_ABC hk X G).mem_toFinset.mpr hx) hdx'0, φ, hdx, ↓reduceIte]
   exact sub_le_self _ <| Left.mul_nonneg (Nat.cast_nonneg' _) hε
 
 private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_deg_le_k {k : ℕ} (hk : 2 ≤ k) {ε : ℝ} (hε : 0 ≤ ε)
@@ -371,7 +372,7 @@ private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_deg_le_k {k : ℕ} (hk : 2 �
   have hdABC' : ∀ x ∈ (_ABC hk X G).toFinset, G.degree x ≠ 1 :=
     fun x hx ↦ not_iff_not.mpr hdΛ |>.mp <| notMem_of_mem_of_empty_inter hx (ABC'_inter_Λ_empty hk)
   have hdx0 : G.degree x ≠ 0 := Nat.ne_zero_of_lt hdx
-  simp only [φ, hdx, hdx', hdx0, hdABC' x hx, ↓reduceDIte, true_and]
+  simp only [φ, hdx, hdx', hdx0, hdABC' x hx, ↓reduceIte, true_and]
   rcases (_ABC hk X G).mem_toFinset.mpr hx with hA | hB | hC
   · simp only [ABC.f, hA, ↓reduceDIte, ABC.fA]
     exact le_trans (sub_le_self _ <| Left.mul_nonneg (Nat.cast_nonneg' _) hε) (by grind)
@@ -413,7 +414,7 @@ private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_kp1_le_deg_of_min_right_of_B_
   simp only [φ, hdx0, hdx1, ↓reduceDIte, hdx', and_false, ABC.f, hA]
   calc _
     _ ≤ (2 / (↑(G.degree x) + 1)) - #(G.neighborFinset x ∩ G.Λ) * ε := by
-      simp only [tsub_le_iff_right, sub_add_cancel, inf_le_right]
+      simp only [↓reduceIte, tsub_le_iff_right, sub_add_cancel, inf_le_right]
   split_ifs
   · rename_i hB
     simp only [ABC.fB]
@@ -529,7 +530,7 @@ private lemma _φ_closed_Nv_le_f_Nv_of_2_le_deg_of_kp1_le_deg_of_min_left_of_B_o
   simp only [φ, hdx0, hdx1, ↓reduceDIte, hdx', and_false, ABC.f, hA]
   calc _
     _ ≤ ((k + 1) * ε) - #(G.neighborFinset x ∩ G.Λ) * ε := by
-      simp only [tsub_le_iff_right, sub_add_cancel, inf_le_left]
+      simp only [↓reduceIte, tsub_le_iff_right, sub_add_cancel, inf_le_left]
     _ = ((k + 1 : ℝ) - #(G.neighborFinset x ∩ G.Λ)) * ε := by
       exact Eq.symm <| sub_mul ..
   split_ifs
@@ -600,7 +601,7 @@ private lemma _φ_closed_Nv_le_f_Nv {k : ℕ} (hk : 2 ≤ k)
         _ ≤ φ k ε (G.degree x) := by
           refine sub_le_self _ <| Left.mul_nonneg (Nat.cast_nonneg' _) hε
         _ ≤ 2 / (G.degree x + 1 : ℝ) := by
-          simp only [φ, hdx0, hdABC' x hx, ↓reduceDIte]
+          simp only [φ, hdx0, hdABC' x hx, ↓reduceIte]
           grind
       have : 2 / (G.degree x + 1 : ℝ) ≤ 5 / 6 := by
         refine le_trans ?_ (by linarith : 2 / (3 : ℝ) ≤ 5 / 6)
@@ -630,7 +631,7 @@ private lemma _f_is_lb_of_degree_in_Λ_le_k {k : ℕ} (hk : 2 ≤ k)
     (G : SimpleGraph V) [DecidableRel G.Adj] (X : Finset V)
     (hX : G.support ⊆ X) (h : ¬∃ v ∈ X, k + 1 ≤ G.degree_in G.Λ v)
     (hΛ : ¬∃ x y, G.degree x = 1 ∧ G.degree y = 1 ∧ G.Adj x y) :
-    ∃ s ⊆ X, G.InducesCaterpillar s
+    ∃ s ⊆ X, G.InducesForestOfCaterpillars s
       ∧ (∀ v ∈ s, G.degree_in s v ≤ k) ∧ ∑ v ∈ X, φ k ε (G.degree v) ≤ #s := by
   have hABCX : (X \ G.Λ) = (_ABC hk X G).toFinset := by
     ext u
@@ -655,16 +656,13 @@ private lemma _f_is_lb_of_degree_in_Λ_le_k {k : ℕ} (hk : 2 ≤ k)
     rcases mem_union.mp hx with hxs | hxΛ
     · exact mem_sdiff.mp (hABCX ▸ hs hxs) |>.1
     · exact hX <| (degree_pos_iff_mem_support G x).mp <| Nat.lt_of_sub_eq_succ (hdΛ.mp hxΛ)
-  · refine InducesCaterpillar_union_deg_le_1 G ?_ ?_
+  · refine InducesForestOfCaterpillars_union_deg_le_1 G ?_ ?_
     · exact fun x hx ↦ le_of_eq <| hdΛ.mp hx
     · refine (_ABC ..).linear_forest_of_forest_respects hs ?_ ?_
       · exact InducesForest_graph_mono' (by grind) hsf
       · have : (_ABC hk X G) = ((_ABC hk X G) \ G.Λ) := by
-          simp only [_ABC]
-          ext x <;> {
-            simp only [mem_sdiff, degree_in, ABC.Tripartition.sdiff, iff_self_and, and_imp]
-            exact fun _ h _ ↦ h
-          }
+          simp only [_ABC, ABC.Tripartition.sdiff]
+          grind
         refine (_ABC ..).respects_mono G ?_ (this ▸ hsresp)
         intro x hx
         exact ABC.Tripartition.mem_toFinset _ |>.mp (this ▸ ((_ABC ..).mem_toFinset.mpr <| hs hx))
@@ -847,7 +845,7 @@ private lemma _f_is_lb_of_degree_in_Λ_le_k {k : ℕ} (hk : 2 ≤ k)
 private lemma _f_is_lb {k : ℕ} (hk : 2 ≤ k)
     {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 2 / ((k + 1) * (k + 2 : ℝ)))
     (G : SimpleGraph V) [DecidableRel G.Adj] (X : Finset V) (hX : G.support ⊆ X) :
-    ∃ s ⊆ X, G.InducesCaterpillar s
+    ∃ s ⊆ X, G.InducesForestOfCaterpillars s
       ∧ (∀ v ∈ s, G.degree_in s v ≤ k) ∧ ∑ v ∈ X, φ k ε (G.degree v) ≤ ↑(#s) := by
   if h : ∃ v ∈ X, k + 1 ≤ G.degree_in G.Λ v then
     obtain ⟨v, hvX, hdv⟩ := h
@@ -951,14 +949,14 @@ private lemma _f_is_lb {k : ℕ} (hk : 2 ≤ k)
           have H := (mem_neighborFinset .. |>.mp <| mem_inter.mp hw |>.1).symm
           exact deleteIncidencesOf_degree_lt H (mem_singleton.mpr rfl)
       nth_rewrite 1 [φ]; nth_rewrite 1 [φ]
-      simp only [one_ne_zero, ↓reduceDIte, sub_sub_cancel_left, sum_neg_distrib, sum_const,
+      simp only [one_ne_zero, ↓reduceIte, sub_sub_cancel_left, sum_neg_distrib, sum_const,
         nsmul_eq_mul, neg_add_le_iff_le_add, add_zero]
       have Hdv' : k + 1 ≤ G.degree v := le_trans hdv degree_in_le_degree
       have hdv2 : 2 ≤ G.degree v := by lia
       have hdv0 : G.degree v ≠ 0 := by lia
       have hdv1 : G.degree v ≠ 1 := by lia
       have hdv' : ¬G.degree v ≤ k := by lia
-      simp only [φ, hdv2, hdv0, hdv1, hdv', true_and, ↓reduceDIte]
+      simp only [φ, hdv2, hdv0, hdv1, hdv', true_and, ↓reduceIte]
       refine le_trans Std.min_le_left ?_
       refine mul_le_mul ?_ (le_refl _) hε (Nat.cast_nonneg' _)
       rw [← Nat.cast_one, ← Nat.cast_add, Nat.cast_le, ← degree_in]
@@ -980,12 +978,12 @@ private lemma _f_is_lb {k : ℕ} (hk : 2 ≤ k)
       rcases mem_union.mp hu with hu | hu
       · exact mem_sdiff.mp (hs hu) |>.1
       · exact mem_def.mpr <| hX <| G.degree_pos_iff_mem_support _ |>.mp <| by grind
-    · refine InducesCaterpillarIsUnionStable G s {x, y} ?_ ?_ ?_ ?_
+    · refine InducesForestOfCaterpillarsIsUnionStable G s {x, y} ?_ ?_ ?_ ?_
       · grind
       · intro u hu z hz
         refine not_adj_symm <| hnotadj hz (by grind)
-      · exact InducesCaterpillar_graph_mono' (by grind) hs'cat
-      · exact G.InducesCaterpillar_pair
+      · exact InducesForestOfCaterpillars_graph_mono' (by grind) hs'cat
+      · exact G.InducesForestOfCaterpillars_pair
     · intro v hv
       rcases mem_union.mp hv with hv | hv
       · refine le_of_eq_of_le ?_ (hsdeg v hv)
@@ -1018,7 +1016,7 @@ private lemma _f_is_lb {k : ℕ} (hk : 2 ≤ k)
           refine sum_le_sum fun v hv ↦ ?_
           have hdv : G.degree v = 1 := by grind
           rw [hdv]
-          simp only [φ, one_ne_zero, ↓reduceDIte]
+          simp only [φ, one_ne_zero, ↓reduceIte]
           exact sub_le_self 1 hε
         _ = #s + 2 := by
           simp only [sum_const, nsmul_eq_mul, mul_one, add_right_inj]
@@ -1042,16 +1040,16 @@ private lemma _f_is_lb {k : ℕ} (hk : 2 ≤ k)
 
 private lemma f_is_lb {k : ℕ} {f : ℕ → ℝ} (hk : 2 ≤ k)
     {ε : ℝ} (hε : 0 ≤ ε) (hε' : ε ≤ 2 / ((k + 1) * (k + 2 : ℝ))) (hf : f ≤ φ k ε) :
-    IsCaroWeiTypeLowerBound f (GraphParameter.BoundedDegreeCaterpillar k) := by
+    IsCaroWeiTypeLowerBound f (BoundedDegreeForestOfCaterpillars k) := by
   intro V _ _ G _
   obtain ⟨s, hs, hscat, hsdeg, hscard⟩ := by
     refine _f_is_lb hk hε hε' G univ ?_
     simp only [coe_univ, Set.subset_univ]
   exact ⟨s, ⟨hscat, hsdeg⟩, le_trans (sum_le_sum fun v _ ↦ hf _) hscard⟩
 
-theorem BoundedDegreeCaterpillar_LowerBound_iff (f : ℕ → ℝ) :
+theorem BoundedDegreeForestOfCaterpillars_LowerBound_iff (f : ℕ → ℝ) :
     ∀ k : ℕ, 2 ≤ k →
-      (IsCaroWeiTypeLowerBound f (GraphParameter.BoundedDegreeCaterpillar k)
+      (IsCaroWeiTypeLowerBound f (BoundedDegreeForestOfCaterpillars k)
       ↔ ∃ ε : ℝ, 0 ≤ ε ∧ ε ≤ 2 / ((k + 1) * (k + 2 : ℝ)) ∧ f ≤ φ k ε) := by
   intro k hk
   refine ⟨_lb_bounded_by_extremal f hk, ?_⟩

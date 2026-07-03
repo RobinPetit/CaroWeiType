@@ -105,11 +105,12 @@ namespace Tripartition
 
 lemma mem_toSet (ABC : Tripartition V) {x : V} :
     x ∈ ABC ↔ x ∈ ABC.toSet := by
-  simp only [toSet, Set.mem_setOf_eq]
+  rfl
 
 lemma mem_toFinset (ABC : Tripartition V) [ABC.Decidable] {x : V} :
     x ∈ ABC ↔ x ∈ ABC.toFinset := by
-  simp only [mem_toSet, toFinset, Set.mem_toFinset]
+  simp only [toFinset, Set.mem_toFinset]
+  rfl
 
 end Tripartition
 
@@ -1377,33 +1378,22 @@ lemma mem_of_mem_promote (ABC : Tripartition V) {x y : V} :
 
 lemma mem_demote_finset_of_mem (ABC : Tripartition V) {x : V} {s : Finset _} :
     x ∈ ABC → x ∈ ABC.demote_finset s := by
-  intro h
-  if hin : x ∈ s then
-    rcases h with h | h | h
-    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inl <| Or.inr ⟨h, hin⟩
-    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inr <| Or.inr ⟨h, hin⟩
-    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inr <| Or.inl h
-  else
-    rcases h with h | h | h
-    · exact Tripartition.mem_iff _ |>.mpr <| Or.inl ⟨h, hin⟩
-    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inl <| Or.inl ⟨h, hin⟩
-    · exact Tripartition.mem_iff _ |>.mpr <| Or.inr <| Or.inr <| Or.inl h
+  refine fun h ↦ Tripartition.mem_iff _ |>.mpr ?_
+  rcases Classical.em (x ∈ s) with hin | hin <;> {
+    simp only [demote_finset, hin, not_true_eq_false, not_false_eq_true, and_false, and_true,
+      false_or, or_false, and_true]
+    grind only [ABC.mem_iff]
+  }
 
 lemma mem_demote_of_mem (ABC : Tripartition V) {x y : V} :
-    x ∈ ABC → x ∈ ABC.demote y := by
-  intro h
-  simp only [demote]
-  exact ABC.mem_demote_finset_of_mem h
+    x ∈ ABC → x ∈ ABC.demote y :=
+  ABC.mem_demote_finset_of_mem
 
 lemma mem_of_mem_demote_finset (ABC : Tripartition V) {x : V} {s : Finset _} :
     x ∈ ABC.demote_finset s → x ∈ ABC := by
   intro h
-  rcases h with h | h | h
-  · simp only [mem_iff, h.1, true_or]
-  · rcases h with h | h <;> simp only [mem_iff, h.1, true_or, or_true]
-  · rcases h with h | h
-    · simp only [mem_iff, h, or_true]
-    · simp only [mem_iff, h.1, or_true, true_or]
+  simp only [demote_finset, mem_iff] at h ⊢
+  grind only
 
 lemma mem_of_mem_demote (ABC : Tripartition V) {x y : V} :
     x ∈ ABC.demote y → x ∈ ABC := by
@@ -1469,24 +1459,20 @@ lemma promote_finset_toFinset_eq [DecidableEq V] (ABC : Tripartition V) [ABC.Dec
     ABC.toFinset = (ABC.promote_finset s).toFinset := by
   ext y
   simp only [← mem_toFinset]
-  refine ⟨?_, ?_⟩
-  · exact ABC.mem_promote_finset_of_mem
-  · exact ABC.mem_of_mem_promote_finset
+  exact ⟨ABC.mem_promote_finset_of_mem, ABC.mem_of_mem_promote_finset⟩
 
 lemma demote_finset_toFinset_eq [DecidableEq V] (ABC : Tripartition V) [ABC.Decidable]
     {s : Finset V} :
     ABC.toFinset = (ABC.demote_finset s).toFinset := by
   ext y
   simp only [← mem_toFinset]
-  refine ⟨?_, ?_⟩
-  · exact ABC.mem_demote_finset_of_mem
-  · exact ABC.mem_of_mem_demote_finset
+  exact ⟨ABC.mem_demote_finset_of_mem, ABC.mem_of_mem_demote_finset⟩
 
 lemma promote_toFinset_eq [DecidableEq V] (ABC : Tripartition V) [ABC.Decidable] {x : V} :
     ABC.toFinset = (ABC.promote x).toFinset := by
   ext y
   simp only [← mem_toFinset]
-  exact ⟨mem_promote_of_mem ABC, mem_of_mem_promote ABC⟩
+  exact ⟨ABC.mem_promote_of_mem, ABC.mem_of_mem_promote⟩
 
 lemma f_eq_of_demote_finset_of_notMem (G : SimpleGraph V) (ABC : Tripartition V) [ABC.Decidable]
     {x : V} {s : Finset V} (h : x ∉ s) [Fintype (G.neighborSet x)] :
@@ -1500,18 +1486,12 @@ lemma f_eq_of_demote_of_ne (G : SimpleGraph V) (ABC : Tripartition V) [ABC.Decid
   f_eq_of_demote_finset_of_notMem _ _ (notMem_singleton.mpr hne)
 
 lemma sdiff_empty (ABC : Tripartition V) : (ABC \ ∅) = ABC := by
-  ext <;> simp only [sdiff, notMem_empty, not_false_eq_true, and_true]
+  simp only [sdiff, notMem_empty, not_false_eq_true, and_true]
 
 lemma sdiff_eq [DecidableEq V] (ABC : Tripartition V) [ABC.Decidable] (W : Finset V) :
     (ABC \ W) = (ABC \ (W ∩ ABC.toFinset)) := by
-  ext w <;> {
-    simp only [sdiff, toFinset, toSet, mem_iff, Set.toFinset_setOf, mem_inter, mem_filter, mem_univ,
-      true_and, not_and, not_or, and_congr_right_iff]
-    intro H
-    simp only [H, not_true_eq_false,
-      not_A_of_B, not_A_of_C, not_B_of_A, not_B_of_C, not_C_of_A, not_C_of_B, not_false_eq_true,
-      and_self, and_true, imp_false, and_false]
-  }
+  simp only [sdiff, mem_inter, not_and, mk.injEq, ← ABC.mem_toFinset, ABC.mem_iff]
+  grind only
 
 @[simp]
 lemma card_promote_finset_eq_card [DecidableEq V] {ABC : Tripartition V} [ABC.Decidable]
@@ -1575,26 +1555,8 @@ lemma toFinset_mono [DecidableEq V] {ABC : Tripartition V} [ABC.Decidable] {s : 
 lemma sdiff_demote_finset_eq_demote_finset_sdiff {ABC : Tripartition V}
     {s s' : Finset V} :
     (ABC \ s).demote_finset s' = ((ABC.demote_finset s') \ s) := by
-  ext u
-  · refine ⟨?_, ?_⟩ <;> exact fun ⟨⟨h₁, h₂⟩, h₃⟩ ↦ ⟨⟨h₁, h₃⟩, h₂⟩
-  · refine ⟨?_, ?_⟩
-    · intro h
-      rcases h with h | h
-      · exact ⟨Or.inl ⟨h.1.1, h.2⟩, h.1.2⟩
-      · exact ⟨Or.inr ⟨h.1.1, h.2⟩, h.1.2⟩
-    · intro ⟨h, hs⟩
-      rcases h with ⟨h, h'⟩ | ⟨h, h'⟩
-      · exact Or.inl ⟨⟨h, hs⟩, h'⟩
-      · exact Or.inr ⟨⟨h, hs⟩, h'⟩
-  · refine ⟨?_, ?_⟩
-    · intro h
-      rcases h with h | h
-      · exact ⟨Or.inl h.1, h.2⟩
-      · exact ⟨Or.inr ⟨h.1.1, h.2⟩, h.1.2⟩
-    · intro ⟨h, hs⟩
-      rcases h with h | h
-      · exact Or.inl ⟨h, hs⟩
-      · refine Or.inr ⟨⟨h.1, hs⟩, h.2⟩
+  simp only [demote_finset, sdiff]
+  grind only
 
 @[simp]
 lemma toFinset_eq [DecidableEq V] {ABC : Tripartition V} [ABC.Decidable] {s : Finset V} :

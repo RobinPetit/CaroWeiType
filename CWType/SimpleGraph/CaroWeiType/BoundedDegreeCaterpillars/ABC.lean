@@ -6,7 +6,6 @@ open Finset
 namespace CaroWeiType
 namespace ABC
 
-@[ext]
 structure Tripartition (V : Type) [Fintype V] where
   A : V → Prop
   B : V → Prop
@@ -72,19 +71,22 @@ def sdiff (ABC : Tripartition V) (s : Finset V) : Tripartition V where
   A v := ABC.A v ∧ v ∉ s
   B v := ABC.B v ∧ v ∉ s
   C v := ABC.C v ∧ v ∉ s
-  sound x := by
-    if hxs : x ∈ s then
-      simp only [hxs, not_true_eq_false, and_false, not_false_eq_true, true_and]
-    else
-      simp only [hxs, not_false_eq_true, and_true, ABC.sound x]
+  sound x := by grind [ABC.sound]
 
-infixl:50 " \\ " => sdiff
+infix:70 " \\ " => sdiff
+
+-- @[reducible, simp]
+-- instance instHSubTripartitionFinset : HSub (Tripartition V) (Finset V) (Tripartition V) :=
+--   ⟨sdiff⟩
+--
+-- instance instHSubTripartitionSingleton : HSub (Tripartition V) V (Tripartition V) :=
+--   ⟨fun ABC v ↦ ABC.sdiff {v}⟩
 
 instance [DecidableEq V] {ABC : Tripartition V} [inst : ABC.Decidable] {s : Finset V} :
     (ABC \ s).Decidable where
-  A x := by simp only [sdiff]; have := inst.A; infer_instance
-  B x := by simp only [sdiff]; have := inst.B; infer_instance
-  C x := by simp only [sdiff]; have := inst.C; infer_instance
+  A x := @instDecidableAnd _ _ (inst.A x) inferInstance
+  B x := @instDecidableAnd _ _ (inst.B x) inferInstance
+  C x := @instDecidableAnd _ _ (inst.C x) inferInstance
 
 instance [DecidableEq V] {ABC : Tripartition V} [inst : ABC.Decidable] {s : Finset V} :
     (ABC.promote_finset s).Decidable where

@@ -11,11 +11,11 @@ lemma InducesForest_of_IndepSet {V : Type*} [DecidableEq V] [Fintype V]
   refine IsDegenerateSet_mono G zero_le_one s ?_
   exact CaroWeiType.Is0DegenerateSet_iff_IsIndepSet G s |>.mpr hs
 
-lemma InducesForest_of_InducesCaterpillar {V : Type*} [DecidableEq V] [Fintype V]
-    (G : SimpleGraph V) [DecidableRel G.Adj] {s : Finset V} (hs : G.InducesCaterpillar s) :
+lemma InducesForest_of_InducesForestOfCaterpillars {V : Type*} [DecidableEq V] [Fintype V]
+    (G : SimpleGraph V) [DecidableRel G.Adj] {s : Finset V} (hs : G.InducesForestOfCaterpillars s) :
     G.InducesForest s := by
   intro t ht htne
-  simp only [InducesCaterpillar, InducesLinearForest] at hs
+  simp only [InducesForestOfCaterpillars, InducesLinearForest] at hs
   if h : ∃ x ∈ t, G.degree_in s x = 1 then
     obtain ⟨x, hxt, hxd⟩ := h
     refine ⟨x, hxt, le_of_le_of_eq (degree_in_mono ht) hxd⟩
@@ -579,10 +579,11 @@ lemma InducesForest_of_iso {V V' : Type} [DecidableEq V] [Fintype V] [DecidableE
     G'.InducesForest (s.image φ.toFun) :=
   IsDegenerateSet_of_graph_iso φ s h
 
-lemma InducesCaterpillar_of_iso {V V' : Type} [DecidableEq V] [Fintype V] {G : SimpleGraph V}
+lemma InducesForestOfCaterpillars_of_iso {V V' : Type}
+    [DecidableEq V] [Fintype V] {G : SimpleGraph V}
     [DecidableEq V'] [Fintype V'] {G' : SimpleGraph V'} [DecidableRel G.Adj] [DecidableRel G'.Adj]
-    (φ : G ≃g G') {s : Finset V} (h : G.InducesCaterpillar s) :
-    G'.InducesCaterpillar (s.image φ.toFun) := by
+    (φ : G ≃g G') {s : Finset V} (h : G.InducesForestOfCaterpillars s) :
+    G'.InducesForestOfCaterpillars (s.image φ.toFun) := by
   obtain ⟨h, h'⟩ := h
   refine ⟨?_, ?_⟩
   · suffices (s \ {x ∈ s | G.degree_in s x = 1}).image φ.toFun
@@ -694,8 +695,9 @@ lemma InducesForestOfStars_of_iso {V V' : Type} [DecidableEq V] [Fintype V] {G :
     rw [← hxx', ← hyy', heq] at hne
     exact false_of_ne hne
 
-lemma InducesCaterpillarIsUnionStable {V : Type*} [DecidableEq V] [Fintype V] :
-    IsNonAdjacentUnionStableProp (fun G _ s ↦ @SimpleGraph.InducesCaterpillar V _ _ G _ s) := by
+lemma InducesForestOfCaterpillarsIsUnionStable {V : Type*} [DecidableEq V] [Fintype V] :
+    IsNonAdjacentUnionStableProp
+      (fun G _ s ↦ @SimpleGraph.InducesForestOfCaterpillars V _ _ G _ s) := by
   intro G _ s s' hss' h ⟨hslf, hs⟩ ⟨hs'lf, hs'⟩
   have hdegree_in_s {u} (hu : u ∈ s) :
       G.neighborFinset u ∩ s = G.neighborFinset u ∩ (s ∪ s') := by
@@ -788,11 +790,11 @@ lemma InducesLinearForest_mono' {V : Type*} [DecidableEq V] [Fintype V]
   refine degree_in_deleteIncidencesOf_of_le (inter_comm s₁ s₂ ▸ hcap) ?_ (le_refl _)
   exact notMem_of_mem_of_empty_inter hx hcap
 
-lemma InducesCaterpillar_mono' {V : Type*} [DecidableEq V] [Fintype V]
+lemma InducesForestOfCaterpillars_mono' {V : Type*} [DecidableEq V] [Fintype V]
     (G : SimpleGraph V) [DecidableRel G.Adj] {s₁ s₂ : Finset V} (hcap : s₁ ∩ s₂ = ∅)
-    (hs : (G.deleteIncidencesOf s₂).InducesCaterpillar s₁) :
-    G.InducesCaterpillar s₁ := by
-  simp only [InducesCaterpillar] at hs
+    (hs : (G.deleteIncidencesOf s₂).InducesForestOfCaterpillars s₁) :
+    G.InducesForestOfCaterpillars s₁ := by
+  simp only [InducesForestOfCaterpillars] at hs
   refine @InducesLinearForest_mono' _ _ _ G _ _ s₂ ?_ ?_
   · ext u
     simp only [notMem_empty, iff_false, mem_inter, not_and]
@@ -818,10 +820,10 @@ lemma InducesCaterpillar_mono' {V : Type*} [DecidableEq V] [Fintype V]
       · exact notMem_of_mem_of_empty_inter hus₁ hcap
     }
 
-lemma InducesCaterpillar_union_deg_le_1 {V : Type*} [DecidableEq V] [Fintype V]
+lemma InducesForestOfCaterpillars_union_deg_le_1 {V : Type*} [DecidableEq V] [Fintype V]
     (G : SimpleGraph V) [DecidableRel G.Adj] {s₁ s₂ : Finset V} (hs₂ : ∀ x ∈ s₂, G.degree x ≤ 1)
     (hs₁ : G.InducesLinearForest s₁) :
-    G.InducesCaterpillar (s₁ ∪ s₂) := by
+    G.InducesForestOfCaterpillars (s₁ ∪ s₂) := by
   refine ⟨?_, ?_⟩
   · intro t ht htne
     if h : ∃ x, x ∈ t ∩ s₂ then
@@ -859,15 +861,15 @@ lemma InducesCaterpillar_union_deg_le_1 {V : Type*} [DecidableEq V] [Fintype V]
       exact mem_inter.mpr ⟨mem_neighborFinset .. |>.mpr hxu.symm, mem_union_left _ hxs₁⟩
     · exact le_trans degree_in_le_degree (le_trans (hs₂ x hxs₂) NeZero.one_le)
 
-lemma InducesCaterpillar_iff {V : Type*} [DecidableEq V] [Fintype V] {G : SimpleGraph V}
+lemma InducesForestOfCaterpillars_iff {V : Type*} [DecidableEq V] [Fintype V] {G : SimpleGraph V}
     [DecidableRel G.Adj] (s : Finset V) :
-    G.InducesCaterpillar s ↔ G.InducesForest s ∧
+    G.InducesForestOfCaterpillars s ↔ G.InducesForest s ∧
       ∀ v x y z, v ∈ s → x ∈ s → y ∈ s → z ∈ s → x ≠ y → x ≠ z → y ≠ z
         → 3 ≤ G.degree_in s v → 2 ≤ G.degree_in s x → 2 ≤ G.degree_in s y → 2 ≤ G.degree_in s z
         → G.Adj v x → G.Adj v y → ¬G.Adj v z := by
   constructor
   · intro hs
-    refine ⟨InducesForest_of_InducesCaterpillar G hs, ?_⟩
+    refine ⟨InducesForest_of_InducesForestOfCaterpillars G hs, ?_⟩
     intro v x y z hvs hxs hys hzs hxy hxz hyz hdv hdx hdy hdz hvx hvy hvz
     have : 3 ≤ G.degree_in (s \ {x ∈ s | G.degree_in s x = 1}) v := by
       have : #({x, y, z} : Finset _) = 3 := by grind
@@ -910,12 +912,12 @@ lemma InducesCaterpillar_iff {V : Type*} [DecidableEq V] [Fintype V] {G : Simple
       (mem_neighborFinset .. |>.mp <| mem_inter.mp hy |>.1) ?_
     exact mem_neighborFinset .. |>.mp <| mem_inter.mp hz |>.1
 
-lemma InducesCaterpillar_graph_mono' {V : Type*} [DecidableEq V] [Fintype V] {G : SimpleGraph V}
-    [DecidableRel G.Adj] {s₁ s₂ : Finset V} (hs : s₁ ∩ s₂ = ∅)
-    (h : (G.deleteIncidencesOf s₂).InducesCaterpillar s₁) :
-    G.InducesCaterpillar s₁ := by
-  obtain ⟨hs₁f, h⟩ := InducesCaterpillar_iff _ |>.mp h
-  refine InducesCaterpillar_iff _ |>.mpr ⟨InducesForest_graph_mono' hs hs₁f, ?_⟩
+lemma InducesForestOfCaterpillars_graph_mono' {V : Type*} [DecidableEq V] [Fintype V]
+    {G : SimpleGraph V} [DecidableRel G.Adj] {s₁ s₂ : Finset V} (hs : s₁ ∩ s₂ = ∅)
+    (h : (G.deleteIncidencesOf s₂).InducesForestOfCaterpillars s₁) :
+    G.InducesForestOfCaterpillars s₁ := by
+  obtain ⟨hs₁f, h⟩ := InducesForestOfCaterpillars_iff _ |>.mp h
+  refine InducesForestOfCaterpillars_iff _ |>.mpr ⟨InducesForest_graph_mono' hs hs₁f, ?_⟩
   intro v x y z hv hx hy hz hxy hxz hyz hdv hdx hdy hdz hvx hvy
   have hs' := inter_comm s₁ s₂ ▸ hs
   have := by
@@ -936,15 +938,15 @@ lemma InducesCaterpillar_graph_mono' {V : Type*} [DecidableEq V] [Fintype V] {G 
   · exact notMem_of_mem_of_empty_inter hv hs
   · exact notMem_of_mem_of_empty_inter hz hs
 
-lemma InducesCaterpillar_pair {V : Type*} [DecidableEq V] [Fintype V]
+lemma InducesForestOfCaterpillars_pair {V : Type*} [DecidableEq V] [Fintype V]
     (G : SimpleGraph V) [DecidableRel G.Adj] {v w : V} :
-    G.InducesCaterpillar {v, w} := by
+    G.InducesForestOfCaterpillars {v, w} := by
   refine ⟨InducesForest_mono sdiff_subset InducesForest_pair, ?_⟩
   exact fun x hx ↦ le_trans₃ (degree_in_le_card_minus_one_of_mem hx) (by grind) one_le_two
 
-lemma InducesCaterpillar_singleton {V : Type*} [DecidableEq V] [Fintype V]
+lemma InducesForestOfCaterpillars_singleton {V : Type*} [DecidableEq V] [Fintype V]
     (G : SimpleGraph V) [DecidableRel G.Adj] {v : V} :
-    G.InducesCaterpillar {v} :=
-  pair_eq_singleton v ▸ G.InducesCaterpillar_pair
+    G.InducesForestOfCaterpillars {v} :=
+  pair_eq_singleton v ▸ G.InducesForestOfCaterpillars_pair
 
 end SimpleGraph

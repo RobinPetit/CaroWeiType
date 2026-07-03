@@ -83,7 +83,8 @@ lemma Δf_eq'' {c : ℝ} {d : ℕ} (hd : 0 < d) :
     exact Nat.cast_inj.mpr <| Nat.sub_eq_iff_eq_add hd |>.mp rfl
   exact heq ▸ hobj
 
-lemma split_sum {α β ι : Type*} [DecidableEq ι] [Ring β] {f : ι → β} (s : Finset α) (s' : Finset ι)
+lemma split_sum {α β ι : Type*} [DecidableEq ι] [AddCommMonoid β] {f : ι → β}
+    (s : Finset α) (s' : Finset ι)
     {g : α → Finset ι} (h : s.sup g = s')
     (h' : ∀ x y, x ≠ y → g x ∩ g y = ∅) :
     ∑ x ∈ s', f x = ∑ x ∈ s, ∑ y ∈ g x, f y := by

@@ -289,6 +289,23 @@ theorem Finset_get_other_other {s : Finset α} (hs : 3 ≤ #s) (x y : α) :
     sdiff_nonempty_of_card_lt_card <| lt_of_le_of_lt card_le_two <| this ▸ Nat.lt_add_one 2
   refine ⟨z, ?_, ?_⟩ <;> grind
 
+theorem Finset_four_le_card_iff (s : Finset α) :
+    4 ≤ s.card ↔
+      ∃ a b c d, a ∈ s ∧ b ∈ s ∧ c ∈ s ∧ d ∈ s ∧ a ≠ b ∧ a ≠ c ∧ a ≠ d ∧ b ≠ c ∧ b ≠ d ∧ c ≠ d := by
+  classical
+  constructor
+  · intro hs
+    obtain ⟨a, ha⟩ := Finset_get_one s (Nat.one_le_of_lt hs)
+    obtain ⟨b, c, d, hbs, hcs, hds, hbnec, hbned, hcned⟩ := by
+      refine Finset_three_le_card_iff (s \ {a}) |>.mp ?_
+      rw [card_sdiff, singleton_inter_of_mem ha, card_singleton]
+      exact Nat.le_sub_one_of_lt hs
+    refine ⟨a, b, c, d, ha, ?_, ?_, ?_, ?_, ?_, ?_, hbnec, hbned, hcned⟩
+    <;> grind
+  · intro ⟨a, b, c, d, has, hbs, hcs, hds, haneb, hanec, haned, hbnec, hbned, hcned⟩
+    suffices {a, b, c, d} ⊆ s by exact le_of_eq_of_le (by grind) (card_le_card this)
+    grind
+
 variable [DecidableEq α]
 
 lemma ne_of_ne_congr {α β : Type*} (f : α → β) {x y : α} (h : f x ≠ f y) : x ≠ y :=
@@ -1145,6 +1162,15 @@ lemma deleteIncidencesOf_degree_le {s : Finset V} {v : V}
 lemma deleteIncidencesOf_singleton_eq_deleteIncidenceSet (v : V) :
     G.deleteIncidencesOf {v} = G.deleteIncidenceSet v := by
   simp [deleteIncidencesOf, deleteIncidenceSet_le]
+
+lemma deleteIncidencesOf_degree_eq_zero_of_mem {s : Finset V} {v : V} (hv : v ∈ s)
+    [Fintype ((G.deleteIncidencesOf s).neighborSet v)] :
+    (G.deleteIncidencesOf s).degree v = 0 := by
+  suffices (G.deleteIncidencesOf s).neighborFinset v = ∅ by
+    rw [degree, this, card_empty]
+  ext w
+  simp only [mem_neighborFinset, notMem_empty, iff_false]
+  exact deleteIncidencesOf_notAdj hv
 
 theorem deleteIncidenceSet_notAdj {v w : V} :
     ¬(G.deleteIncidenceSet v).Adj v w :=
